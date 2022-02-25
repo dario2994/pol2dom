@@ -1,6 +1,6 @@
 # pol2dom
 
-Tool to transform a Polygon problem package into a DOMjudge problem package. It does all the job and no human work is necessary after the conversion.
+Tool to transform a Polygon problem package into a DOMjudge problem package. It does all the job and no human intervention is necessary after the conversion.
 
 - Parses from the Polygon package: metadata (name, time limit, memory limit), samples, checker, interactor, input files, output files, solutions (submitted as jury submissions on DOMJudge). Checkers and interactors using testlib.h are supported transparently.
 - Generates the statement pdf (with the possibility of customizing the LaTeX template) starting from the statement sections written in polygon (legend, input, output, notes). The samples' explanations are detected from the notes section in polygon through the use of special markers (see [Samples explanation detection](#samples-explanations-detection) for the details).
@@ -11,15 +11,16 @@ This project was born as a refactoring of [polygon2domjudge](https://github.com/
 
 ## Usage
 
-Running `p2d --color red --from polygon_package --to domjudge_package` will convert the Polygon problem package `polygon_package` into an equivalent DOMjudge problem package `domjudge_package`. The name of the file `domjudge_package` corresponds to the letter used to identify the problem in DOMjudge.
+Running `p2d --contest "CONTEST NAME" --color "COLOR NAME" --from polygon_package --to domjudge_package` will convert the Polygon problem package `polygon_package` into an equivalent DOMjudge problem package `domjudge_package`. The name of the file `domjudge_package` corresponds to the letter used to identify the problem in DOMjudge.
 The arguments `polygon_package` and `domjudge_package` can be either folders or zip files.
 
-Example: `p2d --color red --from my_problems/sum-integers.zip --to C.zip`.
+Example: `p2d --contest SWERC 2022" --color red --from my_problems/sum-integers.zip --to C.zip`.
 
 Use `p2d --help` for a guide.
 
 ## Installation
-### Method 1: Install the Python package using `pipx` (`pipx` is like `pip` but uses virtual-environments transparently to avoid polluting the global python environment)
+### Method 1: Install the Python package using `pipx`
+The tool `pipx` is like `pip` (so it allows to install python packages in the local system) but uses virtual-environments transparently to avoid polluting the global python environment)
 
 Run
 ```bash
@@ -57,7 +58,8 @@ Since we want to parse explanation "sample-wise", we need to add some structure.
 
 The explanation of the i-th sample shall be preceded by the line `%BEGIN i` and followed by the line `%END`. For example:
 
-``` BLAH BLAH BLAH
+```
+BLAH BLAH BLAH
 
 \textbf{Explanation of the first sample}
 %BEGIN 1
@@ -67,7 +69,8 @@ There are $3$ people and...
 In the second sample
 %BEGIN 2
 there are $5$ people and...
-%END```
+%END
+```
 
-Notice that only the explanation itself shall be among the two magic lines, and not the title. The first letter of the explanation will be capitalized even if it is not in the polygon statement.
+Notice that only the explanation itself shall be among the two magic lines, and not the title. The first letter of the explanation of each sample will be capitalized.
 

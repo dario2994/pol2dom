@@ -77,6 +77,7 @@ def parse_samples_explanations(notes):
         elif re.fullmatch(r'%END', line.strip()):
             assert(test_id != -1)
             assert(test_id not in explanations)
+            curr = curr[0].upper() + curr[1:]  # Capitalize first letter.
             explanations[test_id] = curr
             curr = ''
             test_id = -1
