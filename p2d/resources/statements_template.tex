@@ -1,0 +1,145 @@
+\documentclass[11pt,final,twoside]{article}
+
+%%%%%%%%%%%%%%%%%%% PACKAGES %%%%%%%%%%%%%%%%%%%%
+\usepackage[a4paper, margin={2cm, 2.5cm, 2cm, 3.5cm}]{geometry}
+\usepackage[T1]{fontenc}    
+\usepackage[utf8]{inputenc}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage{layout}
+\usepackage{fancyhdr}
+\usepackage{ifthen}
+
+%%%%%%%%%%%%%%%%%%% GLOBAL SPACING CONFIGURATION %%%%%%%%%%%%%%%%%%%%
+\setlist{leftmargin=2em,topsep=0.5em}
+\setlength{\parindent}{0em}
+\setlength{\parskip}{0.5em}
+
+%%%%%%%%%%%%%%%%%%% HEADER AND FOOTER %%%%%%%%%%%%%%%%%%%%
+\pagestyle{fancy}
+\fancyhf{}
+\setlength\headheight{14pt}
+\lhead{\textsc{Problem \problemletter: \problemtitle}}
+\rhead{\textsc{??CONTEST??}} % e.g., SWERC 2021/22 - Milan
+\rfoot{\thepage\hspace{2em}}
+
+
+%%%%%%%%%%%%%%%%%%% PROBLEM HEADER %%%%%%%%%%%%%%%%%%%%
+\newcommand\problemheader{%
+{\bf \huge \fbox{\textsc{\problemletter}} \problemtitle}
+\begin{flushright}
+\begin{minipage}{4.5cm}
+\textsc{Time limit: \hspace{1.55em}\timelimit{}s} \\
+\textsc{Memory limit: \memorylimit{}MB}
+\end{minipage}
+\end{flushright}
+\vspace{2em}%
+}
+
+
+%%%%%%%%%%%%%%%%%%% SECTION TITLES %%%%%%%%%%%%%%%%%%%%
+\newcommand\customsection[1]{%
+\par
+\vspace{1.5em}
+{\Large \textsc{\textbf{#1}}}
+\\[0.5em]%
+\ignorespacesafterend
+}%
+
+\newcommand\inputsection{\customsection{Input}}
+\newcommand\outputsection{\customsection{Output}}
+\newcommand\samplessection{
+\customsection{Samples}
+\vspace{-1.2em}
+
+\ignorespacesafterend
+}
+
+
+%%%%%%%%%%%%%%%%%%% SAMPLES PRETTY PRINTING %%%%%%%%%%%%%%%%%%%%
+\newcounter{samplescnt}
+\setcounter{samplescnt}{0}
+
+\newcommand\printfile[2]{%
+\begin{minipage}[t]{#1}
+\vspace{-0.1em}
+{\verbatiminput{#2} }
+\vspace{-0.5em}
+\end{minipage}%
+\ignorespacesafterend
+}
+
+\newcommand\sampleexplanation[1]{
+\unskip
+
+\textbf{Explanation of sample \arabic{samplescnt}.}\\
+#1%
+
+\addvspace{2em}
+\ignorespacesafterend
+}%
+
+
+%%%%%%%%%%%%%%%%%%% NORMAL SAMPLE %%%%%%%%%%%%%%%%%%%%
+\newlength\samplewidth
+\setlength\samplewidth{8.08cm}
+
+\newcommand\sample[1]{
+\stepcounter{samplescnt}%
+\begin{tabular}{| c | c |}
+    \hline
+    \textbf{Sample input \arabic{samplescnt}} & \textbf{Sample output \arabic{samplescnt}} \\
+    \hline
+    \printfile{\samplewidth}{#1.in}
+    &
+    \printfile{\samplewidth}{#1.out}
+    \\
+    \hline
+\end{tabular}%
+
+\addvspace{2em}
+\ignorespacesafterend
+}
+
+
+%%%%%%%%%%%%%%%%%%% BIG SAMPLE %%%%%%%%%%%%%%%%%%%%
+\newlength\bigsamplewidth
+\setlength\bigsamplewidth{16.58cm}
+
+\newcommand\bigsample[1]{
+\stepcounter{samplescnt}%
+\begin{tabular}{| c |}
+    \hline
+    \textbf{Sample input \arabic{samplescnt}} \\
+    \hline
+    \printfile{\bigsamplewidth}{#1.in}
+    \\
+    \hline
+\end{tabular}%
+\\[1em]
+\begin{tabular}{| c |}
+    \hline
+    \textbf{Sample output \arabic{samplescnt}} \\
+    \hline
+    \printfile{\bigsamplewidth}{#1.out} 
+    \\
+    \hline
+\end{tabular}%
+
+\addvspace{2em}
+\ignorespacesafterend
+}
+
+%%%%%%%%%%%%%%%%%%% PROBLEM METADATA %%%%%%%%%%%%%%%%%%%%
+
+\newcommand\problemletter{undefined}
+\newcommand\problemtitle{undefined}
+\newcommand\timelimit{undefined}
+\newcommand\memorylimit{undefined}
+
+ 
+\begin{document}
+
+??DOCUMENTCONTENT??
+
+\end{document}
