@@ -37,12 +37,12 @@ RESULT_POLYGON2DOMJUDGE = {
     'accepted': 'accepted',
     'wrong-answer': 'wrong_answer',
     'presentation-error': 'wrong_answer',
-    'time-limit-exceeded': 'time_limit_exceed',
-    'time-limit-exceeded-or-accepted': 'time_limit_exceed',
-    'time-limit-exceeded-or-memory-limit-exceeded': 'run_time_error',
+    'time-limit-exceeded': 'time_limit_exceeded',
+    'time-limit-exceeded-or-accepted': None,
+    'time-limit-exceeded-or-memory-limit-exceeded': None,
     'memory-limit-exceeded': 'run_time_error',
-    'rejected': 'run_time_error',  # = label 'Incorrect' in polygon.
-    'failed': 'run_time_error',
+    'rejected': None,  # = label 'Incorrect' in polygon.
+    'failed': None,
     'do-not-run': None
 }
 
@@ -52,8 +52,8 @@ def prepare_argument_parser():
     parser.add_argument('--polygon', '--from', required=True, help='Path of the polygon package. Can be either a directory or a zip.')
     parser.add_argument('--domjudge', '--to', required=True, help='Name of the domjudge package that will be created. Can be either a directory or a zip.')
     parser.add_argument('--force', '-f', action='store_true', help='Whether the script can overwrite the destination given by --to.')
-    parser.add_argument('--color', required=True, help='Color of the problem.')
-    parser.add_argument('--contest', required=True, help='Name of the contest, used only to generate the statement.')
+    parser.add_argument('--color', default='black', help='Color of the problem.')
+    parser.add_argument('--contest', default='', help='Name of the contest, used only to generate the statement.')
     parser.add_argument('--statements-template', default=os.path.join(RESOURCES_PATH, 'statements_template.tex'), help='Path of the LaTeX statements template.')
     parser.add_argument('--big-sample-size', type=int, default=BIG_SAMPLE_SIZE, help='Number of characters in the longest line of a sample which triggers the call of \'\\bigsample\' instead of \'\\sample\' in the tex source of the statement.')
     parser.add_argument('--update-testlib', action='store_true', help='Whether to update the local version of testlib (syncing it with the last version from the github repository).')
@@ -118,6 +118,9 @@ def generate_problem_tex(args, problem, pdflatex_dir):
             samples_tex += '\\sampleexplanation{%s}\n' % sample['explanation']
 
         sample_id += 1
+
+    for image in problem['statement']['images']:
+        shutil.copyfile(image[1], os.path.join(pdflatex_dir, image[0]))
 
     with open(os.path.join(RESOURCES_PATH, 'problem_template.tex')) as f:
         problem_template = f.read()
@@ -276,13 +279,21 @@ def parse_problem_from_polygon(args, polygon):
             sample_id += 1
         problem['statement']['samples'] = samples
 
+    # Detecting images
+    problem['statement']['images'] = []
+    statement_path = abs_path('statements', 'english')
+    image_extensions = ['.jpg', '.gif', '.png', '.jpeg', '.pdf', '.svg']
+    for f in os.listdir(statement_path):
+        if any([f.lower().endswith(ext) for ext in image_extensions]):
+            problem['statement']['images'].append(
+                    (f, os.path.join(statement_path,f)))
+
     # Tests
     problem['tests'] = []
     for testset in problem_xml.find('judging').iter('testset'):
-        if testset.attrib['name'] == 'pretests':
-            continue
-        if testset.attrib['name'] != 'tests':
-            raise RuntimeError('The tests shall may contain only the testsets \'tests\' and \'pretests\' (\'pretests\' is not necessary.')
+        if testset.attrib['name'] not in ['pretests', 'tests']:
+            raise RuntimeError('The tests shall may contain only the testsets \'tests\' and \'pretests\' (\'pretests\' is not necessary).')
+        # Pretests are processed only to collect samples.
         input_format = testset.find('input-path-pattern').text
         output_format = testset.find('answer-path-pattern').text
 
@@ -294,7 +305,8 @@ def parse_problem_from_polygon(args, polygon):
                 'out': abs_path(output_format % test_id),
                 'is_sample': 'sample' in test.attrib
             }
-            problem['tests'].append(t)
+            if testset.attrib['name'] == 'tests' or t['is_sample']:
+                   problem['tests'].append(t)
             test_id += 1
     if not problem['tests']:
         raise RuntimeError('One of the testset shall be called \'tests\'.')
@@ -385,8 +397,10 @@ def convert_to_domjudge(args, problem, domjudge):
     elif problem['checker']['name'] is not None:
         checker_name = problem['checker']['name']
         logging.debug('Standard checker \'%s\'.' % checker_name)
-        assert(re.match(r'std\:\:([a-z]+)\.cpp', checker_name) is not None)
-        checker_name = re.match(r'std\:\:([a-z]+)\.cpp', checker_name).groups()[0]
+
+        checker_name_match = re.match(r'std\:\:([a-z0-9]+)\.cpp', checker_name)
+        assert(checker_name_match)
+        checker_name = checker_name_match.groups()[0]
         assert(checker_name in CHECKER_POLYGON2DOMJUDGE)
 
         problem_yaml_data['validation'] = 'default'
@@ -435,6 +449,13 @@ def main():
 
     if args.domjudge.endswith('/'):
         args.domjudge = args.domjudge[:-1]
+
+    if not re.fullmatch(r'[a-zA-Z0-9\-]+', pathlib.Path(args.domjudge).stem):
+        logging.error('The name of the domjudge package '
+                      + '(specified via --domjudge) '
+                      + 'can contain only letters, numbers and '
+                      + 'hyphens (spaces and underscores are not allowed).')
+        exit(1)
 
     # Unzip the polygon package if it is zipped.
     if zipfile.is_zipfile(args.polygon):
@@ -500,6 +521,4 @@ if __name__ == "__main__":
 
 # TODO: Create whole problem set (with custom front page).
 #       Create tests for this tool.
-#       Interaction section is not supported in the statement.
-#       Handle images in the statement.
-#       Handle additional files used in the generator/checker/anything else.
+#       Interactive problems are not supported.

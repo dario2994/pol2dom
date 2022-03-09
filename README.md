@@ -4,7 +4,7 @@ Tool to transform a Polygon problem package into a DOMjudge problem package. It 
 
 - Parses from the Polygon package: metadata (name, time limit, memory limit), samples, checker, interactor, input files, output files, solutions (submitted as jury submissions on DOMJudge). Checkers and interactors using testlib.h are supported transparently.
 - Generates the statement pdf (with the possibility of customizing the LaTeX template) starting from the statement sections written in polygon (legend, input, output, notes). The samples' explanations are detected from the notes section in polygon through the use of special markers (see [Samples explanation detection](#samples-explanations-detection) for the details).
-- Accepts as arguments the letter and the color of the problem (which are not contained in the Polygon package).
+- Accepts as optional arguments the color of the problem (which is not contained in the Polygon package) and the contest name (to properly generate the statement).
 - Supports both zip archives and folders.
 
 This project was born as a refactoring of [polygon2domjudge](https://github.com/cubercsl/polygon2domjudge).
@@ -13,6 +13,8 @@ This project was born as a refactoring of [polygon2domjudge](https://github.com/
 
 Running `p2d --contest "CONTEST NAME" --color "COLOR NAME" --from polygon_package --to domjudge_package` will convert the Polygon problem package `polygon_package` into an equivalent DOMjudge problem package `domjudge_package`. The name of the file `domjudge_package` corresponds to the letter used to identify the problem in DOMjudge.
 The arguments `polygon_package` and `domjudge_package` can be either folders or zip files.
+
+The polygon package must be a *full* package, i.e., it must contain the generated tests.
 
 Example: `p2d --contest SWERC 2022" --color red --from my_problems/sum-integers.zip --to C.zip`.
 
