@@ -85,7 +85,7 @@ def add_header(lines, header):
 
 def replace_exit_code(lines, name, value):
     for i in range(len(lines)):
-        match = re.fullmatch(r'(#define +%s +)\d+( +)' % name, lines[i])
+        match = re.fullmatch(r'(# *define +%s +)[a-zA-Z0-9]+( *)' % name, lines[i])
         if match:
             lines[i] = match.groups()[0] + str(value) + match.groups()[1]
     return lines

@@ -21,7 +21,7 @@ setup(
     url='https://github.com/dario2994/pol2dom',
     license='MIT',
     packages=find_packages(),
-    package_data={'': ['resources/*']},
+    package_data={'': ['resources/*.tex']},
     include_package_data=True,
     entry_points={
         'console_scripts': [
