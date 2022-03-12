@@ -1,4 +1,5 @@
 import os
+import platform
 import requests
 import shutil
 import subprocess
@@ -11,8 +12,12 @@ OK_SYMBOL = u'\u2705'
 NEUTRAL_SYMBOL = '  '
 ERROR_SYMBOL = u'\u274C'
 
+def package_suffix():
+    os_name = 'windows' if platform.system() == 'Windows' else 'linux'
+    return '$%s.zip' % os_name
+
 def find_latest_local_version(name, polygon):
-    suffix = '$linux.zip'
+    suffix = package_suffix()
     version = -1
     for f in os.listdir(polygon):
         prefix = name + '-'
@@ -38,7 +43,8 @@ def run_p2d_problem(name, old_version, letter, color, contest, polygon, domjudge
         return old_version
 
     args = p2d_problem.prepare_argument_parser().parse_args(
-            ['--from', os.path.join(polygon, '%s-%s$linux.zip' % (name, version)),
+            ['--from', os.path.join(polygon, '%s-%s%s'
+                                             % (name, version, package_suffix)),
             '--to', os.path.join(domjudge, '%s.zip' % letter),
             '--color', color,
             '--contest', contest,
