@@ -25,10 +25,11 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'p2d=p2d.main:main'
+            'p2d-problem=p2d.p2d_problem:main',
+            'p2d-contest=p2d.p2d_contest:main'
         ]
     },
-    python_requires='>=3.5',
+    python_requires='>=3.7',
     platforms='any',
     install_requires=[
         'pyyaml >= 5.3',

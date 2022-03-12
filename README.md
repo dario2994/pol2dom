@@ -1,24 +1,43 @@
 # pol2dom
 
-Tool to transform a Polygon problem package into a DOMjudge problem package. It does all the job and no human intervention is necessary after the conversion.
+Tool to import a problem/contest prepared in [Polygon](https://polygon.codeforces.com/) into a [DOMjudge](https://www.domjudge.org/) instance.
 
-- Parses from the Polygon package: metadata (name, time limit, memory limit), samples, checker, interactor, input files, output files, solutions (submitted as jury submissions on DOMJudge). Checkers and interactors using testlib.h are supported transparently.
-- Generates the statement pdf (with the possibility of customizing the LaTeX template) starting from the statement sections written in polygon (legend, input, output, notes). The samples' explanations are detected from the notes section in polygon through the use of special markers (see [Samples explanation detection](#samples-explanations-detection) for the details).
-- Accepts as optional arguments the color of the problem (which is not contained in the Polygon package) and the contest name (to properly generate the statement).
-- Supports both zip archives and folders.
+This tool, offers two commands: `p2d-problem` and `p2d-contest`.
 
-This project was born as a refactoring of [polygon2domjudge](https://github.com/cubercsl/polygon2domjudge).
+- `p2d-problem` converts a Polygon (full) package into a DOMjudge package.
+- `p2d-contest` handles the conversion of a whole problem set and its import into a DOMjudge instance.
+
+The main features are:
+
+- The conversion from a Polygon package into a DOMjudge package is fully automatic and requires no human intervention.
+- Parses the statement from the Polygon package and generates the statement in pdf (with the possibility of [customizing the LaTeX template](#customization-of-the-latex-statement-template)). The samples' explanations are [detected from the notes section in polygon through the use of special markers](#samples-explanations-detection).
+- Checkers using testlib.h are supported transparently (by using a modified testlib.h which is DOMjudge compatible).
+- Using the submissions-verifier feature of DOMjudge, it enforces that the submissions present in polygon get the correct result also in DOMjudge.
+- Using DOMjudge APIs, it imports the problems (if updated) directly into the DOMjudge instance.
+
+This project was born as a refactoring of [polygon2domjudge](https://github.com/cubercsl/polygon2domjudge) and evolved into something more.
 
 ## Usage
 
-Running `p2d --contest "CONTEST NAME" --color "COLOR NAME" --from polygon_package --to domjudge_package` will convert the Polygon problem package `polygon_package` into an equivalent DOMjudge problem package `domjudge_package`. The name of the file `domjudge_package` corresponds to the letter used to identify the problem in DOMjudge.
+### Usage p2d-problem
+
+Running
+
+```p2d-problem --contest "CONTEST NAME" --color "COLOR NAME" --from polygon_package --to domjudge_package```
+
+converts the Polygon problem package `polygon_package` into an equivalent DOMjudge problem package `domjudge_package`.
+The name of the file `domjudge_package` corresponds to the letter used to identify the problem in DOMjudge.
 The arguments `polygon_package` and `domjudge_package` can be either folders or zip files.
 
 The polygon package must be a *full* package, i.e., it must contain the generated tests.
 
-Example: `p2d --contest SWERC 2022" --color red --from my_problems/sum-integers.zip --to C.zip`.
+Example: `p2d-problem --contest SWERC 2022" --color red --from my_problems/sum-integers.zip --to C.zip`.
 
-Use `p2d --help` for a guide.
+Use `p2d-problem --help` for a guide.
+
+### Usage of p2d-contest
+
+TODO
 
 ## Installation
 ### Method 1: Install the Python package using `pipx`
@@ -28,11 +47,11 @@ Run
 ```bash
 $ pip install git+https://github.com/dario2994/pol2dom
 ```
-This provides you with the command `p2d` available in any shell terminal.
+This provides you with the commands `p2d-problem` and `p2d-contest` available in any shell terminal.
 
 ### Method 2: Run directly from the repository
 
-Clone the repository with `git clone https://github.com/dario2994/pol2dom` and run the command with `bin/p2d.sh` directly from the repository folder.
+Clone the repository with `git clone https://github.com/dario2994/pol2dom` and run the commands with `bin/p2d-problem.sh` and `bin/p2d-contest.sh` directly from the repository folder.
 
 ## Customization of the LaTeX statement template
 
@@ -53,7 +72,7 @@ The tex file `resources/statements_template.tex` implements the commands: `\prob
 
 If you want to customize the visual aspect of the generated pdf, use the command argument `--statements_template 'my_statements_template.tex'` (it will be used instead of `resources/statements_template.tex`).
 
-### Samples explanation detection
+## Samples explanation detection
 
 In polygon the explanations of samples (when present) are contained in the Notes section without a specific structure.
 Since we want to parse explanation "sample-wise", we need to add some structure.
@@ -76,3 +95,6 @@ there are $5$ people and...
 
 Notice that only the explanation itself shall be among the two magic lines, and not the title. The first letter of the explanation of each sample will be capitalized.
 
+## Structure of `contest.yaml`
+
+TODO

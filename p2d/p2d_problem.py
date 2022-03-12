@@ -87,11 +87,13 @@ def parse_samples_explanations(notes):
     return explanations
 
 
-def contains_long_line(args, txt):
-    for line in txt.split('\n'):
-        if len(line) > args.big_sample_size:
-            return True
-    return False
+def contains_long_line(args, filename):
+    with open(filename) as f:
+        lines = f.readlines()
+        for line in lines:
+            if len(line) > args.big_sample_size:
+                return True
+        return False
 
 
 # Returns a string containing the statement tex (only what shall go inside
@@ -252,7 +254,8 @@ def parse_problem_from_polygon(args, polygon):
             ml_str = testset.find('memory-limit').text
             problem['timelimit'] = float(tl_str) / 1000.0
             problem['memorylimit'] = int(ml_str) // 2**20
-
+    assert('timelimit' in problem and 'memorylimit' in problem)
+    
     # Statement
     problem['statement'] = {}
     statement_json_path = abs_path(
@@ -270,11 +273,12 @@ def parse_problem_from_polygon(args, polygon):
             sample = {
                 'in': abs_path('statements', 'english', sample_json['inputFile']),
                 'out': abs_path('statements', 'english', sample_json['outputFile']),
-                'is_long': contains_long_line(args, sample_json['inputFile'])
-                           or contains_long_line(args, sample_json['outputFile']),
                 'explanation': explanations[sample_id] if sample_id in explanations
                                                        else None
             }
+            sample['is_long'] = contains_long_line(args, sample['in']) \
+                                or contains_long_line(args, sample['out']),
+                
             samples.append(sample)
             sample_id += 1
         problem['statement']['samples'] = samples
@@ -290,14 +294,14 @@ def parse_problem_from_polygon(args, polygon):
 
     # Tests
     problem['tests'] = []
+    test_id = 1
     for testset in problem_xml.find('judging').iter('testset'):
         if testset.attrib['name'] not in ['pretests', 'tests']:
-            raise RuntimeError('The tests shall may contain only the testsets \'tests\' and \'pretests\' (\'pretests\' is not necessary).')
+            logging.warning('testset \'%s\' ignored: only the testset \'tests\' is exported in DOMjudge (apart from the samples).' % testset.attrib['name'])
         # Pretests are processed only to collect samples.
         input_format = testset.find('input-path-pattern').text
         output_format = testset.find('answer-path-pattern').text
 
-        test_id = 1
         for test in testset.iter('test'):
             t = {
                 'num': test_id,
@@ -306,8 +310,8 @@ def parse_problem_from_polygon(args, polygon):
                 'is_sample': 'sample' in test.attrib
             }
             if testset.attrib['name'] == 'tests' or t['is_sample']:
-                   problem['tests'].append(t)
-            test_id += 1
+                problem['tests'].append(t)
+                test_id += 1
     if not problem['tests']:
         raise RuntimeError('One of the testset shall be called \'tests\'.')
 
@@ -439,8 +443,7 @@ def convert_to_domjudge(args, problem, domjudge):
         yaml.safe_dump(problem_yaml_data, f, default_flow_style=False)
 
 
-def main():
-    args = prepare_argument_parser().parse_args()
+def p2d_problem(args):
     logging.basicConfig(
         stream=sys.stdout,
         format='%(levelname)s: %(message)s',
@@ -515,10 +518,13 @@ def main():
     logging.info('Converted \'%s\' to the DOMjudge format.'
                  % problem['shortname'])
 
+def main():
+    args = prepare_argument_parser().parse_args()
+    p2d_problem(args)
 
 if __name__ == "__main__":
     main()
 
-# TODO: Create whole problem set (with custom front page).
+# TODO: 
 #       Create tests for this tool.
 #       Interactive problems are not supported.

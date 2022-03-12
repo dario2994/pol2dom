@@ -10,8 +10,12 @@
 \usepackage{fancyhdr}
 \usepackage{ifthen}
 \usepackage{graphicx}
-% Set default width of \includegraphics to \textwidth.
-\setkeys{Gin}{width=\textwidth}
+% Set max width of \includegraphics to \linewidth.
+\usepackage[export]{adjustbox}
+\let\oldincludegraphics\includegraphics
+\renewcommand{\includegraphics}[2][]{%
+    \oldincludegraphics[#1,max width=\linewidth]{#2}%
+}
 
 %%%%%%%%%%%%%%%%%%% GLOBAL SPACING CONFIGURATION %%%%%%%%%%%%%%%%%%%%
 \setlist{leftmargin=2em,topsep=0.5em}
