@@ -31,7 +31,7 @@ The arguments `polygon_package` and `domjudge_package` can be either folders or 
 
 The polygon package must be a *full* package, i.e., it must contain the generated tests.
 
-Example: `p2d-problem --contest "SWERC 2022" --color red --from my_problems/sum-integers.zip --to C.zip`.
+*Example*: `p2d-problem --contest "SWERC 2022" --color red --from my_problems/sum-integers.zip --to C.zip`.
 
 Use `p2d-problem --help` for a guide.
 
@@ -47,7 +47,7 @@ The content and the format of `contest.yaml` are described in [Structure of cont
 
 Use `p2d-contest --help` for a guide.
 
-Example: `p2d-contest --polygon ~/Downloads/ --domjudge domjudge_packages/ --yaml swerc.yaml --send`.
+*Example*: `p2d-contest --polygon ~/Downloads/ --domjudge domjudge_packages/ --yaml swerc.yaml --send`.
 
 ## Installation
 ### Method 1: Install the Python package using `pipx`
@@ -107,4 +107,34 @@ Notice that only the explanation itself shall be among the two magic lines, and 
 
 ## Structure of `contest.yaml`
 
-TODO
+The file `contest.yaml` (passed to `p2d-contest` via the argument `--yaml`) must be a valid `yaml` file containing the following top-level keys:
+
+- server: The URL of the DOMjudge instance (necessary only if you want to directly import the problems with `--send`).
+- username: Username of a Judge user of the DOMjudge instance (necessary only if you want to directly import the problems with `--send`).
+- password: Password of the Judge user (necessary only if you want to directly import the problems with `--send`).
+- contest_id: Id of the contest in the DOMjudge instance (necessary only if you want to directly import the problems with `--send`).
+- contest_name: Name of the contest, used to generate properly the pdf of the statements.
+- problems: This is a list of problems. A problem is a dictionary with the following keys:
+  - name: Short-name, in polygon, of the problem. This is used to find the polygon package in the directory specified by `--polygon`.
+          So, if the name is `maximum-subarray`, the tool will look for a file (in the directory `--polygon`) with name `maximum-subarray-VERSION$linux.zip` or (depending on the platform). Notice that this name format is exactly the one used by polygon, so after downloading the package no renaming is necessary.
+  - letter: Letter to be used to identify the problem in DOMjudge.
+  - color: Color of the problem in DOMjudge.
+  - version: This key is created, and updated, by `p2d-contest`. It denotes the latest package version which was succesfully converted.
+  - id: This key is created by `p2d-contest`. It corresponds to the id of the problem in the DOMjudge instance.
+
+*Example*: The following one is a valid `contest.yaml` file.
+
+```
+server: https://www.domjudge.org/demoweb/
+username: jury
+password: jury
+contest_id: 123
+contest_name: International Competition of Programmers
+problems:
+- name: maximum-subarray
+  letter: A
+  color: red
+- name: lis
+  letter: B
+  color: purple
+```
