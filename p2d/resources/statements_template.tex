@@ -21,6 +21,7 @@
 \setlist{leftmargin=2em,topsep=0.5em}
 \setlength{\parindent}{0em}
 \setlength{\parskip}{0.5em}
+\raggedbottom
 
 %%%%%%%%%%%%%%%%%%% HEADER AND FOOTER %%%%%%%%%%%%%%%%%%%%
 \pagestyle{fancy}
@@ -33,23 +34,29 @@
 
 %%%%%%%%%%%%%%%%%%% PROBLEM HEADER %%%%%%%%%%%%%%%%%%%%
 \newcommand\problemheader{%
-{\bf \huge \fbox{\textsc{\problemletter}} \problemtitle}
-\begin{flushright}
-\begin{minipage}{4.5cm}
-\textsc{Time limit: \hspace{1.55em}\timelimit{}s} \\
-\textsc{Memory limit: \memorylimit{}MB}
-\end{minipage}
-\end{flushright}
+% \begin{minipage}[t]{\textwidth}
+    {\bf \huge \fbox{\textsc{\problemletter}} \problemtitle}
+    % \vspace{1em}
+    \begin{flushright}
+        \begin{minipage}[t]{4.5cm}
+            \textsc{Time limit: \hspace{1.55em}\timelimit{}s} \\
+            \textsc{Memory limit: \memorylimit{}MB}
+        \end{minipage}
+    \end{flushright}
 \vspace{2em}%
+% \end{minipage}
 }
 
 
 %%%%%%%%%%%%%%%%%%% SECTION TITLES %%%%%%%%%%%%%%%%%%%%
 \newcommand\customsection[1]{%
+\pagebreak[1]
 \par
 \vspace{1.5em}
 {\Large \textsc{\textbf{#1}}}
+\nopagebreak
 \\[0.5em]%
+\nopagebreak
 \ignorespacesafterend
 }%
 
@@ -57,7 +64,7 @@
 \newcommand\outputsection{\customsection{Output}}
 \newcommand\samplessection{
 \customsection{Samples}
-\vspace{-1.2em}
+\vspace{-0.7em}
 
 \ignorespacesafterend
 }

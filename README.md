@@ -72,7 +72,8 @@ The statement is generated starting from `resources/problem_template.tex` by per
 3. Generate an initially empty string `samples`.
 For each problem sample, create two files `sample_id.in` and `sample_id.out` and append to the string `samples` the code `\sample{sample_id}` or `\bigsample{sample_id}`. The command `\bigsample` is used if there is a line in `sample_id.in` or `sample_id.out` longer than `BIG_SAMPLE_CHARS_NUM=40` characters (the value of `BIG_SAMPLE_CHARS_NUM` can be configured via `--big_sample_chars_num`), so that big samples can have a different formatting if desired.
 If the sample has an explanation (see [Samples explanation detection](#samples-explanation-detection)), append also `\sampleexplanation{Content of the sample explanation.}`.
-4. Replace the string `??SAMPLES??` with the string `samples` generated in the previous step.
+4. Add the prefix `\samplessection` to the string `samples`. For spacing reasons, the reality is a bit more complex (the section title is put in a minipage together with the first sample) but this is not important here.
+5. Replace the string `??SAMPLES??` with the string `samples` generated in the previous step.
 
 It is clear from the operations performed that `resources/problem_template.tex` contains the placeholders `??LETTER??`, `??NAME??`, `??TIMELIMIT??`, `??MEMORYLIMIT??`, `??LEGEND??`, `??INPUT??`, `??OUTPUT??`, `??SAMPLES??`.
 

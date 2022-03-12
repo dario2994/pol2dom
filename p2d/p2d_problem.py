@@ -100,7 +100,12 @@ def contains_long_line(args, filename):
 # \begin{document} \end{document}).
 # The samples (.in/.out) are copied in pdflatex_dir.
 def generate_problem_tex(args, problem, pdflatex_dir):
-    samples_tex = ''
+    # The first samples is put in a minipage with the title `Samples` to
+    # avoid a page break in between (which is very likely otherwise).
+    samples_tex = '''
+\\begin{minipage}{\\textwidth}
+\\samplessection
+'''
 
     sample_id = 1
     for sample in problem['statement']['samples']:
@@ -117,9 +122,21 @@ def generate_problem_tex(args, problem, pdflatex_dir):
         samples_tex += '\n'
 
         if sample['explanation']:
+            if sample_id == 1:
+                samples_tex += '\\vspace{-1.5em}\n'
             samples_tex += '\\sampleexplanation{%s}\n' % sample['explanation']
 
+        if sample_id == 1:
+            samples_tex += '''
+\\end{minipage}
+\\vspace{2.3em}
+'''
+
         sample_id += 1
+
+    if sample_id == 1:
+        logging.error('No samples found.')
+        exit(1)
 
     for image in problem['statement']['images']:
         shutil.copyfile(image[1], os.path.join(pdflatex_dir, image[0]))
@@ -277,8 +294,7 @@ def parse_problem_from_polygon(args, polygon):
                                                        else None
             }
             sample['is_long'] = contains_long_line(args, sample['in']) \
-                                or contains_long_line(args, sample['out']),
-                
+                                or contains_long_line(args, sample['out'])
             samples.append(sample)
             sample_id += 1
         problem['statement']['samples'] = samples
