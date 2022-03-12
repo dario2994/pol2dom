@@ -44,7 +44,7 @@ def run_p2d_problem(name, old_version, letter, color, contest, polygon, domjudge
 
     args = p2d_problem.prepare_argument_parser().parse_args(
             ['--from', os.path.join(polygon, '%s-%s%s'
-                                             % (name, version, package_suffix)),
+                                             % (name, version, package_suffix())),
             '--to', os.path.join(domjudge, '%s.zip' % letter),
             '--color', color,
             '--contest', contest,
@@ -54,7 +54,7 @@ def run_p2d_problem(name, old_version, letter, color, contest, polygon, domjudge
     try:
         p2d_problem.p2d_problem(args)
     except:
-        print(ERROR_SYMBOL, name, ':', 'Error during the execution of p2d-problem.')
+        print(ERROR_SYMBOL, name, ':', 'Error during the execution of p2d-problem with arguments %s.' % args)
         return old_version
 
     print(OK_SYMBOL, name, ':', 'Converted into \'%s\'.'

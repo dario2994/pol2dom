@@ -4,4 +4,4 @@
 
 export PYTHONPATH
 PYTHONPATH="$(dirname "$(dirname "$(readlink -f "$0")")"):$PYTHONPATH"
-exec python -m p2d.p2d-contest "$@"
+exec python -m p2d.p2d_contest "$@"
