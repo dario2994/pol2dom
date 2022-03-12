@@ -116,7 +116,7 @@ The file `contest.yaml` (passed to `p2d-contest` via the argument `--yaml`) must
 - contest_name: Name of the contest, used to generate properly the pdf of the statements.
 - problems: This is a list of problems. A problem is a dictionary with the following keys:
   - name: Short-name, in polygon, of the problem. This is used to find the polygon package in the directory specified by `--polygon`.
-          So, if the name is `maximum-subarray`, the tool will look for a file (in the directory `--polygon`) with name `maximum-subarray-VERSION$linux.zip` or (depending on the platform). Notice that this name format is exactly the one used by polygon, so after downloading the package no renaming is necessary.
+          So, if the name is `lis`, the tool will look for a file (in the directory `--polygon`) with name `lis-VERSION$windows.zip` or `lis-VERSION$linux.zip` (depending on the platform). Notice that this name format is exactly the one used by polygon, so after downloading the package no renaming is necessary.
   - letter: Letter to be used to identify the problem in DOMjudge.
   - color: Color of the problem in DOMjudge.
   - version: This key is created, and updated, by `p2d-contest`. It denotes the latest package version which was succesfully converted.
