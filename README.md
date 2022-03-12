@@ -110,8 +110,8 @@ Notice that only the explanation itself shall be among the two magic lines, and 
 The file `contest.yaml` (passed to `p2d-contest` via the argument `--yaml`) must be a valid `yaml` file containing the following top-level keys:
 
 - server: The URL of the DOMjudge instance (necessary only if you want to directly import the problems with `--send`).
-- username: Username of a Judge user of the DOMjudge instance (necessary only if you want to directly import the problems with `--send`).
-- password: Password of the Judge user (necessary only if you want to directly import the problems with `--send`).
+- username: Username of an admin user of the DOMjudge instance (necessary only if you want to directly import the problems with `--send`).
+- password: Password of the admin user (necessary only if you want to directly import the problems with `--send`).
 - contest_id: Id of the contest in the DOMjudge instance (necessary only if you want to directly import the problems with `--send`).
 - contest_name: Name of the contest, used to generate properly the pdf of the statements.
 - problems: This is a list of problems. A problem is a dictionary with the following keys:
@@ -126,8 +126,8 @@ The file `contest.yaml` (passed to `p2d-contest` via the argument `--yaml`) must
 
 ```
 server: https://www.domjudge.org/demoweb/
-username: jury
-password: jury
+username: admin
+password: admin
 contest_id: 123
 contest_name: International Competition of Programmers
 problems:
