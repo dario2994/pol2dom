@@ -10,16 +10,16 @@ This tool, offers two commands: `p2d-problem` and `p2d-contest`.
 The main features are:
 
 - The conversion from a Polygon package into a DOMjudge package is fully automatic and requires no human intervention.
-- Parses the statement from the Polygon package and generates the statement in pdf (with the possibility of [customizing the LaTeX template](#customization-of-the-latex-statement-template)). The samples' explanations are [detected from the notes section in polygon through the use of special markers](#samples-explanations-detection).
+- Parses the statement from the Polygon package and generates the statement in pdf (with the possibility of [customizing the LaTeX template](#customization-of-the-latex-statement-template)). The samples' explanations are [detected from the notes section in polygon through the use of special markers](#samples-explanation-detection).
 - Checkers using testlib.h are supported transparently (by using a modified testlib.h which is DOMjudge compatible).
-- Using the submissions-verifier feature of DOMjudge, it enforces that the submissions present in polygon get the correct result also in DOMjudge.
-- Using DOMjudge APIs, it imports the problems (if updated) directly into the DOMjudge instance.
+- Through the `Judging verifier` feature of DOMjudge, it enforces that the submissions present in polygon get the correct result also in DOMjudge.
+- Through DOMjudge APIs, it imports the problems (if updated) directly into the DOMjudge instance.
 
 This project was born as a refactoring of [polygon2domjudge](https://github.com/cubercsl/polygon2domjudge) and evolved into something more.
 
 ## Usage
 
-### Usage p2d-problem
+### p2d-problem
 
 Running
 
@@ -31,13 +31,23 @@ The arguments `polygon_package` and `domjudge_package` can be either folders or 
 
 The polygon package must be a *full* package, i.e., it must contain the generated tests.
 
-Example: `p2d-problem --contest SWERC 2022" --color red --from my_problems/sum-integers.zip --to C.zip`.
+Example: `p2d-problem --contest "SWERC 2022" --color red --from my_problems/sum-integers.zip --to C.zip`.
 
 Use `p2d-problem --help` for a guide.
 
-### Usage of p2d-contest
+### p2d-contest
 
-TODO
+Running 
+
+```p2d-contest --polygon polygon_directory --domjudge domjudge_directory --yaml contest.yaml --send```
+
+searches the latest package of the problems specified in `contest.yaml` in `polygon_directory`; converts them into DOMjudge packages (which are saved in `domjudge_directory`, updating previous versions) and send, through the APIs, the updated packages to the DOMjudge instance specified in `contest.yaml`.
+
+The content and the format of `contest.yaml` are described in [Structure of contest.yaml](#structure-of-contestyaml).
+
+Use `p2d-contest --help` for a guide.
+
+Example: `p2d-contest --polygon ~/Downloads/ --domjudge domjudge_packages/ --yaml swerc.yaml --send`.
 
 ## Installation
 ### Method 1: Install the Python package using `pipx`
@@ -74,7 +84,7 @@ If you want to customize the visual aspect of the generated pdf, use the command
 
 ## Samples explanation detection
 
-In polygon the explanations of samples (when present) are contained in the Notes section without a specific structure.
+In polygon the explanation of samples (when present) is contained in the Notes section without a specific structure.
 Since we want to parse explanation "sample-wise", we need to add some structure.
 
 The explanation of the i-th sample shall be preceded by the line `%BEGIN i` and followed by the line `%END`. For example:
