@@ -100,12 +100,7 @@ def contains_long_line(args, filename):
 # \begin{document} \end{document}).
 # The samples (.in/.out) are copied in pdflatex_dir.
 def generate_problem_tex(args, problem, pdflatex_dir):
-    # The first samples is put in a minipage with the title `Samples` to
-    # avoid a page break in between (which is very likely otherwise).
-    samples_tex = '''
-\\begin{minipage}{\\textwidth}
-\\samplessection
-'''
+    samples_tex = ''
 
     sample_id = 1
     for sample in problem['statement']['samples']:
@@ -122,15 +117,7 @@ def generate_problem_tex(args, problem, pdflatex_dir):
         samples_tex += '\n'
 
         if sample['explanation']:
-            if sample_id == 1:
-                samples_tex += '\\vspace{-1.5em}\n'
             samples_tex += '\\sampleexplanation{%s}\n' % sample['explanation']
-
-        if sample_id == 1:
-            samples_tex += '''
-\\end{minipage}
-\\vspace{2.3em}
-'''
 
         sample_id += 1
 

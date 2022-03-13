@@ -23,6 +23,13 @@
 \setlength{\parskip}{0.5em}
 \raggedbottom
 
+\usepackage{titlesec}
+\titlespacing*{\section}{0em}{1.5em}{0.2em}
+\titleformat*{\section}{\Large\scshape\bfseries}
+
+\titlespacing*{\subsection}{0em}{-1.5em}{-0.4em}
+\titleformat*{\subsection}{\normalsize\bfseries}
+
 %%%%%%%%%%%%%%%%%%% HEADER AND FOOTER %%%%%%%%%%%%%%%%%%%%
 \pagestyle{fancy}
 \fancyhf{}
@@ -34,41 +41,15 @@
 
 %%%%%%%%%%%%%%%%%%% PROBLEM HEADER %%%%%%%%%%%%%%%%%%%%
 \newcommand\problemheader{%
-% \begin{minipage}[t]{\textwidth}
-    {\bf \huge \fbox{\textsc{\problemletter}} \problemtitle}
-    % \vspace{1em}
-    \begin{flushright}
-        \begin{minipage}[t]{4.5cm}
-            \textsc{Time limit: \hspace{1.55em}\timelimit{}s} \\
-            \textsc{Memory limit: \memorylimit{}MB}
-        \end{minipage}
-    \end{flushright}
+{\bf \huge \fbox{\textsc{\problemletter}} \problemtitle}
+\begin{flushright}
+    \begin{minipage}[t]{4.5cm}
+        \textsc{Time limit: \hspace{1.55em}\timelimit{}s} \\
+        \textsc{Memory limit: \memorylimit{}MB}
+    \end{minipage}
+\end{flushright}
 \vspace{2em}%
-% \end{minipage}
 }
-
-
-%%%%%%%%%%%%%%%%%%% SECTION TITLES %%%%%%%%%%%%%%%%%%%%
-\newcommand\customsection[1]{%
-\pagebreak[1]
-\par
-\vspace{1.5em}
-{\Large \textsc{\textbf{#1}}}
-\nopagebreak
-\\[0.5em]%
-\nopagebreak
-\ignorespacesafterend
-}%
-
-\newcommand\inputsection{\customsection{Input}}
-\newcommand\outputsection{\customsection{Output}}
-\newcommand\samplessection{
-\customsection{Samples}
-\vspace{-0.7em}
-
-\ignorespacesafterend
-}
-
 
 %%%%%%%%%%%%%%%%%%% SAMPLES PRETTY PRINTING %%%%%%%%%%%%%%%%%%%%
 \newcounter{samplescnt}
@@ -84,13 +65,10 @@
 }
 
 \newcommand\sampleexplanation[1]{
-\unskip
-
-\textbf{Explanation of sample \arabic{samplescnt}.}\\
+\subsection*{Explanation of sample \arabic{samplescnt}.}
 #1%
 
 \addvspace{2em}
-\ignorespacesafterend
 }%
 
 
