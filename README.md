@@ -55,7 +55,7 @@ The tool `pipx` is like `pip` (so it allows to install python packages in the lo
 
 Run
 ```bash
-$ pip install git+https://github.com/dario2994/pol2dom
+$ pipx install git+https://github.com/dario2994/pol2dom
 ```
 This provides you with the commands `p2d-problem` and `p2d-contest` available in any shell terminal.
 
