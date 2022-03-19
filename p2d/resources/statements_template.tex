@@ -10,6 +10,9 @@
 \usepackage{fancyhdr}
 \usepackage{ifthen}
 \usepackage{graphicx}
+\usepackage{pdfpages}
+\usepackage[strict]{changepage}
+
 % Set max width of \includegraphics to \linewidth.
 \usepackage[export]{adjustbox}
 \let\oldincludegraphics\includegraphics
@@ -31,16 +34,45 @@
 \titleformat*{\subsection}{\normalsize\bfseries}
 
 %%%%%%%%%%%%%%%%%%% HEADER AND FOOTER %%%%%%%%%%%%%%%%%%%%
-\pagestyle{fancy}
+
+\fancypagestyle{problem}{
 \fancyhf{}
+    \renewcommand{\headrulewidth}{0.1pt}
 \setlength\headheight{14pt}
 \lhead{\textsc{Problem \problemletter: \problemtitle}}
 \rhead{\textsc{??CONTEST??}} % e.g., SWERC 2021/22 - Milan
 \rfoot{\thepage\hspace{2em}}
+}
 
+\pagestyle{problem}
+
+
+%%%%%%%%%%%%%%%%%%%%%%% BLANK PAGES %%%%%%%%%%%%%%%%%%%%%%%
+
+\fancypagestyle{blank}{
+    \fancyhf{}
+    \renewcommand{\headrulewidth}{0pt}    
+    \rfoot{\thepage\hspace{2em}}
+}
+
+\newcommand{\insertblankpageifnecessary}{
+    \clearpage
+    \checkoddpage
+    \ifoddpage\else
+    \thispagestyle{blank}
+    \vspace*{\fill}
+    \begin{center}
+    \scalebox{3}{\rotatebox{45}{\color{black!6}\Huge\textbf{BLANK PAGE}}}
+    \vspace{80pt}
+    \end{center}
+    \vspace*{\fill}
+    \fi
+    \cleardoublepage
+}
 
 %%%%%%%%%%%%%%%%%%% PROBLEM HEADER %%%%%%%%%%%%%%%%%%%%
 \newcommand\problemheader{%
+\setcounter{samplescnt}{0}
 {\bf \huge \fbox{\textsc{\problemletter}} \problemtitle}
 \begin{flushright}
     \begin{minipage}[t]{4.5cm}
@@ -53,7 +85,6 @@
 
 %%%%%%%%%%%%%%%%%%% SAMPLES PRETTY PRINTING %%%%%%%%%%%%%%%%%%%%
 \newcounter{samplescnt}
-\setcounter{samplescnt}{0}
 
 \newcommand\printfile[2]{%
 \begin{minipage}[t]{#1}

@@ -11,6 +11,7 @@ The main features are:
 
 - The conversion from a Polygon package into a DOMjudge package is fully automatic and requires no human intervention.
 - Parses the statement from the Polygon package and generates the statement in pdf (with the possibility of [customizing the LaTeX template](#customization-of-the-latex-statement-template)). The samples' explanations are [detected from the notes section in polygon through the use of special markers](#samples-explanation-detection).
+- Can generate also a pdf with the complete problem set of a contest featuring a custom front page.
 - Checkers using testlib.h are supported transparently (by using a modified testlib.h which is DOMjudge compatible).
 - Through the `Judging verifier` feature of DOMjudge, it enforces that the submissions present in polygon get the correct result also in DOMjudge.
 - Through DOMjudge APIs, it imports the problems (if updated) directly into the DOMjudge instance.
@@ -41,7 +42,7 @@ Running
 
 ```p2d-contest --polygon polygon_directory --domjudge domjudge_directory --yaml contest.yaml --send```
 
-searches the latest package of the problems specified in `contest.yaml` in `polygon_directory`; converts them into DOMjudge packages (which are saved in `domjudge_directory`, updating previous versions) and send, through the APIs, the updated packages to the DOMjudge instance specified in `contest.yaml`.
+searches the latest package of the problems specified in `contest.yaml` in `polygon_directory`; converts them into DOMjudge packages (which are saved in `domjudge_directory`, updating previous versions) and send, through the APIs, the updated packages to the DOMjudge instance specified in `contest.yaml`. Moreover, it creates the document `domjudge_directory/problemset.pdf` containing all the problem statements. It is possible to use a custom front page for the problem set pdf through the argument `--front-page`.
 
 The content and the format of `contest.yaml` are described in [Structure of contest.yaml](#structure-of-contestyaml).
 

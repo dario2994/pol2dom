@@ -54,6 +54,7 @@ def prepare_argument_parser():
     parser.add_argument('--force', '-f', action='store_true', help='Whether the script can overwrite the destination given by --to.')
     parser.add_argument('--color', default='black', help='Color of the problem.')
     parser.add_argument('--contest', default='', help='Name of the contest, used only to generate the statement.')
+    parser.add_argument('--save-tex', default='', help='If provided, the tex of the statement (only the statement itself, not a full working tex file) is saved into this path. This can be handy to generate the pdf for the complete problem set of a contest.')
     parser.add_argument('--statements-template', default=os.path.join(RESOURCES_PATH, 'statements_template.tex'), help='Path of the LaTeX statements template.')
     parser.add_argument('--big-sample-size', type=int, default=BIG_SAMPLE_SIZE, help='Number of characters in the longest line of a sample which triggers the call of \'\\bigsample\' instead of \'\\sample\' in the tex source of the statement.')
     parser.add_argument('--update-testlib', action='store_true', help='Whether to update the local version of testlib (syncing it with the last version from the github repository).')
@@ -72,9 +73,15 @@ def parse_samples_explanations(notes):
     curr = ''
     for line in lines:
         if re.fullmatch(r'%BEGIN (\d+)', line.strip()):
+            if test_id != -1:
+                logging.error('In the samples explanations, there are two %BEGIN lines without an %END line in between: %s.' % notes)
+                exit(1)
             assert(test_id == -1)
             test_id = int(re.fullmatch(r'%BEGIN (\d+)', line.strip()).group(1))
         elif re.fullmatch(r'%END', line.strip()):
+            if test_id == -1:
+                logging.error('In the samples explanations, there is an %END line which does not close any %BEGIN line: %s.' % notes)
+                exit(1)
             assert(test_id != -1)
             assert(test_id not in explanations)
             curr = curr[0].upper() + curr[1:]  # Capitalize first letter.
@@ -83,6 +90,9 @@ def parse_samples_explanations(notes):
             test_id = -1
         elif test_id != -1:
             curr += line + '\n'
+    if test_id != -1:
+        logging.error('In the samples explanations, the last %BEGIN line is not matched by an %END line: %s.' % notes)
+        exit(1)
     assert(test_id == -1)
     return explanations
 
@@ -98,7 +108,7 @@ def contains_long_line(args, filename):
 
 # Returns a string containing the statement tex (only what shall go inside
 # \begin{document} \end{document}).
-# The samples (.in/.out) are copied in pdflatex_dir.
+# The samples (.in/.out) and the images are copied in pdflatex_dir.
 def generate_problem_tex(args, problem, pdflatex_dir):
     samples_tex = ''
 
@@ -125,11 +135,9 @@ def generate_problem_tex(args, problem, pdflatex_dir):
         logging.error('No samples found.')
         exit(1)
 
-    for image in problem['statement']['images']:
-        shutil.copyfile(image[1], os.path.join(pdflatex_dir, image[0]))
-
     with open(os.path.join(RESOURCES_PATH, 'problem_template.tex')) as f:
         problem_template = f.read()
+
     replacements_problem = {
         'LETTER': problem['letter'],
         'NAME': problem['name'],
@@ -144,16 +152,32 @@ def generate_problem_tex(args, problem, pdflatex_dir):
         problem_template = problem_template.replace(
             '??%s??' % placeholder, str(replacements_problem[placeholder]))
 
+    for image in problem['statement']['images']:
+        # Giving a name depending on the problem letter to the image so that
+        # if the complete problem set of a contest is compiled in the same
+        # directory no errors are generated because of images in different
+        # problems with the exact same name (e.g., figure.png).
+        image_unique_name = problem['letter'] + '_' + image[0]
+        problem_template = problem_template.replace(image[0], image_unique_name)
+        shutil.copyfile(image[1], os.path.join(pdflatex_dir, image_unique_name))
+
     return problem_template
 
 
-# Execute pdflatex on `pdflatex_dir/tex` and copies the generated pdf document
-# in the `pdf` path.
-def tex2pdf(pdflatex_dir, tex, pdf):
+# Execute pdflatex on `from_` and copies the generated pdf document
+# in the `to` path.
+# from_ is a .tex file, to is a .pdf file.
+def tex2pdf(from_, to):
+    logging.info('Compiling \'%s\' into \'%s\' (pdflatex).' % (from_, to))
+    if not from_.endswith('.tex'):
+        logging.error('The argument from_=\'%s\' passed to tex2pdf is not a .tex file.')
+        exit(1)
+    
+    from_dir = os.path.dirname(from_)
+    from_name = os.path.basename(from_)[:-4]# Without extension
     command_as_list = ['pdflatex', '-interaction=nonstopmode',
-                       '-output-dir=' + pdflatex_dir, '-jobname=problem',
-                       os.path.join(pdflatex_dir, tex)]
-
+                       '-output-dir=' + from_dir, '-jobname=%s' % from_name,
+                       from_]
     logging.debug('pdflatex command = ' + ' '.join(command_as_list))
     pdflatex = subprocess.run(command_as_list, stdout=subprocess.PIPE,
                               shell=False)
@@ -163,8 +187,25 @@ def tex2pdf(pdflatex_dir, tex, pdf):
         logging.error('The pdflatex command returned an error.')
         exit(1)
 
-    shutil.copyfile(os.path.join(pdflatex_dir, 'problem.pdf'), pdf)
+    shutil.copyfile(os.path.join(from_dir, from_name + '.pdf'), to)
 
+def compile_statements_template(
+        statements_template_path, contest, document_content, from_, to):
+    replacements_statements = {
+        'CONTEST': contest,
+        'DOCUMENTCONTENT': document_content
+    }
+    with open(statements_template_path) as f:
+        statements_template = f.read()
+
+    for placeholder in replacements_statements:
+        statements_template = statements_template.replace(
+            '??%s??' % placeholder, str(replacements_statements[placeholder]))
+
+    with open(from_, 'w') as f:
+        f.write(statements_template)
+
+    tex2pdf(from_, to)
 
 # Produce the statement domjudge/problem.pdf.
 def generate_problem_pdf(args, problem, domjudge):
@@ -174,23 +215,9 @@ def generate_problem_pdf(args, problem, domjudge):
 
     problem_tex = generate_problem_tex(args, problem, pdflatex_dir)
 
-    replacements_statements = {
-        'CONTEST': args.contest,
-        'DOCUMENTCONTENT': problem_tex
-    }
-    with open(args.statements_template) as f:
-        statements_template = f.read()
-    for placeholder in replacements_statements:
-        statements_template = statements_template.replace(
-            '??%s??' % placeholder, str(replacements_statements[placeholder]))
-
-    with open(os.path.join(pdflatex_dir, 'statement.tex'), 'w') as f:
-        f.write(statements_template)
-
-    # Compile the tex to pdf.
-    logging.info('Compiling the statement to pdf.')
-    tex2pdf(
-        pdflatex_dir, 'statement.tex', os.path.join(domjudge, 'problem.pdf'))
+    compile_statements_template(args.statements_template, args.contest, problem_tex,
+                                os.path.join(pdflatex_dir, 'statement.tex'),
+                                os.path.join(domjudge, 'problem.pdf'))
 
     if not args.keep_dirs:
         shutil.rmtree(pdflatex_dir)
@@ -238,16 +265,16 @@ solutions: []
     result: string
 '''
 def parse_problem_from_polygon(args, polygon):
-    def abs_path(*path):
+    def pol_path(*path):
         return os.path.join(polygon, *path)
 
     logging.info('Parsing the polygon package directory \'%s\'.' % polygon)
-    logging.debug('Parsing \'%s\'' % abs_path('problem.xml'))
+    logging.debug('Parsing \'%s\'' % pol_path('problem.xml'))
 
     problem = {}
 
     # Metadata
-    problem_xml = xml.etree.ElementTree.parse(abs_path('problem.xml'))
+    problem_xml = xml.etree.ElementTree.parse(pol_path('problem.xml'))
     problem['shortname'] = problem_xml.getroot().attrib['short-name']
     problem['name'] = problem_xml.find('names').find('name').attrib['value']
     problem['letter'] = os.path.splitext(os.path.basename(args.domjudge))[0]
@@ -262,7 +289,7 @@ def parse_problem_from_polygon(args, polygon):
     
     # Statement
     problem['statement'] = {}
-    statement_json_path = abs_path(
+    statement_json_path = pol_path(
         'statements', 'english', 'problem-properties.json')
     with open(statement_json_path) as f:
         statement_json = json.load(f)
@@ -275,8 +302,8 @@ def parse_problem_from_polygon(args, polygon):
         samples = []
         for sample_json in statement_json['sampleTests']:
             sample = {
-                'in': abs_path('statements', 'english', sample_json['inputFile']),
-                'out': abs_path('statements', 'english', sample_json['outputFile']),
+                'in': pol_path('statements', 'english', sample_json['inputFile']),
+                'out': pol_path('statements', 'english', sample_json['outputFile']),
                 'explanation': explanations[sample_id] if sample_id in explanations
                                                        else None
             }
@@ -288,7 +315,7 @@ def parse_problem_from_polygon(args, polygon):
 
     # Detecting images
     problem['statement']['images'] = []
-    statement_path = abs_path('statements', 'english')
+    statement_path = pol_path('statements', 'english')
     image_extensions = ['.jpg', '.gif', '.png', '.jpeg', '.pdf', '.svg']
     for f in os.listdir(statement_path):
         if any([f.lower().endswith(ext) for ext in image_extensions]):
@@ -301,6 +328,7 @@ def parse_problem_from_polygon(args, polygon):
     for testset in problem_xml.find('judging').iter('testset'):
         if testset.attrib['name'] not in ['pretests', 'tests']:
             logging.warning('testset \'%s\' ignored: only the testset \'tests\' is exported in DOMjudge (apart from the samples).' % testset.attrib['name'])
+        local_id = 1
         # Pretests are processed only to collect samples.
         input_format = testset.find('input-path-pattern').text
         output_format = testset.find('answer-path-pattern').text
@@ -308,10 +336,12 @@ def parse_problem_from_polygon(args, polygon):
         for test in testset.iter('test'):
             t = {
                 'num': test_id,
-                'in': abs_path(input_format % test_id),
-                'out': abs_path(output_format % test_id),
+                'in': pol_path(input_format % local_id),
+                'out': pol_path(output_format % local_id),
                 'is_sample': 'sample' in test.attrib
             }
+            local_id += 1
+            
             if testset.attrib['name'] == 'tests' or t['is_sample']:
                 problem['tests'].append(t)
                 test_id += 1
@@ -321,7 +351,7 @@ def parse_problem_from_polygon(args, polygon):
     # Checker
     checker_xml = problem_xml.find('assets').find('checker')
     problem['checker'] = {
-        'source': abs_path(checker_xml.find('source').attrib['path']),
+        'source': pol_path(checker_xml.find('source').attrib['path']),
         'name': checker_xml.attrib['name'] if 'name' in checker_xml.attrib
                                            else None
     }
@@ -334,7 +364,7 @@ def parse_problem_from_polygon(args, polygon):
     if problem_xml.find('assets').find('interactor'):
         logging.debug('The problem is interactive.')
         problem['interactor'] = {
-            'source': abs_path(problem_xml.find('assets').find('interactor')
+            'source': pol_path(problem_xml.find('assets').find('interactor')
                                           .find('source').attrib['path'])
         }
 
@@ -343,7 +373,7 @@ def parse_problem_from_polygon(args, polygon):
     solutions_tag = problem_xml.find('assets').find('solutions')
     for solution in solutions_tag.iter('solution'):
         s = {
-            'source': abs_path(solution.find('source').attrib['path']),
+            'source': pol_path(solution.find('source').attrib['path']),
             'result': solution.attrib['tag']
         }
         problem['solutions'].append(s)
@@ -386,7 +416,6 @@ def convert_to_domjudge(args, problem, domjudge):
     pathlib.Path(secret_dir).mkdir(parents=True)
     for test in problem['tests']:
         destination = sample_dir if test['is_sample'] else secret_dir
-
         shutil.copyfile(
             test['in'], os.path.join(destination, '%s.in' % test['num']))
         shutil.copyfile(
@@ -479,6 +508,17 @@ def p2d_problem(args):
 
     # Parse the polygon package
     problem = parse_problem_from_polygon(args, polygon)
+
+    if args.save_tex:
+        if not os.path.isdir(args.save_tex):
+            logging.error('The directory \'%s\' passed through the command line argument \'--save-tex\' does not exist.' % args.save_tex)
+            exit(1)
+        args.save_tex = os.path.abspath(args.save_tex)
+        tex_source = generate_problem_tex(args, problem, args.save_tex)
+        with open(os.path.join(args.save_tex,
+                               problem['letter'] + '.tex'),
+                  'w') as f:
+            f.write(tex_source)
 
     # Create the domjudge directory.
     if args.domjudge.endswith('.zip'):

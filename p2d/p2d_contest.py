@@ -1,4 +1,5 @@
 import os
+import pathlib
 import platform
 import requests
 import shutil
@@ -48,6 +49,7 @@ def run_p2d_problem(name, old_version, letter, color, contest, polygon, domjudge
             '--to', os.path.join(domjudge, '%s.zip' % letter),
             '--color', color,
             '--contest', contest,
+            '--save-tex', os.path.join(domjudge, 'statements'),
             '--verbosity', 'warning',
             '--force'])
 
@@ -83,15 +85,37 @@ yaml_path = 'all_problems.yaml'
 
 
 def prepare_argument_parser():
-    parser = ArgumentParser(description='Utility script to convert many polygon packages into domjudge packages.')
+    parser = ArgumentParser(description='Utility script to import a whole contest from polygon into domjudge.')
     parser.add_argument('--polygon', '--from', required=True, help='Directory where the polygon packages can be found.')
     parser.add_argument('--domjudge', '--to', required=True, help='Directory where the DOMjudge packages shall be saved.')
     parser.add_argument('--yaml', required=True, help='Yaml file with a list of the problems to convert (it must contain also some additional metadata for each problem).')
     parser.add_argument('--ignore-version', action='store_true', help='All packages are generated again, ignoring the last converted version. Useful if the p2d script is updated or the letters/colors of the problems are changed.')
     parser.add_argument('--ignore-id', action='store_true', help='The packages are sent to the domjudge server without including their id if they have one. Useful if the problems were deleted in the DOMjudge instance.')
     parser.add_argument('--send', action='store_true', help='Whether the packages updated shall be sent to the domjudge server instance.')
+    parser.add_argument('--front-page', default='', help='The front page of the pdf containing the whole problem set. Must be a valid pdf file.')
     
     return parser
+
+def generate_problemset_pdf(contest, letters, frontpage, domjudge):
+    problemset_tex = ''
+
+    if frontpage:
+        frontpage = os.path.abspath(frontpage)
+        problemset_tex += '\\includepdf{%s}\n' % frontpage
+        problemset_tex += '\\insertblankpageifnecessary\n\n'
+
+    for letter in letters:
+        maybe_tex = os.path.join(domjudge, 'statements', letter + '.tex')
+        if not os.path.isfile(maybe_tex):
+            continue
+        problemset_tex += '\\input{%s.tex}\n' % letter
+        problemset_tex += '\\insertblankpageifnecessary\n\n'
+    
+    p2d_problem.compile_statements_template(
+            os.path.join(p2d_problem.RESOURCES_PATH, 'statements_template.tex'),
+            contest, problemset_tex,
+            os.path.join(domjudge, 'statements', 'problemset.tex'),
+            os.path.join(domjudge, 'problemset.pdf'))
 
 def p2d_contest(args):
     with open(args.yaml, 'r') as f:
@@ -99,8 +123,10 @@ def p2d_contest(args):
             config = yaml.safe_load(f)
         except yaml.YAMLError as exc:
             print(exc)
-    problems = config['problems']
 
+    pathlib.Path(os.path.join(args.domjudge, 'statements')).mkdir(exist_ok=True)
+
+    problems = config['problems']
     for p in problems:
         old_version = p['version'] if 'version' in p else -1
         if args.ignore_version:
@@ -122,12 +148,13 @@ def p2d_contest(args):
     with open(yaml_path, 'w', encoding='utf-8') as f:
         yaml.safe_dump(config, f, default_flow_style=False, sort_keys=False)
 
+    generate_problemset_pdf(
+            config['contest_name'], [p['letter'] for p in problems],
+            args.front_page, args.domjudge)
+
 def main():
     args = prepare_argument_parser().parse_args()
     p2d_contest(args)
 
 if __name__ == "__main__":
     main()
-
-# TODO:
-#       Create whole problem set pdf.
