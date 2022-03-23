@@ -4,8 +4,8 @@ Tool to import a problem/contest prepared in [Polygon](https://polygon.codeforce
 
 This tool, offers two commands: `p2d-problem` and `p2d-contest`.
 
-- `p2d-problem` converts a Polygon (full) package into a DOMjudge package.
-- `p2d-contest` handles the conversion of a whole problem set and its import into a DOMjudge instance.
+- `p2d-problem` converts a Polygon (full) package into a DOMjudge package (which is a descendand of the [Problem Package Format](https://icpc.io/problem-package-format/)).
+- `p2d-contest` handles the conversion of a whole problem set, the generation of a pdf of the whole problem set, and its import into a DOMjudge instance.
 
 The main features are:
 
@@ -40,15 +40,15 @@ Use `p2d-problem --help` for a guide.
 
 Running 
 
-```p2d-contest --polygon polygon_directory --domjudge domjudge_directory --yaml contest.yaml --send```
+```p2d-contest --config contest.yaml --import```
 
-searches the latest package of the problems specified in `contest.yaml` in `polygon_directory`; converts them into DOMjudge packages (which are saved in `domjudge_directory`, updating previous versions) and send, through the APIs, the updated packages to the DOMjudge instance specified in `contest.yaml`. Moreover, it creates the document `domjudge_directory/problemset.pdf` containing all the problem statements. It is possible to use a custom front page for the problem set pdf through the argument `--front-page`.
+searches the latest package of the problems specified in `contest.yaml` in `polygon_dir` (specified in `contest.yaml`); converts them into DOMjudge packages in `domjudge_dir` (specified in `contest.yaml`) updating previous versions; and imports, through the APIs, the updated packages into the DOMjudge instance specified in `contest.yaml`. Moreover, it creates the document `domjudge_dir/problemset.pdf` containing all the problem statements. It is possible to use a custom front page for the problem set pdf through the argument `--front-page`.
 
 The content and the format of `contest.yaml` are described in [Structure of contest.yaml](#structure-of-contestyaml).
 
 Use `p2d-contest --help` for a guide.
 
-*Example*: `p2d-contest --polygon ~/Downloads/ --domjudge domjudge_packages/ --yaml swerc.yaml --send`.
+*Example*: `p2d-contest --config swerc.yaml --import`.
 
 ## Installation
 ### Method 1: Install the Python package using `pipx`
@@ -108,8 +108,10 @@ Notice that only the explanation itself shall be among the two magic lines, and 
 
 ## Structure of `contest.yaml`
 
-The file `contest.yaml` (passed to `p2d-contest` via the argument `--yaml`) must be a valid `yaml` file containing the following top-level keys:
+The file `contest.yaml` (passed to `p2d-contest` via the argument `--config`) must be a valid `yaml` file containing the following top-level keys:
 
+- polygon_dir: The directory where the polygon packages shall be searched. It is handy to set it to the local Downloads folder, so that after downloading the packages from Polygon no further action is required.
+- domjudge_dir: The directory where the DOMjudge packages shall be saved. The pdf of the whole problem set is saved in this directory too, with the name `problemset.pdf`.
 - server: The URL of the DOMjudge instance (necessary only if you want to directly import the problems with `--send`).
 - username: Username of an admin user of the DOMjudge instance (necessary only if you want to directly import the problems with `--send`).
 - password: Password of the admin user (necessary only if you want to directly import the problems with `--send`).
@@ -118,14 +120,18 @@ The file `contest.yaml` (passed to `p2d-contest` via the argument `--yaml`) must
 - problems: This is a list of problems. A problem is a dictionary with the following keys:
   - name: Short-name, in polygon, of the problem. This is used to find the polygon package in the directory specified by `--polygon`.
           So, if the name is `lis`, the tool will look for a file (in the directory `--polygon`) with name `lis-VERSION$windows.zip` or `lis-VERSION$linux.zip` (depending on the platform). Notice that this name format is exactly the one used by polygon, so after downloading the package no renaming is necessary.
-  - letter: Letter to be used to identify the problem in DOMjudge.
+  - label: The label used to identify the problem in the scoreboard (usually it is an uppercase letter).
   - color: Color of the problem in DOMjudge.
-  - version: This key is created, and updated, by `p2d-contest`. It denotes the latest package version which was succesfully converted.
-  - id: This key is created by `p2d-contest`. It corresponds to the id of the problem in the DOMjudge instance.
+  - local-version: This key is created, and updated, by `p2d-contest`. It is the version of the latest Polygon package which was succesfully converted in a DOMjudge package.
+  - server-version: This key is created, and updated, by `p2d-contest`. It is the version of the latest Polygon package which was succesfully imported into the DOMjudge instance.
+  - id: This key is created by `p2d-contest`. It corresponds to the (numeric) id of the problem in the DOMjudge instance.
+  - externalid: This key is created by `p2d-contest`. It corresponds to the (alphanumeric) id of the problem in the DOMjudge instance and it must be unique among all problems (it is generated appending a random string to the name of the problem).
 
 *Example*: The following one is a valid `contest.yaml` file.
 
 ```
+polygon_dir: ~/Downloads/
+domjudge_dir: all_problems/
 server: https://www.domjudge.org/demoweb/
 username: admin
 password: admin
@@ -133,9 +139,9 @@ contest_id: 123
 contest_name: International Competition of Programmers
 problems:
 - name: maximum-subarray
-  letter: A
+  label: A
   color: red
 - name: lis
-  letter: B
+  label: B
   color: purple
 ```

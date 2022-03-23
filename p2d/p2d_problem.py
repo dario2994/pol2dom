@@ -55,6 +55,7 @@ def prepare_argument_parser():
     parser.add_argument('--color', default='black', help='Color of the problem.')
     parser.add_argument('--contest', default='', help='Name of the contest, used only to generate the statement.')
     parser.add_argument('--save-tex', default='', help='If provided, the tex of the statement (only the statement itself, not a full working tex file) is saved into this path. This can be handy to generate the pdf for the complete problem set of a contest.')
+    parser.add_argument('--only-tex', action='store_true', help='Whether only the tex (as described in the help section of --save-tex) should be generated without generating a DOMjudge package. This can be passed only if --save-tex is passed.') 
     parser.add_argument('--statements-template', default=os.path.join(RESOURCES_PATH, 'statements_template.tex'), help='Path of the LaTeX statements template.')
     parser.add_argument('--big-sample-size', type=int, default=BIG_SAMPLE_SIZE, help='Number of characters in the longest line of a sample which triggers the call of \'\\bigsample\' instead of \'\\sample\' in the tex source of the statement.')
     parser.add_argument('--update-testlib', action='store_true', help='Whether to update the local version of testlib (syncing it with the last version from the github repository).')
@@ -482,6 +483,10 @@ def p2d_problem(args):
         level=eval('logging.' + args.verbosity.upper())
     )
 
+    if not args.save_tex and args.only_tex:
+        logging.error('The flag --only-tex can be passed only if --save-tex is specified.')
+        exit(1)
+
     if args.domjudge.endswith('/'):
         args.domjudge = args.domjudge[:-1]
 
@@ -521,45 +526,46 @@ def p2d_problem(args):
             f.write(tex_source)
 
     # Create the domjudge directory.
-    if args.domjudge.endswith('.zip'):
-        if os.path.isfile(args.domjudge) and not args.force:
-            raise FileExistsError('The zip file %s already exists. Use --force to let the script overwrite existing files.' % args.domjudge)
-        domjudge = tempfile.mkdtemp(prefix='p2d-domjudge')
-        logging.debug('The temporary directory for the DOMjudge package is %s.'
-                      % domjudge)
-    else:
-        if os.path.isdir(args.domjudge) and not args.force:
-            raise FileExistsError('The directory %s already exists. Use --force to let the script overwrite existing directories.' % args.domjudge)
-        domjudge = args.domjudge
-        # The following three lines guarantee that in the end the domjudge
-        # directory is empty.
-        pathlib.Path(domjudge).mkdir(exist_ok=args.force)
-        shutil.rmtree(domjudge)
-        pathlib.Path(domjudge).mkdir()
+    if not args.only_tex:
+        if args.domjudge.endswith('.zip'):
+            if os.path.isfile(args.domjudge) and not args.force:
+                raise FileExistsError('The zip file %s already exists. Use --force to let the script overwrite existing files.' % args.domjudge)
+            domjudge = tempfile.mkdtemp(prefix='p2d-domjudge')
+            logging.debug('The temporary directory for the DOMjudge package is %s.'
+                          % domjudge)
+        else:
+            if os.path.isdir(args.domjudge) and not args.force:
+                raise FileExistsError('The directory %s already exists. Use --force to let the script overwrite existing directories.' % args.domjudge)
+            domjudge = args.domjudge
+            # The following three lines guarantee that in the end the domjudge
+            # directory is empty.
+            pathlib.Path(domjudge).mkdir(exist_ok=args.force)
+            shutil.rmtree(domjudge)
+            pathlib.Path(domjudge).mkdir()
 
-    logging.debug(json.dumps(problem, sort_keys=True, indent=4))
+        logging.debug(json.dumps(problem, sort_keys=True, indent=4))
 
-    testlib_h = os.path.join(RESOURCES_PATH, 'testlib.h')
-    if args.update_testlib or not os.path.isfile(testlib_h):
-        logging.info('Downloading testlib.h and patching it for DOMjudge compatibility.')
-        generate_testlib_for_domjudge(testlib_h)
+        testlib_h = os.path.join(RESOURCES_PATH, 'testlib.h')
+        if args.update_testlib or not os.path.isfile(testlib_h):
+            logging.info('Downloading testlib.h and patching it for DOMjudge compatibility.')
+            generate_testlib_for_domjudge(testlib_h)
 
-    # Produce the domjudge package.
-    convert_to_domjudge(args, problem, domjudge)
+        # Produce the domjudge package.
+        convert_to_domjudge(args, problem, domjudge)
+
+        # Create the domjudge zip if required.
+        if args.domjudge.endswith('.zip'):
+            logging.info('Zipping the DOMjudge package \'%s\'.' % args.domjudge)
+            shutil.make_archive(args.domjudge[:-4], 'zip', domjudge)
+            if not args.keep_dirs:
+                shutil.rmtree(domjudge)
+
+    logging.info('Converted \'%s\' to the DOMjudge format.'
+                 % problem['shortname'])
 
     # Erase the unzipped polygon package if it were created.
     if zipfile.is_zipfile(args.polygon) and not args.keep_dirs:
         shutil.rmtree(polygon)
-
-    # Create the domjudge zip if required.
-    if args.domjudge.endswith('.zip'):
-        logging.info('Zipping the DOMjudge package \'%s\'.' % args.domjudge)
-        shutil.make_archive(args.domjudge[:-4], 'zip', domjudge)
-        if not args.keep_dirs:
-            shutil.rmtree(domjudge)
-
-    logging.info('Converted \'%s\' to the DOMjudge format.'
-                 % problem['shortname'])
 
 def main():
     args = prepare_argument_parser().parse_args()
