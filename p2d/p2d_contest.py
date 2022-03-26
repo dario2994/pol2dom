@@ -135,6 +135,7 @@ def prepare_argument_parser():
     return parser
 
 def generate_problemset_pdf(contest, labels, frontpage, domjudge):
+    labels.sort()
     problemset_tex = ''
 
     if frontpage:
@@ -218,3 +219,4 @@ if __name__ == "__main__":
     main()
 
 # Make the error printing uniform. Maybe using logging?
+# --ignore-id
