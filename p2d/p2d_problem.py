@@ -66,7 +66,32 @@ def prepare_argument_parser():
 
     return parser
 
+def parse_author_and_preparation(tutorial):
+    lines = tutorial.splitlines()
+    if not lines:
+        return ('', '')
 
+    author = ''
+    preparation = ''
+
+    for line in lines:
+        line = line.strip()
+        if line.startswith('%AUTHOR '):
+            if author:
+                console.warning('There are multiple lines in the tutorial starting with %AUTHOR.')
+            author = line[len('%AUTHOR '):]
+        if line.startswith('%PREPARATION '):
+            if preparation:
+                console.warning('There are multiple lines in the tutorial starting with %PREPARATION.')
+            preparation = line[len('%PREPARATION '):]
+
+    if not author:
+        logging.warning('The AUTHOR line is not present in the tutorial section of the statement.')
+    if not preparation:
+        logging.warning('The PREPARATION line is not present in the tutorial section of the statement.')
+
+    return (author, preparation)
+    
 def parse_samples_explanations(notes):
     lines = notes.splitlines()
     explanations = {}
@@ -106,16 +131,44 @@ def contains_long_line(args, filename):
                 return True
         return False
 
+# Returns a string containing the tex source of the solution (only what shall
+# go inside \begin{document} \end{document}).
+# The images are copied in pdflatex_dir.
+def generate_solution_tex(args, problem, pdflatex_dir):
+    with open(os.path.join(RESOURCES_PATH, 'solution_template.tex')) as f:
+        solution_template = f.read()
 
-# Returns a string containing the statement tex (only what shall go inside
-# \begin{document} \end{document}).
+    replacements_solution = {
+        'LABEL': problem['label'],
+        'NAME': problem['name'],
+        'AUTHOR': problem['author'],
+        'PREPARATION': problem['preparation'],
+        'SOLUTION': problem['statement']['tutorial']
+    }
+    for placeholder in replacements_solution:
+        solution_template = solution_template.replace(
+            '??%s??' % placeholder, str(replacements_solution[placeholder]))
+
+    for image in problem['statement']['images']:
+        # Giving a name depending on the problem label to the image so that
+        # if the complete problem set of a contest is compiled in the same
+        # directory no errors are generated because of images in different
+        # problems with the exact same name (e.g., figure.png).
+        image_unique_name = problem['label'] + '_' + image[0]
+        solution_template = solution_template.replace(image[0], image_unique_name)
+        shutil.copyfile(image[1], os.path.join(pdflatex_dir, image_unique_name))
+
+    return solution_template
+
+# Returns a string containing the tex of the statement (only what shall go
+# inside \begin{document} \end{document}).
 # The samples (.in/.out) and the images are copied in pdflatex_dir.
 def generate_problem_tex(args, problem, pdflatex_dir):
     samples_tex = ''
 
     sample_id = 1
     for sample in problem['statement']['samples']:
-        sample_path = (os.path.join(pdflatex_dir, problem['letter']
+        sample_path = (os.path.join(pdflatex_dir, problem['label']
                        + str(sample_id)))
 
         shutil.copyfile(sample['in'], sample_path + '.in')
@@ -140,7 +193,7 @@ def generate_problem_tex(args, problem, pdflatex_dir):
         problem_template = f.read()
 
     replacements_problem = {
-        'LETTER': problem['letter'],
+        'LABEL': problem['label'],
         'NAME': problem['name'],
         'TIMELIMIT': problem['timelimit'],
         'MEMORYLIMIT': problem['memorylimit'],
@@ -154,11 +207,11 @@ def generate_problem_tex(args, problem, pdflatex_dir):
             '??%s??' % placeholder, str(replacements_problem[placeholder]))
 
     for image in problem['statement']['images']:
-        # Giving a name depending on the problem letter to the image so that
+        # Giving a name depending on the problem label to the image so that
         # if the complete problem set of a contest is compiled in the same
         # directory no errors are generated because of images in different
         # problems with the exact same name (e.g., figure.png).
-        image_unique_name = problem['letter'] + '_' + image[0]
+        image_unique_name = problem['label'] + '_' + image[0]
         problem_template = problem_template.replace(image[0], image_unique_name)
         shutil.copyfile(image[1], os.path.join(pdflatex_dir, image_unique_name))
 
@@ -231,12 +284,13 @@ def generate_problem_pdf(args, problem, domjudge):
 # The returned dictionary has the following structure ('[]' denotes a list):
 '''
 color: string
-letter: string
+label: string
 shortname: string
 name: string
 timelimit: float
 memorylimit: int
-
+author: string
+preparation: string
 
 statement:
     legend: string
@@ -247,6 +301,7 @@ statement:
         out: string
         is_long: boolean
         explanation: string
+    tutorial: string
 
 tests: []
     num: integer
@@ -278,7 +333,7 @@ def parse_problem_from_polygon(args, polygon):
     problem_xml = xml.etree.ElementTree.parse(pol_path('problem.xml'))
     problem['shortname'] = problem_xml.getroot().attrib['short-name']
     problem['name'] = problem_xml.find('names').find('name').attrib['value']
-    problem['letter'] = os.path.splitext(os.path.basename(args.domjudge))[0]
+    problem['label'] = os.path.splitext(os.path.basename(args.domjudge))[0]
     problem['color'] = args.color
     for testset in problem_xml.find('judging').findall('testset'):
         if testset.attrib['name'] == 'tests':
@@ -297,6 +352,9 @@ def parse_problem_from_polygon(args, polygon):
         problem['statement']['legend'] = statement_json['legend']
         problem['statement']['input'] = statement_json['input']
         problem['statement']['output'] = statement_json['output']
+        problem['statement']['tutorial'] = statement_json['tutorial']
+        problem['author'], problem['preparation'] = \
+                parse_author_and_preparation(statement_json['tutorial'])
         explanations = parse_samples_explanations(statement_json['notes'])
 
         sample_id = 1
@@ -305,8 +363,7 @@ def parse_problem_from_polygon(args, polygon):
             sample = {
                 'in': pol_path('statements', 'english', sample_json['inputFile']),
                 'out': pol_path('statements', 'english', sample_json['outputFile']),
-                'explanation': explanations[sample_id] if sample_id in explanations
-                                                       else None
+                'explanation': explanations.get(sample_id)
             }
             sample['is_long'] = contains_long_line(args, sample['in']) \
                                 or contains_long_line(args, sample['out'])
@@ -353,8 +410,7 @@ def parse_problem_from_polygon(args, polygon):
     checker_xml = problem_xml.find('assets').find('checker')
     problem['checker'] = {
         'source': pol_path(checker_xml.find('source').attrib['path']),
-        'name': checker_xml.attrib['name'] if 'name' in checker_xml.attrib
-                                           else None
+        'name': checker_xml.attrib.get('name')
     }
 
     if not problem['checker']['source'].endswith('.cpp'):
@@ -519,11 +575,17 @@ def p2d_problem(args):
             logging.error('The directory \'%s\' passed through the command line argument \'--save-tex\' does not exist.' % args.save_tex)
             exit(1)
         args.save_tex = os.path.abspath(args.save_tex)
-        tex_source = generate_problem_tex(args, problem, args.save_tex)
+        problem_tex = generate_problem_tex(args, problem, args.save_tex)
+        solution_tex = generate_solution_tex(args, problem, args.save_tex)
+
         with open(os.path.join(args.save_tex,
-                               problem['letter'] + '.tex'),
+                               problem['label'] + '-statement.tex'),
                   'w') as f:
-            f.write(tex_source)
+            f.write(problem_tex)
+        with open(os.path.join(args.save_tex,
+                               problem['label'] + '-solution.tex'),
+                  'w') as f:
+            f.write(solution_tex)
 
     # Create the domjudge directory.
     if not args.only_tex:

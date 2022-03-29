@@ -11,6 +11,7 @@
 \usepackage{ifthen}
 \usepackage{graphicx}
 \usepackage{pdfpages}
+\usepackage{calc}
 \usepackage[strict]{changepage}
 
 % Set max width of \includegraphics to \linewidth.
@@ -39,12 +40,19 @@
 \fancyhf{}
     \renewcommand{\headrulewidth}{0.1pt}
 \setlength\headheight{14pt}
-\lhead{\textsc{Problem \problemletter: \problemtitle}}
+\lhead{\textsc{Problem \problemlabel: \problemtitle}}
 \rhead{\textsc{??CONTEST??}} % e.g., SWERC 2021/22 - Milan
 \rfoot{\thepage\hspace{2em}}
 }
 
-\pagestyle{problem}
+\fancypagestyle{solution}{
+\fancyhf{}
+    \renewcommand{\headrulewidth}{0.1pt}
+\setlength\headheight{14pt}
+\lhead{\textsc{\problemlabel: \problemtitle}}
+\rhead{\textsc{Solutions of ??CONTEST??}} % e.g., SWERC 2021/22 - Milan
+\rfoot{\thepage\hspace{2em}}
+}
 
 
 %%%%%%%%%%%%%%%%%%%%%%% BLANK PAGES %%%%%%%%%%%%%%%%%%%%%%%
@@ -70,14 +78,28 @@
     \cleardoublepage
 }
 
-%%%%%%%%%%%%%%%%%%% PROBLEM HEADER %%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%% PROBLEM TITLE %%%%%%%%%%%%%%%%%%%%
 \newcommand\problemheader{%
 \setcounter{samplescnt}{0}
-{\bf \huge \fbox{\textsc{\problemletter}} \problemtitle}
+{\bf \huge \fbox{\textsc{\problemlabel}} \problemtitle}
 \begin{flushright}
     \begin{minipage}[t]{4.5cm}
         \textsc{Time limit: \hspace{1.55em}\timelimit{}s} \\
         \textsc{Memory limit: \memorylimit{}MB}
+    \end{minipage}
+\end{flushright}
+\vspace{2em}%
+}
+
+\newcommand\solutionheader{%
+{\bf \huge \fbox{\textsc{\problemlabel}} \problemtitle}
+\begin{flushright}
+    \begin{minipage}[t]{\maxof
+        {\widthof{XXXXXAuthor: \hspace{2.1em}\problemauthor{}}}
+        {\widthof{XXXXXPreparation: \problempreparation{}}}
+    }
+        \textsc{Author: \hspace{2.1em}\problemauthor{}} \\
+        \textsc{Preparation: \problempreparation{}}
     \end{minipage}
 \end{flushright}
 \vspace{2em}%
@@ -155,10 +177,12 @@
 
 %%%%%%%%%%%%%%%%%%% PROBLEM METADATA %%%%%%%%%%%%%%%%%%%%
 
-\newcommand\problemletter{undefined}
+\newcommand\problemlabel{undefined}
 \newcommand\problemtitle{undefined}
 \newcommand\timelimit{undefined}
 \newcommand\memorylimit{undefined}
+\newcommand\problemauthor{undefined}
+\newcommand\problempreparation{undefined}
 
  
 \begin{document}

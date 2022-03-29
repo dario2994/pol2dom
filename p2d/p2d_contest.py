@@ -54,7 +54,7 @@ def run_p2d_problem(
         '--to', os.path.join(domjudge, '%s.zip' % label),
         '--color', color,
         '--contest', contest,
-        '--save-tex', os.path.join(domjudge, 'statements'),
+        '--save-tex', os.path.join(domjudge, 'tex'),
         '--verbosity', 'warning',
         '--force']
 
@@ -67,7 +67,7 @@ def run_p2d_problem(
         p2d_problem.p2d_problem(args)
     except:
         print(ERROR_SYMBOL, name, ':', 'Error during the execution of p2d-problem with arguments %s.' % args)
-        return old_version
+        return old_local_version
 
     if local_version == old_local_version:
         print(NEUTRAL_SYMBOL, name, ':', 'Already up to date, not modified.')
@@ -130,7 +130,6 @@ def prepare_argument_parser():
     parser.add_argument('--ignore-local-version', action='store_true', help='All packages are generated.')
     parser.add_argument('--ignore-server-version', action='store_true', help='All packages are sent to the server.')
     parser.add_argument('--import', action='store_true', dest='import_', help='Whether the packages updated shall be imported into the domjudge server instance.')
-    parser.add_argument('--front-page', default='', help='The front page of the pdf of the whole problem set. Must be a valid pdf file.')
     
     return parser
 
@@ -144,17 +143,41 @@ def generate_problemset_pdf(contest, labels, frontpage, domjudge):
         problemset_tex += '\\insertblankpageifnecessary\n\n'
 
     for label in labels:
-        maybe_tex = os.path.join(domjudge, 'statements', label + '.tex')
+        maybe_tex = os.path.join(domjudge, 'tex', label + '-statement.tex')
         if not os.path.isfile(maybe_tex):
             continue
-        problemset_tex += '\\input{%s.tex}\n' % label
+        problemset_tex += '\\input{%s-statement.tex}\n' % label
         problemset_tex += '\\insertblankpageifnecessary\n\n'
+
+    # Executing pdflatex twice because otherwise the command
+    # \insertblankpageifnecessary does not produce the correct output.
+    for _ in range(2):
+        p2d_problem.compile_statements_template(
+                os.path.join(p2d_problem.RESOURCES_PATH, 'statements_template.tex'),
+                contest, problemset_tex,
+                os.path.join(domjudge, 'tex', 'problemset.tex'),
+                os.path.join(domjudge, 'problemset.pdf'))
+
+def generate_solutions_pdf(contest, labels, frontpage, domjudge):
+    labels.sort()
+    solutions_tex = ''
+
+    if frontpage:
+        frontpage = os.path.abspath(frontpage)
+        solutions_tex += '\\includepdf{%s}\n\n' % frontpage
+
+    for label in labels:
+        maybe_tex = os.path.join(domjudge, 'tex', label + '-solution.tex')
+        if not os.path.isfile(maybe_tex):
+            continue
+        solutions_tex += '\\input{%s-solution.tex}\n' % label
+        solutions_tex += '\\clearpage\n'
     
     p2d_problem.compile_statements_template(
             os.path.join(p2d_problem.RESOURCES_PATH, 'statements_template.tex'),
-            contest, problemset_tex,
-            os.path.join(domjudge, 'statements', 'problemset.tex'),
-            os.path.join(domjudge, 'problemset.pdf'))
+            contest, solutions_tex,
+            os.path.join(domjudge, 'tex', 'solutions.tex'),
+            os.path.join(domjudge, 'solutions.pdf'))
 
 def p2d_contest(args):
     with open(args.config, 'r') as f:
@@ -171,7 +194,7 @@ def p2d_contest(args):
     config['polygon_dir'] = os.path.expanduser(config['polygon_dir'])
     config['domjudge_dir'] = os.path.expanduser(config['domjudge_dir'])
     
-    pathlib.Path(os.path.join(config['domjudge_dir'], 'statements')) \
+    pathlib.Path(os.path.join(config['domjudge_dir'], 'tex')) \
             .mkdir(exist_ok=True)
 
     problems = config['problems']
@@ -209,7 +232,11 @@ def p2d_contest(args):
 
     generate_problemset_pdf(
             config['contest_name'], [p['label'] for p in problems],
-            args.front_page, config['domjudge_dir'])
+            config.get('front_page_problemset'), config['domjudge_dir'])
+
+    generate_solutions_pdf(
+            config['contest_name'], [p['label'] for p in problems],
+            config.get('front_page_solutions'), config['domjudge_dir'])
 
 def main():
     args = prepare_argument_parser().parse_args()
@@ -219,4 +246,3 @@ if __name__ == "__main__":
     main()
 
 # Make the error printing uniform. Maybe using logging?
-# --ignore-id
