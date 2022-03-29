@@ -4,7 +4,7 @@ Tool to import a problem/contest prepared in [Polygon](https://polygon.codeforce
 
 This tool, offers two commands: `p2d-problem` and `p2d-contest`.
 
-- `p2d-problem` converts a Polygon (full) package into a DOMjudge package (which is a descendand of the [Problem Package Format](https://icpc.io/problem-package-format/)).
+- `p2d-problem` converts a Polygon (full) package into a DOMjudge package (which is a descendant of the [Problem Package Format](https://icpc.io/problem-package-format/)).
 - `p2d-contest` handles the conversion of a whole problem set, its import into a DOMjudge instance, the generation of the pdf of the whole problem set, the generation of the solutions of the whole problem set.
 
 The main features are:
@@ -12,7 +12,7 @@ The main features are:
 - The conversion from a Polygon package into a DOMjudge package is fully automatic and requires no human intervention.
 - Parses the statement from the Polygon package and generates the statement in pdf (with the possibility of [customizing the LaTeX template](#customization-of-the-latex-statement-template)). The samples' explanations are [detected from the notes section in polygon through the use of special markers](#samples-explanation-detection).
 - Can generate a pdf with the complete problem set of a contest featuring a custom front page.
-- Can generate a pdf with the solutions of the problem set of a contest featuring a custom front page. In the solutions, the author of the problem and the person who prepared it are mentioned (see the section [Parsing the authors of a problem](#author-detection)).
+- Can generate a pdf with the solutions of a contest featuring a custom front page. In the solutions, the author of the problem and the person who prepared it are mentioned (see the section [Author Detection](#author-detection)).
 - Checkers using testlib.h are supported transparently (by using a modified testlib.h which is DOMjudge compatible).
 - Through the `Judging verifier` feature of DOMjudge, it enforces that the submissions present in polygon get the correct result also in DOMjudge.
 - Through DOMjudge APIs, it imports the problems (if updated) directly into the DOMjudge instance.
@@ -109,7 +109,7 @@ Notice that only the explanation itself shall be among the two magic lines, and 
 
 ## Author Detection
 
-In order to include in the booklet with the solutions the names of those who authored and prepared the various problem one can include such metadata in the `tutorial` section in Polygon.
+In order to include in the booklet with the solutions the names of those who authored and prepared the various problems, one shall include such metadata in the `tutorial` section in Polygon.
 
 In particolar, the first two lines of the `tutorial` section shall be
 
