@@ -55,7 +55,10 @@ def prepare_argument_parser():
     parser.add_argument('--color', default='black', help='Color of the problem.')
     parser.add_argument('--contest', default='', help='Name of the contest, used only to generate the statement.')
     parser.add_argument('--save-tex', default='', help='If provided, the tex of the statement (only the statement itself, not a full working tex file) is saved into this path. This can be handy to generate the pdf for the complete problem set of a contest.')
-    parser.add_argument('--only-tex', action='store_true', help='Whether only the tex (as described in the help section of --save-tex) should be generated without generating a DOMjudge package. This can be passed only if --save-tex is passed.') 
+    parser.add_argument('--only-tex', action='store_true', help='Whether only the tex (as described in the help section of --save-tex) should be generated without generating a DOMjudge package. This can be passed only if --save-tex is passed.')
+    parser.add_argument('--override-time-limit', type=float, help='Override the time limit set in the polygon package with the value (in seconds) given with this argument.')
+    parser.add_argument('--override-memory-limit', type=int, help='Override the memory limit set in the polygon package with the value (in MiB) given with this argument.')
+    parser.add_argument('--hide-tl-ml', action='store_true', help='Whether the time limit and the memory limit shall be shown in the statement.') 
     parser.add_argument('--statements-template', default=os.path.join(RESOURCES_PATH, 'statements_template.tex'), help='Path of the LaTeX statements template.')
     parser.add_argument('--big-sample-size', type=int, default=BIG_SAMPLE_SIZE, help='Number of characters in the longest line of a sample which triggers the call of \'\\bigsample\' instead of \'\\sample\' in the tex source of the statement.')
     parser.add_argument('--update-testlib', action='store_true', help='Whether to update the local version of testlib (syncing it with the last version from the github repository).')
@@ -140,6 +143,7 @@ def generate_solution_tex(args, problem, pdflatex_dir):
 
     replacements_solution = {
         'LABEL': problem['label'],
+        'PROBLEM': problem['color'],
         'NAME': problem['name'],
         'AUTHOR': problem['author'],
         'PREPARATION': problem['preparation'],
@@ -194,9 +198,11 @@ def generate_problem_tex(args, problem, pdflatex_dir):
 
     replacements_problem = {
         'LABEL': problem['label'],
+        'PROBLEM': problem['color'],
         'NAME': problem['name'],
         'TIMELIMIT': problem['timelimit'],
         'MEMORYLIMIT': problem['memorylimit'],
+        'SHOWTLML': '0' if args.hide_tl_ml else '1',
         'LEGEND': problem['statement']['legend'],
         'INPUT': problem['statement']['input'],
         'OUTPUT': problem['statement']['output'],
@@ -287,8 +293,8 @@ color: string
 label: string
 shortname: string
 name: string
-timelimit: float
-memorylimit: int
+timelimit: float (seconds)
+memorylimit: int (MiB)
 author: string
 preparation: string
 
@@ -340,8 +346,19 @@ def parse_problem_from_polygon(args, polygon):
             tl_str = testset.find('time-limit').text
             ml_str = testset.find('memory-limit').text
             problem['timelimit'] = float(tl_str) / 1000.0
-            problem['memorylimit'] = int(ml_str) // 2**20
+            # In the polygon package the memory limit is given in byte.
+            # The memory limit written in polygon is interpreted as MiB, thus
+            # here we recover such number dividing by 2**20.
+            # DOMjudge interpret this value in MiB, so the conversion is exact
+            # see icpc.io/problem-package-format/spec/problem_package_format#limits).
+            problem['memorylimit'] = int(ml_str) // 2**20 # MiB
     assert('timelimit' in problem and 'memorylimit' in problem)
+    
+    if args.override_time_limit:
+        problem['timelimit'] = args.override_time_limit
+
+    if args.override_memory_limit:
+        problem['memorylimit'] = args.override_memory_limit
     
     # Statement
     problem['statement'] = {}

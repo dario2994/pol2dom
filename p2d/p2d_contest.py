@@ -1,3 +1,5 @@
+import contextlib
+from http.client import HTTPConnection
 import logging
 import os
 import pathlib
@@ -16,6 +18,31 @@ from . import p2d_problem
 OK_SYMBOL = u'\u2705'
 NEUTRAL_SYMBOL = '  '
 ERROR_SYMBOL = u'\u274C'
+
+
+def debug_requests_on():
+    HTTPConnection.debuglevel = 1
+    logging.basicConfig()
+    logging.getLogger().setLevel(logging.DEBUG)
+    requests_log = logging.getLogger("requests.packages.urllib3")
+    requests_log.setLevel(logging.DEBUG)
+    requests_log.propagate = True
+
+def debug_requests_off():
+    HTTPConnection.debuglevel = 0
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.WARNING)
+    root_logger.handlers = []
+    requests_log = logging.getLogger("requests.packages.urllib3")
+    requests_log.setLevel(logging.WARNING)
+    requests_log.propagate = False
+
+@contextlib.contextmanager
+def debug_requests():
+    '''Use with 'with'!'''
+    debug_requests_on()
+    yield
+    debug_requests_off()
 
 def generate_externalid(problem):
     random_suffix = ''.join(random.choice(string.ascii_uppercase) for _ in range(6))
@@ -37,8 +64,8 @@ def find_latest_local_version(name, polygon):
     return version
 
 def run_p2d_problem(
-        name, old_local_version, label, color, contest, polygon, domjudge):
-    local_version = find_latest_local_version(name, polygon)
+        old_local_version, problem, contest, hide_tl_ml, polygon, domjudge):
+    local_version = find_latest_local_version(problem['name'], polygon)
     if local_version == -1:
         print(ERROR_SYMBOL, name, ':', 'Not found.')
         return old_local_version
@@ -49,10 +76,11 @@ def run_p2d_problem(
     assert(old_local_version <= local_version)
 
     args_list = \
-        ['--from', os.path.join(polygon, '%s-%s%s'
-                                         % (name, local_version, package_suffix())),
-        '--to', os.path.join(domjudge, '%s.zip' % label),
-        '--color', color,
+        ['--from', os.path.join(polygon, '%s-%s%s' % (problem['name'],
+                                                      local_version,
+                                                      package_suffix())),
+        '--to', os.path.join(domjudge, '%s.zip' % problem['label']),
+        '--color', problem['color'],
         '--contest', contest,
         '--save-tex', os.path.join(domjudge, 'tex'),
         '--verbosity', 'warning',
@@ -60,20 +88,33 @@ def run_p2d_problem(
 
     if local_version == old_local_version:
         args_list.append('--only-tex')
+
+    if 'override_time_limit' in problem:
+        args_list.append('--override-time-limit')
+        args_list.append(str(problem['override_time_limit'])) # in seconds
+
+    if 'override_memory_limit' in problem:
+        args_list.append('--override-memory-limit')
+        args_list.append(str(problem['override_memory_limit'])) # in MiB
+
+    if hide_tl_ml:
+        args_list.append('--hide-tl-ml')
     
     args = p2d_problem.prepare_argument_parser().parse_args(args_list)
 
     try:
         p2d_problem.p2d_problem(args)
     except:
-        print(ERROR_SYMBOL, name, ':', 'Error during the execution of p2d-problem with arguments %s.' % args)
+        print(ERROR_SYMBOL, problem['name'], ':', 'Error during the execution of p2d-problem with arguments %s.' % args)
         return old_local_version
 
     if local_version == old_local_version:
-        print(NEUTRAL_SYMBOL, name, ':', 'Already up to date, not modified.')
+        print(NEUTRAL_SYMBOL, problem['name'], ':', 'Already up to date, not modified (version %s).' % local_version)
     else:
-        print(OK_SYMBOL, name, ':', 'Converted into \'%s\'.'
-                                    % (os.path.join(domjudge, label + '.zip')))
+        print(OK_SYMBOL, problem['name'], ':',
+              'Converted into \'%s\' (version %s).' % (
+                    os.path.join(domjudge, problem['label'] + '.zip'), local_version))
+
     return local_version
 
 def call_domjudge_api(config, api_address, data, files):
@@ -88,7 +129,8 @@ def update_problem_api(zip_file, problem_id, config):
     api_address = '/api/v4/contests/%s/problems' % config['contest_id']
     
     with open(zip_file, 'rb') as f:
-        res = call_domjudge_api(config, api_address, {'problem': problem_id},
+        res = call_domjudge_api(config, api_address,
+                                {'problem': problem_id},
                                 {'zip': (zip_file, f)})
 
     if res.status_code != 200 or not res.json()['problem_id']:
@@ -129,6 +171,7 @@ def prepare_argument_parser():
     parser.add_argument('--config', required=True, help='Yaml file describing the contest. It contains a list of the problems to convert (with some metadata). It contains also: where to find the Polygon packages, where to save the DOMjudge packages, how to access the DOMjudge server.')
     parser.add_argument('--ignore-local-version', action='store_true', help='All packages are generated.')
     parser.add_argument('--ignore-server-version', action='store_true', help='All packages are sent to the server.')
+    parser.add_argument('--hide-tl-ml', action='store_true', help='Whether the time limit and the memory limit shall be shown in the statement.')
     parser.add_argument('--import', action='store_true', dest='import_', help='Whether the packages updated shall be imported into the domjudge server instance.')
     
     return parser
@@ -203,9 +246,11 @@ def p2d_contest(args):
         if args.ignore_local_version:
             old_local_version = -1
         p['local_version'] = run_p2d_problem(
-                p['name'], old_local_version, p['label'], p['color'],
+                old_local_version, p,
                 config['contest_name'],
-                config['polygon_dir'], config['domjudge_dir'])
+                args.hide_tl_ml,
+                config['polygon_dir'],
+                config['domjudge_dir'])
 
         if not args.import_: continue
 
@@ -246,3 +291,5 @@ if __name__ == "__main__":
     main()
 
 # Make the error printing uniform. Maybe using logging?
+#
+# Colored balloon in the statement.

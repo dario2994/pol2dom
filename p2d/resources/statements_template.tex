@@ -12,6 +12,9 @@
 \usepackage{graphicx}
 \usepackage{pdfpages}
 \usepackage{calc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
 \usepackage[strict]{changepage}
 
 % Set max width of \includegraphics to \linewidth.
@@ -79,30 +82,35 @@
 }
 
 %%%%%%%%%%%%%%%%%%% PROBLEM TITLE %%%%%%%%%%%%%%%%%%%%
-\newcommand\problemheader{%
-\setcounter{samplescnt}{0}
-{\bf \huge \fbox{\textsc{\problemlabel}} \problemtitle}
+
+\newcommand\tlml{%
+\if \showtlml 1
 \begin{flushright}
     \begin{minipage}[t]{4.5cm}
         \textsc{Time limit: \hspace{1.55em}\timelimit{}s} \\
         \textsc{Memory limit: \memorylimit{}MB}
+        % The memory limit is in MiB, but most contestants don't know the difference and the difference is minimal, so we prefer to write MB.
     \end{minipage}
 \end{flushright}
+\fi
+}
+
+\newcommand\problemheader{%
+\setcounter{samplescnt}{0}
+{\bf \huge \fbox{\textsc{\problemlabel}} \problemtitle}
+\tlml
 \vspace{2em}%
 }
 
 \newcommand\solutionheader{%
 {\bf \huge \fbox{\textsc{\problemlabel}} \problemtitle}
 \begin{flushright}
-    \begin{minipage}[t]{\maxof
-        {\widthof{XXXXXAuthor: \hspace{2.1em}\problemauthor{}}}
-        {\widthof{XXXXXPreparation: \problempreparation{}}}
-    }
-        \textsc{Author: \hspace{2.1em}\problemauthor{}} \\
-        \textsc{Preparation: \problempreparation{}}
-    \end{minipage}
+    \begin{tabular}{l l}
+        \textsc{Author:} & \textsc{\problemauthor{}} \\ 
+        \textsc{Preparation:} & \textsc{\problempreparation{}}     
+    \end{tabular}
 \end{flushright}
-\vspace{2em}%
+\vspace{1em}%
 }
 
 %%%%%%%%%%%%%%%%%%% SAMPLES PRETTY PRINTING %%%%%%%%%%%%%%%%%%%%
@@ -181,6 +189,7 @@
 \newcommand\problemtitle{undefined}
 \newcommand\timelimit{undefined}
 \newcommand\memorylimit{undefined}
+\newcommand\showtlml{undefined}
 \newcommand\problemauthor{undefined}
 \newcommand\problempreparation{undefined}
 
