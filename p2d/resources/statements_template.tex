@@ -1,7 +1,9 @@
 \documentclass[11pt,final,twoside]{article}
 
 %%%%%%%%%%%%%%%%%%% PACKAGES %%%%%%%%%%%%%%%%%%%%
-\usepackage[a4paper, margin={2cm, 2.5cm, 2cm, 3.5cm}]{geometry}
+\usepackage[a4paper, top=2.5cm, bottom=3.5cm, inner=2cm, outer=2.5cm]{geometry}
+
+\usepackage[usenames,dvipsnames]{xcolor}
 \usepackage[T1]{fontenc}    
 \usepackage[utf8]{inputenc}
 \usepackage{verbatim}
@@ -15,6 +17,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{hyperref}
+\usepackage{tikz}
 \usepackage[strict]{changepage}
 
 % Set max width of \includegraphics to \linewidth.
@@ -44,7 +47,7 @@
     \renewcommand{\headrulewidth}{0.1pt}
 \setlength\headheight{14pt}
 \lhead{\textsc{Problem \problemlabel: \problemtitle}}
-\rhead{\textsc{??CONTEST??}} % e.g., SWERC 2021/22 - Milan
+\rhead{\textsc{\contestname}} % e.g., SWERC 2021/22 - Milan
 \rfoot{\thepage\hspace{2em}}
 }
 
@@ -53,7 +56,7 @@
     \renewcommand{\headrulewidth}{0.1pt}
 \setlength\headheight{14pt}
 \lhead{\textsc{\problemlabel: \problemtitle}}
-\rhead{\textsc{Solutions of ??CONTEST??}} % e.g., SWERC 2021/22 - Milan
+\rhead{\textsc{Solutions of \contestname}} % e.g., SWERC 2021/22 - Milan
 \rfoot{\thepage\hspace{2em}}
 }
 
@@ -83,6 +86,17 @@
 
 %%%%%%%%%%%%%%%%%%% PROBLEM TITLE %%%%%%%%%%%%%%%%%%%%
 
+\newcommand\balloon{%
+\if \showballoon 1
+\begin{tikzpicture}[scale=0.5, overlay, shift={(34.5, 0.5)}]
+    \shade[ball color = \problemcolor] ellipse (1.75 and 2);
+    \shade[ball color = \problemcolor] (-.1,-2) -- (-.3,-2.2) -- (.3,-2.2) -- (.1,-2) -- cycle;
+    \path (0, -2.2) edge [out=250, in=120] (0.3, -4);
+    \path (0.3, -4) edge [out=-60, in=60] (0, -6);
+\end{tikzpicture}
+\fi
+}
+
 \newcommand\tlml{%
 \if \showtlml 1
 \begin{flushright}
@@ -97,6 +111,7 @@
 
 \newcommand\problemheader{%
 \setcounter{samplescnt}{0}
+\balloon
 {\bf \huge \fbox{\textsc{\problemlabel}} \problemtitle}
 \tlml
 \vspace{2em}%
@@ -183,13 +198,18 @@
 \ignorespacesafterend
 }
 
+%%%%%%%%%%%%%%%%%%% CONTEST METADATA %%%%%%%%%%%%%%%%%%%%
+\newcommand\contestname{??CONTESTNAME??}
+\newcommand\showballoon{??SHOWBALLOON??}
+\newcommand\showtlml{??SHOWTLML??}
+
 %%%%%%%%%%%%%%%%%%% PROBLEM METADATA %%%%%%%%%%%%%%%%%%%%
 
 \newcommand\problemlabel{undefined}
+\newcommand\problemcolor{undefined}
 \newcommand\problemtitle{undefined}
 \newcommand\timelimit{undefined}
 \newcommand\memorylimit{undefined}
-\newcommand\showtlml{undefined}
 \newcommand\problemauthor{undefined}
 \newcommand\problempreparation{undefined}
 

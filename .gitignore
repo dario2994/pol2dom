@@ -3,3 +3,7 @@ build/
 *.egg-info/
 *.log
 testlib.h
+p2d/resources/*.aux
+p2d/resources/*.out
+p2d/resources/*.pdf
+p2d/experimental/

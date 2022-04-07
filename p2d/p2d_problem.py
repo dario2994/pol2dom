@@ -58,7 +58,8 @@ def prepare_argument_parser():
     parser.add_argument('--only-tex', action='store_true', help='Whether only the tex (as described in the help section of --save-tex) should be generated without generating a DOMjudge package. This can be passed only if --save-tex is passed.')
     parser.add_argument('--override-time-limit', type=float, help='Override the time limit set in the polygon package with the value (in seconds) given with this argument.')
     parser.add_argument('--override-memory-limit', type=int, help='Override the memory limit set in the polygon package with the value (in MiB) given with this argument.')
-    parser.add_argument('--hide-tl-ml', action='store_true', help='Whether the time limit and the memory limit shall be shown in the statement.') 
+    parser.add_argument('--hide-balloon', action='store_true', help='Whether the colored picture of a balloon shall be shown in the statement.') 
+    parser.add_argument('--hide-tlml', action='store_true', help='Whether the time limit and the memory limit shall be shown in the statement.') 
     parser.add_argument('--statements-template', default=os.path.join(RESOURCES_PATH, 'statements_template.tex'), help='Path of the LaTeX statements template.')
     parser.add_argument('--big-sample-size', type=int, default=BIG_SAMPLE_SIZE, help='Number of characters in the longest line of a sample which triggers the call of \'\\bigsample\' instead of \'\\sample\' in the tex source of the statement.')
     parser.add_argument('--update-testlib', action='store_true', help='Whether to update the local version of testlib (syncing it with the last version from the github repository).')
@@ -143,7 +144,7 @@ def generate_solution_tex(args, problem, pdflatex_dir):
 
     replacements_solution = {
         'LABEL': problem['label'],
-        'PROBLEM': problem['color'],
+        'COLOR': problem['color'],
         'NAME': problem['name'],
         'AUTHOR': problem['author'],
         'PREPARATION': problem['preparation'],
@@ -198,11 +199,10 @@ def generate_problem_tex(args, problem, pdflatex_dir):
 
     replacements_problem = {
         'LABEL': problem['label'],
-        'PROBLEM': problem['color'],
+        'COLOR': problem['color'],
         'NAME': problem['name'],
         'TIMELIMIT': problem['timelimit'],
         'MEMORYLIMIT': problem['memorylimit'],
-        'SHOWTLML': '0' if args.hide_tl_ml else '1',
         'LEGEND': problem['statement']['legend'],
         'INPUT': problem['statement']['input'],
         'OUTPUT': problem['statement']['output'],
@@ -249,10 +249,13 @@ def tex2pdf(from_, to):
 
     shutil.copyfile(os.path.join(from_dir, from_name + '.pdf'), to)
 
-def compile_statements_template(
-        statements_template_path, contest, document_content, from_, to):
+# params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
+def compile_statements_template(statements_template_path, document_content,
+                                from_, to, params):
     replacements_statements = {
-        'CONTEST': contest,
+        'CONTESTNAME': params['contest_name'],
+        'SHOWBALLOON': 0 if params['hide_balloon'] else 1,
+        'SHOWTLML': 0 if params['hide_tlml'] else 1,
         'DOCUMENTCONTENT': document_content
     }
     with open(statements_template_path) as f:
@@ -275,9 +278,15 @@ def generate_problem_pdf(args, problem, domjudge):
 
     problem_tex = generate_problem_tex(args, problem, pdflatex_dir)
 
-    compile_statements_template(args.statements_template, args.contest, problem_tex,
+    pdf_generations_params = {
+        'contest_name': args.contest,
+        'hide_balloon': args.hide_balloon,
+        'hide_tlml': args.hide_tlml
+    }
+    compile_statements_template(args.statements_template, problem_tex,
                                 os.path.join(pdflatex_dir, 'statement.tex'),
-                                os.path.join(domjudge, 'problem.pdf'))
+                                os.path.join(domjudge, 'problem.pdf'),
+                                pdf_generations_params)
 
     if not args.keep_dirs:
         shutil.rmtree(pdflatex_dir)

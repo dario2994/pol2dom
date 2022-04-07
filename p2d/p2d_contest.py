@@ -63,8 +63,9 @@ def find_latest_local_version(name, polygon):
                 version = max(version, int(f[len(prefix):-len(suffix)]))
     return version
 
+# params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
 def run_p2d_problem(
-        old_local_version, problem, contest, hide_tl_ml, polygon, domjudge):
+        old_local_version, problem, polygon, domjudge, params):
     local_version = find_latest_local_version(problem['name'], polygon)
     if local_version == -1:
         print(ERROR_SYMBOL, name, ':', 'Not found.')
@@ -81,7 +82,7 @@ def run_p2d_problem(
                                                       package_suffix())),
         '--to', os.path.join(domjudge, '%s.zip' % problem['label']),
         '--color', problem['color'],
-        '--contest', contest,
+        '--contest', params['contest_name'],
         '--save-tex', os.path.join(domjudge, 'tex'),
         '--verbosity', 'warning',
         '--force']
@@ -97,8 +98,11 @@ def run_p2d_problem(
         args_list.append('--override-memory-limit')
         args_list.append(str(problem['override_memory_limit'])) # in MiB
 
-    if hide_tl_ml:
-        args_list.append('--hide-tl-ml')
+    if params['hide_balloon']:
+        args_list.append('--hide-balloon')
+    
+    if params['hide_tlml']:
+        args_list.append('--hide-tlml')
     
     args = p2d_problem.prepare_argument_parser().parse_args(args_list)
 
@@ -171,12 +175,14 @@ def prepare_argument_parser():
     parser.add_argument('--config', required=True, help='Yaml file describing the contest. It contains a list of the problems to convert (with some metadata). It contains also: where to find the Polygon packages, where to save the DOMjudge packages, how to access the DOMjudge server.')
     parser.add_argument('--ignore-local-version', action='store_true', help='All packages are generated.')
     parser.add_argument('--ignore-server-version', action='store_true', help='All packages are sent to the server.')
-    parser.add_argument('--hide-tl-ml', action='store_true', help='Whether the time limit and the memory limit shall be shown in the statement.')
+    parser.add_argument('--hide-balloon', action='store_true', help='Whether the colored picture of a balloon shall be shown in the statement.')
+    parser.add_argument('--hide-tlml', action='store_true', help='Whether the time limit and the memory limit shall be shown in the statement.')
     parser.add_argument('--import', action='store_true', dest='import_', help='Whether the packages updated shall be imported into the domjudge server instance.')
     
     return parser
 
-def generate_problemset_pdf(contest, labels, frontpage, domjudge):
+# params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
+def generate_problemset_pdf(labels, frontpage, domjudge, params):
     labels.sort()
     problemset_tex = ''
 
@@ -197,11 +203,13 @@ def generate_problemset_pdf(contest, labels, frontpage, domjudge):
     for _ in range(2):
         p2d_problem.compile_statements_template(
                 os.path.join(p2d_problem.RESOURCES_PATH, 'statements_template.tex'),
-                contest, problemset_tex,
+                problemset_tex,
                 os.path.join(domjudge, 'tex', 'problemset.tex'),
-                os.path.join(domjudge, 'problemset.pdf'))
+                os.path.join(domjudge, 'problemset.pdf'),
+                params)
 
-def generate_solutions_pdf(contest, labels, frontpage, domjudge):
+# params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
+def generate_solutions_pdf(labels, frontpage, domjudge, params):
     labels.sort()
     solutions_tex = ''
 
@@ -218,9 +226,10 @@ def generate_solutions_pdf(contest, labels, frontpage, domjudge):
     
     p2d_problem.compile_statements_template(
             os.path.join(p2d_problem.RESOURCES_PATH, 'statements_template.tex'),
-            contest, solutions_tex,
+            solutions_tex,
             os.path.join(domjudge, 'tex', 'solutions.tex'),
-            os.path.join(domjudge, 'solutions.pdf'))
+            os.path.join(domjudge, 'solutions.pdf'),
+            params)
 
 def p2d_contest(args):
     with open(args.config, 'r') as f:
@@ -247,10 +256,13 @@ def p2d_contest(args):
             old_local_version = -1
         p['local_version'] = run_p2d_problem(
                 old_local_version, p,
-                config['contest_name'],
-                args.hide_tl_ml,
                 config['polygon_dir'],
-                config['domjudge_dir'])
+                config['domjudge_dir'],
+                {
+                    'contest_name': config['contest_name'],
+                    'hide_balloon': args.hide_balloon,
+                    'hide_tlml': args.hide_tlml
+                })
 
         if not args.import_: continue
 
@@ -275,13 +287,23 @@ def p2d_contest(args):
     with open(args.config, 'w', encoding='utf-8') as f:
         yaml.safe_dump(config, f, default_flow_style=False, sort_keys=False)
 
+    pdf_generations_params = {
+        'contest_name': config['contest_name'],
+        'hide_balloon': args.hide_balloon,
+        'hide_tlml': args.hide_tlml
+    }
+    
     generate_problemset_pdf(
-            config['contest_name'], [p['label'] for p in problems],
-            config.get('front_page_problemset'), config['domjudge_dir'])
+            [p['label'] for p in problems],
+            config.get('front_page_problemset'),
+            config['domjudge_dir'],
+            pdf_generations_params)
 
     generate_solutions_pdf(
-            config['contest_name'], [p['label'] for p in problems],
-            config.get('front_page_solutions'), config['domjudge_dir'])
+            [p['label'] for p in problems],
+            config.get('front_page_solutions'),
+            config['domjudge_dir'],
+            pdf_generations_params)
 
 def main():
     args = prepare_argument_parser().parse_args()
@@ -290,6 +312,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-# Make the error printing uniform. Maybe using logging?
-#
-# Colored balloon in the statement.
+# Make the error printing uniform. Maybe using logging.
