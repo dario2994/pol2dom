@@ -126,7 +126,6 @@ def parse_samples_explanations(notes):
     assert(test_id == -1)
     return explanations
 
-
 def contains_long_line(args, filename):
     with open(filename) as f:
         lines = f.readlines()

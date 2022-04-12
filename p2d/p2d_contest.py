@@ -68,11 +68,11 @@ def run_p2d_problem(
         old_local_version, problem, polygon, domjudge, params):
     local_version = find_latest_local_version(problem['name'], polygon)
     if local_version == -1:
-        print(ERROR_SYMBOL, name, ':', 'Not found.')
+        print(ERROR_SYMBOL, 'The polygon package was not found.')
         return old_local_version
     assert(local_version != -1)
     if old_local_version > local_version:
-        print(ERROR_SYMBOL, name, ':', 'The latest polygon package found in \'%s\' is older than the latest DOMjudge package found in \'%s\'.' % (polygon, domjudge))
+        print(ERROR_SYMBOL, 'The latest polygon package found in \'%s\' is older than the latest DOMjudge package found in \'%s\'.' % (polygon, domjudge))
         return old_local_version
     assert(old_local_version <= local_version)
 
@@ -109,13 +109,13 @@ def run_p2d_problem(
     try:
         p2d_problem.p2d_problem(args)
     except:
-        print(ERROR_SYMBOL, problem['name'], ':', 'Error during the execution of p2d-problem with arguments %s.' % args)
+        print(ERROR_SYMBOL, 'Error during the execution of p2d-problem with arguments %s.' % args)
         return old_local_version
 
     if local_version == old_local_version:
-        print(NEUTRAL_SYMBOL, problem['name'], ':', 'Already up to date, not modified (version %s).' % local_version)
+        print(NEUTRAL_SYMBOL, 'Already up to date, not modified (version %s).' % local_version)
     else:
-        print(OK_SYMBOL, problem['name'], ':',
+        print(OK_SYMBOL,
               'Converted into \'%s\' (version %s).' % (
                     os.path.join(domjudge, problem['label'] + '.zip'), local_version))
 
@@ -245,12 +245,14 @@ def p2d_contest(args):
 
     config['polygon_dir'] = os.path.expanduser(config['polygon_dir'])
     config['domjudge_dir'] = os.path.expanduser(config['domjudge_dir'])
-    
+
+    pathlib.Path(config['domjudge_dir']).mkdir(exist_ok=True)
     pathlib.Path(os.path.join(config['domjudge_dir'], 'tex')) \
             .mkdir(exist_ok=True)
 
     problems = config['problems']
     for p in problems:
+        print('\033[1m' + p['name'] + '\033[0m') # Bold
         old_local_version = p['local_version'] if 'local_version' in p else -1
         if args.ignore_local_version:
             old_local_version = -1
