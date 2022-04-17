@@ -81,7 +81,7 @@ def run_p2d_problem(
                                                       local_version,
                                                       package_suffix())),
         '--to', os.path.join(domjudge, '%s.zip' % problem['label']),
-        '--color', problem['color'],
+        '--color', problem.get('color', 'Black'),
         '--contest', params['contest_name'],
         '--save-tex', os.path.join(domjudge, 'tex'),
         '--verbosity', 'warning',
@@ -253,7 +253,7 @@ def p2d_contest(args):
     problems = config['problems']
     for p in problems:
         print('\033[1m' + p['name'] + '\033[0m') # Bold
-        old_local_version = p['local_version'] if 'local_version' in p else -1
+        old_local_version = p.get('local_version', -1)
         if args.ignore_local_version:
             old_local_version = -1
         p['local_version'] = run_p2d_problem(
@@ -268,7 +268,7 @@ def p2d_contest(args):
 
         if not args.import_: continue
 
-        old_server_version = p['server_version'] if 'server_version' in p else -1
+        old_server_version = p.get('server_version', -1)
         if args.ignore_server_version:
             old_server_version = -1
         if p['local_version'] <= old_server_version: continue
