@@ -171,7 +171,7 @@ def add_problem_to_contest_api(problem, config):
     return True
 
 def prepare_argument_parser():
-    parser = ArgumentParser(description='Utility script to import a whole contest from polygon into domjudge.')
+    parser = ArgumentParser(description='Utility script to import a whole contest from polygon into DOMjudge.')
     parser.add_argument('--config', required=True, help='Yaml file describing the contest. It contains a list of the problems to convert (with some metadata). It contains also: where to find the Polygon packages, where to save the DOMjudge packages, how to access the DOMjudge server.')
     parser.add_argument('--ignore-local-version', action='store_true', help='All packages are generated.')
     parser.add_argument('--ignore-server-version', action='store_true', help='All packages are sent to the server.')
@@ -315,3 +315,25 @@ if __name__ == "__main__":
     main()
 
 # Make the error printing uniform. Maybe using logging.
+#
+# Show uploading status in a progress bar.
+#
+# Generate also per-problem statement and editorial (useful to upload it on the
+# website after the contest ends).
+#
+# Download the package directly from polygon if updated. Polygon API now allow
+# to specify the type of the package (which shall be linux!). This would make
+# the tool entirely automatic.
+# 
+# Improve the structure. Reformat as:
+#   parse_polygon_package: Takes a polygon package and construct a Problem object.
+#   write_domjudge_package: Takes a Problem object and generates a DOMJudge Package.
+#   generate_tex: Takes a Problem object and returns the .tex for statement and
+#                 editorial.
+#   polygon_api: Library to interact with Polygon APIs.
+#   domjudge_api: Library to interact with DOMjudge APIs.
+#   p2d_problem: The command line functionality handling single problems.
+#                This should not interact with the various APIs, or it should?
+#   p2d_contest: The command line functionality handling a whole contest.
+#                This should parse a .yaml configuration file and import
+#                various polygon problems into a DOMjudge contest.
