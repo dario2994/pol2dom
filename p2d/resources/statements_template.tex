@@ -23,6 +23,8 @@
 }
 \usepackage{tikz}
 \usepackage[strict]{changepage}
+\usepackage{xparse}
+
 
 % Set max width of \includegraphics to \linewidth.
 \usepackage[export]{adjustbox}
@@ -152,19 +154,19 @@
 }%
 
 
-%%%%%%%%%%%%%%%%%%% NORMAL SAMPLE %%%%%%%%%%%%%%%%%%%%
-\newlength\samplewidth
-\setlength\samplewidth{8.08cm}
+%%%%%%%%%%%%%%%%%%% SMALL SAMPLE %%%%%%%%%%%%%%%%%%%%
+\newlength\smallsamplewidth
+\setlength\smallsamplewidth{8.08cm}
 
-\newcommand\sample[1]{
+\newcommand\smallsample[1]{
 \stepcounter{samplescnt}%
 \begin{tabular}{| c | c |}
     \hline
     \textbf{Sample input \arabic{samplescnt}} & \textbf{Sample output \arabic{samplescnt}} \\
     \hline
-    \printfile{\samplewidth}{#1.in}
+    \printfile{\smallsamplewidth}{#1.in}
     &
-    \printfile{\samplewidth}{#1.out}
+    \printfile{\smallsamplewidth}{#1.out}
     \\
     \hline
 \end{tabular}%
@@ -200,6 +202,51 @@
 
 \addvspace{2em}
 \ignorespacesafterend
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%% SAMPLE %%%%%%%%%%%%%%%%%%%%%%%%%
+% This magic trick to capture the shell output was copied from
+% tex.stackexchange.com/questions/16790
+\ExplSyntaxOn
+\NewDocumentCommand{\captureshell}{som}
+ {
+  \sdaau_captureshell:Ne \l__sdaau_captureshell_out_tl { #3 }
+  \IfBooleanT { #1 }
+   {% we may need to stringify the result
+    \tl_set:Nx \l__sdaau_captureshell_out_tl
+     { \tl_to_str:N \l__sdaau_captureshell_out_tl }
+   }
+  \IfNoValueTF { #2 }
+   {
+    \tl_use:N \l__sdaau_captureshell_out_tl
+   }
+   {
+    \tl_set_eq:NN #2 \l__sdaau_captureshell_out_tl
+   }
+ }
+
+\tl_new:N \l__sdaau_captureshell_out_tl
+
+\cs_new_protected:Nn \sdaau_captureshell:Nn
+ {
+  \sys_get_shell:nnN { #2 } { } #1
+  \tl_trim_spaces:N #1 % remove leading and trailing spaces
+ }
+\cs_generate_variant:Nn \sdaau_captureshell:Nn { Ne }
+\ExplSyntaxOff
+
+\newcommand\sample[1]{
+    \captureshell*[\linelengthin]{cat #1.in | wc -L}
+    \captureshell*[\linelengthout]{cat #1.out | wc -L}
+    \ifnum \linelengthin>40
+        \bigsample{#1}
+    \else
+        \ifnum \linelengthout>40
+            \bigsample{#1}
+        \else
+            \smallsample{#1}
+        \fi
+    \fi
 }
 
 %%%%%%%%%%%%%%%%%%% CONTEST METADATA %%%%%%%%%%%%%%%%%%%%

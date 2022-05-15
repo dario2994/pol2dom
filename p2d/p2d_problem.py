@@ -17,7 +17,6 @@ from .generate_testlib_for_domjudge import generate_testlib_for_domjudge
 
 RESOURCES_PATH = os.path.join(
     os.path.split(os.path.realpath(__file__))[0], 'resources')
-BIG_SAMPLE_SIZE = 40
 
 CHECKER_POLYGON2DOMJUDGE = {
     'fcmp': 'case_sensitive space_change_sensitive',
@@ -61,7 +60,6 @@ def prepare_argument_parser():
     parser.add_argument('--hide-balloon', action='store_true', help='Whether the colored picture of a balloon shall be shown in the statement.') 
     parser.add_argument('--hide-tlml', action='store_true', help='Whether the time limit and the memory limit shall be shown in the statement.') 
     parser.add_argument('--statements-template', default=os.path.join(RESOURCES_PATH, 'statements_template.tex'), help='Path of the LaTeX statements template.')
-    parser.add_argument('--big-sample-size', type=int, default=BIG_SAMPLE_SIZE, help='Number of characters in the longest line of a sample which triggers the call of \'\\bigsample\' instead of \'\\sample\' in the tex source of the statement.')
     parser.add_argument('--update-testlib', action='store_true', help='Whether to update the local version of testlib (syncing it with the last version from the github repository).')
     parser.add_argument('--verbosity', choices=['debug', 'info', 'warning'],
                         default='info', help='Verbosity of the logs.')
@@ -126,14 +124,6 @@ def parse_samples_explanations(notes):
     assert(test_id == -1)
     return explanations
 
-def contains_long_line(args, filename):
-    with open(filename) as f:
-        lines = f.readlines()
-        for line in lines:
-            if len(line) > args.big_sample_size:
-                return True
-        return False
-
 # Returns a string containing the tex source of the solution (only what shall
 # go inside \begin{document} \end{document}).
 # The images are copied in pdflatex_dir.
@@ -178,11 +168,7 @@ def generate_problem_tex(args, problem, pdflatex_dir):
         shutil.copyfile(sample['in'], sample_path + '.in')
         shutil.copyfile(sample['out'], sample_path + '.out')
 
-        if sample['is_long']:
-            samples_tex += '\\bigsample{%s}' % sample_path
-        else:
-            samples_tex += '\\sample{%s}' % sample_path
-        samples_tex += '\n'
+        samples_tex += '\\sample{%s}\n' % sample_path
 
         if sample['explanation']:
             samples_tex += '\\sampleexplanation{%s}\n' % sample['explanation']
@@ -234,7 +220,7 @@ def tex2pdf(from_, to):
     
     from_dir = os.path.dirname(from_)
     from_name = os.path.basename(from_)[:-4]# Without extension
-    command_as_list = ['pdflatex', '-interaction=nonstopmode',
+    command_as_list = ['pdflatex', '-interaction=nonstopmode', '--shell-escape',
                        '-output-dir=' + from_dir, '-jobname=%s' % from_name,
                        from_]
     logging.debug('pdflatex command = ' + ' '.join(command_as_list))
@@ -313,7 +299,6 @@ statement:
     samples: []
         in: string
         out: string
-        is_long: boolean
         explanation: string
     tutorial: string
 
@@ -390,8 +375,6 @@ def parse_problem_from_polygon(args, polygon):
                 'out': pol_path('statements', 'english', sample_json['outputFile']),
                 'explanation': explanations.get(sample_id)
             }
-            sample['is_long'] = contains_long_line(args, sample['in']) \
-                                or contains_long_line(args, sample['out'])
             samples.append(sample)
             sample_id += 1
         problem['statement']['samples'] = samples
