@@ -46,7 +46,7 @@ def tex2pdf(from_, to):
 # inside \begin{document} \end{document}).
 # The samples (.in/.out) and the images are copied in tex_dir/samples and
 # tex_dir/images respectively.
-def generate_problem_tex(problem, tex_dir):
+def generate_statement_tex(problem, tex_dir):
     pathlib.Path(os.path.join(tex_dir, 'samples')).mkdir(exist_ok=True)
     pathlib.Path(os.path.join(tex_dir, 'images')).mkdir(exist_ok=True)
     
@@ -71,10 +71,10 @@ def generate_problem_tex(problem, tex_dir):
         logging.error('No samples found.')
         exit(1)
 
-    with open(os.path.join(RESOURCES_PATH, 'problem_template.tex')) as f:
-        problem_template = f.read()
+    with open(os.path.join(RESOURCES_PATH, 'statement_template.tex')) as f:
+        statement_template = f.read()
 
-    replacements_problem = {
+    replacements_statement = {
         'LABEL': problem['label'],
         'COLOR': problem['color'],
         'TITLE': problem['title'],
@@ -85,19 +85,19 @@ def generate_problem_tex(problem, tex_dir):
         'OUTPUT': problem['statement']['output'],
         'SAMPLES': samples_tex
     }
-    for placeholder in replacements_problem:
-        problem_template = problem_template.replace(
-            '??%s??' % placeholder, str(replacements_problem[placeholder]))
+    for placeholder in replacements_statement:
+        statement_template = statement_template.replace(
+            '??%s??' % placeholder, str(replacements_statement[placeholder]))
 
     for image in problem['statement']['images']:
         # Giving a name depending on the problem name to the image to avoid
         # collisions with images of other statements/solutions.
         image_unique_name = os.path.join(
             'images', problem['name'] + '-' + image[0])
-        problem_template = problem_template.replace(image[0], image_unique_name)
+        statement_template = statement_template.replace(image[0], image_unique_name)
         shutil.copyfile(image[1], os.path.join(tex_dir, image_unique_name))
 
-    return problem_template
+    return statement_template
 
 
 # Returns a string containing the tex source of the solution (only what shall
@@ -134,44 +134,44 @@ def generate_solution_tex(problem, tex_dir):
 # \begin{document} ... \end{document}) into a pdf file.
 #
 # It performs the following operations:
-# 1. Fill statements_template.tex document tag with document_content;
+# 1. Fill document_template.tex document tag with document_content;
 # 2. Replace the placeholders in params using params;
 # 3. Save the resulting tex in from_;
 # 4. Compile from_ into the pdf to.
 #
 # from_ is a .tex file, to is a .pdf file.
 # params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
-def compile_statements_template(document_content, from_, to, params):
-    replacements_statements = {
+def compile_document_template(document_content, from_, to, params):
+    replacements_document = {
         'CONTESTNAME': params['contest_name'],
         'SHOWBALLOON': 0 if params['hide_balloon'] else 1,
         'SHOWTLML': 0 if params['hide_tlml'] else 1,
         'DOCUMENTCONTENT': document_content
     }
-    with open(os.path.join(RESOURCES_PATH, 'statements_template.tex')) as f:
-        statements_template = f.read()
+    with open(os.path.join(RESOURCES_PATH, 'document_template.tex')) as f:
+        document_template = f.read()
 
-    for placeholder in replacements_statements:
-        statements_template = statements_template.replace(
-            '??%s??' % placeholder, str(replacements_statements[placeholder]))
+    for placeholder in replacements_document:
+        document_template = document_template.replace(
+            '??%s??' % placeholder, str(replacements_document[placeholder]))
 
     with open(from_, 'w') as f:
-        f.write(statements_template)
+        f.write(document_template)
 
     tex2pdf(from_, to)
 
 # Produces the statement (in pdf) of a problem in pdf_file.
 #   params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
-def generate_problem_pdf(problem, pdf_file, params):
+def generate_statement_pdf(problem, pdf_file, params):
     tex_dir = tempfile.mkdtemp(
         prefix='%s-p2d-pdflatex' % problem['name'])
     logging.debug('Temporary directory for pdflatex: \'%s\'.' % tex_dir)
 
-    statement_tex = generate_problem_tex(problem, tex_dir)
-    compile_statements_template(statement_tex,
-                                os.path.join(tex_dir, 'statement.tex'),
-                                pdf_file,
-                                params)
+    statement_tex = generate_statement_tex(problem, tex_dir)
+    compile_document_template(statement_tex,
+                              os.path.join(tex_dir, 'statement.tex'),
+                              pdf_file,
+                              params)
 
     # TODO: Handle debugging in some way
     #  if not args.keep_dirs:
@@ -184,8 +184,8 @@ def generate_solution_pdf(problem, pdf_file, params):
     logging.debug('Temporary directory for pdflatex: \'%s\'.' % tex_dir)
 
     solution_tex = generate_solution_tex(problem, tex_dir)
-    compile_statements_template(solution_tex,
-                                os.path.join(tex_dir, 'statement.tex'),
+    compile_document_template(solution_tex,
+                                os.path.join(tex_dir, 'solution.tex'),
                                 pdf_file,
                                 params)
 
@@ -216,7 +216,7 @@ def generate_problemset_pdf(problems, frontpage, tex_dir, params):
     # Executing pdflatex twice because otherwise the command
     # \insertblankpageifnecessary does not produce the correct output.
     for _ in range(2):
-        compile_statements_template(
+        compile_document_template(
                 problemset_tex,
                 os.path.join(tex_dir, 'problemset.tex'),
                 os.path.join(tex_dir, 'problemset.pdf'),
@@ -240,7 +240,7 @@ def generate_solutions_pdf(problems, frontpage, tex_dir, params):
         solutions_tex += '\\input{%s-solution.tex}\n' % problem
         solutions_tex += '\\clearpage\n'
     
-    compile_statements_template(
+    compile_document_template(
             solutions_tex,
             os.path.join(tex_dir, 'solutions.tex'),
             os.path.join(tex_dir, 'solutions.pdf'),

@@ -69,7 +69,7 @@ def generate_domjudge_package(problem, domjudge, params):
     problem_yaml_data['limits'] = {'memory': problem['memorylimit']}
 
     # Statement
-    tex_utilities.generate_problem_pdf(
+    tex_utilities.generate_statement_pdf(
         problem, os.path.join(domjudge, 'problem.pdf'), params)
 
     # Tests

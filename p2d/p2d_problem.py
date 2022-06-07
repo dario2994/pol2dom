@@ -102,7 +102,7 @@ def p2d_problem(args):
 
         tex_dir = os.path.abspath(args.save_tex)
             
-        problem_tex = tex_utilities.generate_problem_tex(problem, tex_dir)
+        problem_tex = tex_utilities.generate_statement_tex(problem, tex_dir)
         solution_tex = tex_utilities.generate_solution_tex(problem, tex_dir)
 
         with open(os.path.join(tex_dir, problem['name'] + '-statement.tex'),
