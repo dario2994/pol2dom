@@ -2,6 +2,8 @@ import requests
 import os
 import re
 
+from p2d._version import __version__
+
 HEADER_COMMENT = '''\
 // Modified by a script to work with DOMjudge.
 // Differences with the standard testlib.h:

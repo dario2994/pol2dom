@@ -1,94 +1,117 @@
-import contextlib
-from http.client import HTTPConnection
 import logging
 import os
 import pathlib
-import platform
-import random
-import requests
 import shutil
 import string
-import subprocess
 import sys
 import tempfile
 import yaml
+import zipfile
 from argparse import ArgumentParser
-from . import p2d_problem
 
-OK_SYMBOL = u'\u2705'
-NEUTRAL_SYMBOL = '  '
-ERROR_SYMBOL = u'\u274C'
+from p2d._version import __version__
+from p2d import polygon_api, p2d_problem, domjudge_api, tex_utilities
 
 
-def debug_requests_on():
-    HTTPConnection.debuglevel = 1
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.DEBUG)
-    requests_log = logging.getLogger("requests.packages.urllib3")
-    requests_log.setLevel(logging.DEBUG)
-    requests_log.propagate = True
+# TODO
+#  OK_SYMBOL = u'\u2705'
+#  NEUTRAL_SYMBOL = '  '
+#  ERROR_SYMBOL = u'\u274C'
 
-def debug_requests_off():
-    HTTPConnection.debuglevel = 0
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.WARNING)
-    root_logger.handlers = []
-    requests_log = logging.getLogger("requests.packages.urllib3")
-    requests_log.setLevel(logging.WARNING)
-    requests_log.propagate = False
 
-@contextlib.contextmanager
-def debug_requests():
-    '''Use with 'with'!'''
-    debug_requests_on()
-    yield
-    debug_requests_off()
+def manage_download(config, polygon_dir, problem):
+    if 'polygon_id' not in problem:
+        logging.warning('Skipped because polygon_id is not specified.')
+        return
+    
+    # Check versions
+    local_version = problem.get('polygon_version', -1)
+    latest_package = polygon_api.get_latest_package_id(
+        config['polygon']['key'], config['polygon']['secret'], problem['polygon_id'])
 
-def generate_externalid(problem):
-    random_suffix = ''.join(random.choice(string.ascii_uppercase) for _ in range(6))
-    return problem['label'] + '-' + problem['name'] + '-' + random_suffix
+    logging.debug('For problem %s the selected package is %s.'
+                  % (problem['name'], latest_package[1]))
+    # TODO: Check problem['name'] calling a polygon api?
 
-def package_suffix():
-    os_name = 'windows' if platform.system() == 'Windows' else 'linux'
-    return '$%s.zip' % os_name
+    if latest_package[0] == -1:
+        logging.warning('No packages were found on polygon.')
+        return
 
-def find_latest_local_version(name, polygon):
-    suffix = package_suffix()
-    version = -1
-    for f in os.listdir(polygon):
-        prefix = name + '-'
-        if f.startswith(name + '-') and f.endswith(suffix):
-            maybe_version = f[len(prefix):-len(suffix)]
-            if maybe_version.isdigit():
-                version = max(version, int(f[len(prefix):-len(suffix)]))
-    return version
+    if latest_package[0] < local_version:
+        logging.warning('The local version is newer than the polygon version')
+        return
 
-# params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
-def run_p2d_problem(
-        old_local_version, problem, polygon, domjudge, params):
-    local_version = find_latest_local_version(problem['name'], polygon)
-    if local_version == -1:
-        print(ERROR_SYMBOL, 'The polygon package was not found.')
-        return old_local_version
-    assert(local_version != -1)
-    if old_local_version > local_version:
-        print(ERROR_SYMBOL, 'The latest polygon package found in \'%s\' is older than the latest DOMjudge package found in \'%s\'.' % (polygon, domjudge))
-        return old_local_version
-    assert(old_local_version <= local_version)
+    if latest_package[0] == local_version:
+        logging.info('The polygon package is up to date.')
+        return
+
+    pathlib.Path(polygon_dir).mkdir(exist_ok=True)
+    
+    # Download the package
+    package_zip = os.path.join(polygon_dir, problem['name'] + '.zip')
+    polygon_api.download_package(
+        config['polygon']['key'], config['polygon']['secret'],
+        problem['polygon_id'], latest_package[1], package_zip)
+
+    # Unzip the package
+    if not zipfile.is_zipfile(package_zip):
+        logging.error(
+            'There was an error downloading the package zip to \'%s\'.'
+            % package_zip)
+        return
+
+    with zipfile.ZipFile(package_zip, 'r') as f:
+        logging.debug('Unzipping the polygon package \'%s\'.' % package_zip)
+        f.extractall(polygon_dir)
+
+    logging.info('Downloaded and unzipped the polygon package into '
+                 '\'%s\'.' % os.path.join(polygon_dir))
+    problem['polygon_version'] = latest_package[0]
+
+# TODO: Should this call p2d_problem? Or something at a lower-level?
+# Transforms the polygon package contained in polygon_dir (already extracted)
+# into an equivalent domjudge package in domjudge_dir. In domjudge_dir the
+# package is contained extracted, but also a zip of the package itself is
+# present.
+# Moreover, this function creates the two tex files:
+#   tex_dir/problem['name']-statement.tex
+#   tex_dir/problem['name']-solution.tex
+def manage_convert(config, polygon_dir, domjudge_dir, tex_dir, problem):
+    # Check versions
+    polygon_version = problem.get('polygon_version', -1)
+    domjudge_version = problem.get('domjudge_local_version', -1)
+
+    if polygon_version == -1:
+        logging.warning('The polygon package is not present locally.')
+        return
+
+    if polygon_version < domjudge_version:
+        logging.warning('The version of the local domjudge package is more '
+                        'up to date the the local polygon package.')
+        return
+
+    if polygon_version == domjudge_version:
+        logging.info('The local domjudge package is already up to date.')
+        return
+
+    # Prepare the p2d-problem command.
+    pathlib.Path(domjudge_dir).mkdir(exist_ok=True)
 
     args_list = \
-        ['--from', os.path.join(polygon, '%s-%s%s' % (problem['name'],
-                                                      local_version,
-                                                      package_suffix())),
-        '--to', os.path.join(domjudge, '%s.zip' % problem['label']),
+        ['--from', polygon_dir,
+        '--to', domjudge_dir,
+        '--label', problem.get('label', '?'),
         '--color', problem.get('color', 'Black'),
-        '--contest', params['contest_name'],
-        '--save-tex', os.path.join(domjudge, 'tex'),
+        '--contest', config['contest_name'],
+        '--save-tex', tex_dir,
         '--verbosity', 'warning',
         '--force']
 
-    if local_version == old_local_version:
-        args_list.append('--only-tex')
+    # TODO: This shall be removed, but a --ignore-version flag shall be added
+    #       so that if something is changed in config.yaml (e.g., contest name)
+    #       the domjudge packages are generated in any case.
+    #  if local_version == old_local_version:
+        #  args_list.append('--only-tex')
 
     if 'override_time_limit' in problem:
         args_list.append('--override-time-limit')
@@ -98,214 +121,226 @@ def run_p2d_problem(
         args_list.append('--override-memory-limit')
         args_list.append(str(problem['override_memory_limit'])) # in MiB
 
-    if params['hide_balloon']:
+    if config.get('hide_balloon', 0):
         args_list.append('--hide-balloon')
     
-    if params['hide_tlml']:
+    if config.get('hide_balloon', 0):
         args_list.append('--hide-tlml')
     
     args = p2d_problem.prepare_argument_parser().parse_args(args_list)
 
+    # Run p2d-problem.
     try:
+        # This is lengthy in order to have the proper level of logging.
+        logging_level = logging.root.getEffectiveLevel()
+
+        for handler in logging.root.handlers[:]:
+            logging.root.removeHandler(handler)
+
         p2d_problem.p2d_problem(args)
+
+        for handler in logging.root.handlers[:]:
+            logging.root.removeHandler(handler)
+
+        logging.basicConfig(
+            stream=sys.stdout,
+            format='%(levelname)s: %(message)s',
+            level=logging_level
+        )        
     except:
-        print(ERROR_SYMBOL, 'Error during the execution of p2d-problem with arguments %s.' % args)
-        return old_local_version
+        logging.error(
+            'Error during the execution of p2d-problem with arguments %s.' % args)
+        raise
 
-    if local_version == old_local_version:
-        print(NEUTRAL_SYMBOL, 'Already up to date, not modified (version %s).' % local_version)
-    else:
-        print(OK_SYMBOL,
-              'Converted into \'%s\' (version %s).' % (
-                    os.path.join(domjudge, problem['label'] + '.zip'), local_version))
+    logging.info('Converted the polygon package to the DOMjudge package \'%s\'',
+                 domjudge_dir)
 
-    return local_version
+    # Zip the package
+    # A temporary file is necessary since make_archive goes crazy if the .zip
+    # belongs to the directory that must be compressed.
+    with tempfile.NamedTemporaryFile(suffix='.zip', mode='w', encoding='utf-8') as f:
+        shutil.make_archive(f.name[:-4], 'zip', domjudge_dir)
+        shutil.copyfile(f.name, os.path.join(domjudge_dir, problem['name'] + '.zip'))
+    problem['domjudge_local_version'] = polygon_version
 
-def call_domjudge_api(config, api_address, data, files):
-    res = requests.post(
-        config['server'] + api_address,
-        auth=requests.auth.HTTPBasicAuth(config['username'], config['password']),
-        data=data,
-        files=files)
-    return res
+def manage_domjudge(config, domjudge_dir, problem):
+    # Check versions
+    local_version = problem.get('domjudge_local_version', -1)
+    server_version = problem.get('domjudge_server_version', -1)
 
-def update_problem_api(zip_file, problem_id, config):
-    api_address = '/api/v4/contests/%s/problems' % config['contest_id']
+    if local_version == -1:
+        logging.warning('The DOMjudge package is not present locally.')
+        return
+
+    if local_version < server_version:
+        logging.warning('The version of the DOMjudge package on the server is '
+                        'more up to date than the local one.')
+        return
+
+    if local_version == server_version:
+        logging.info('The DOMjudge package on the server is already up to date.')
+        return
+
+        
+    # Adding the problem to the contest if it was not already done.
+    if 'domjudge_id' not in problem:
+        if not domjudge_api.add_problem_to_contest_api(problem, config['domjudge']):
+            logging.error('There was an error while adding the problem '
+                          'to the contest in the DOMjudge server.')
+            return
+
+    # Sending the problem package to the server.
+    assert('domjudge_id' in problem and 'domjudge_externalid' in problem)
+    zip_file = os.path.join(domjudge_dir, problem['name'] + '.zip')
+    zip_file_copy = os.path.join(domjudge_dir,
+                                 problem['domjudge_externalid'] + '.zip')
+    shutil.copyfile(zip_file, zip_file_copy)
     
-    with open(zip_file, 'rb') as f:
-        res = call_domjudge_api(config, api_address,
-                                {'problem': problem_id},
-                                {'zip': (zip_file, f)})
+    if not domjudge_api.update_problem_api(
+            zip_file_copy, problem['domjudge_externalid'], config['domjudge']):
+        logging.error('There was an error while updating the problem '
+                      'in the DOMjudge server.')
+        return
+            
+    problem['domjudge_server_version'] = local_version
 
-    if res.status_code != 200 or not res.json()['problem_id']:
-        print(ERROR_SYMBOL, 'Error sending the package to the DOMjudge server:',
-              res.json())
-        return False
-    else:
-        print(OK_SYMBOL, 'Successfully sent the package to the DOMjudge server.')
-        return True # res.json()['problem_id'] TODO
-
-def add_problem_to_contest_api(problem, config):
-    api_address = '/api/v4/contests/%s/problems/add-data' % config['contest_id']
-    externalid = generate_externalid(problem)
+    logging.info('Updated the DOMjudge package on the server \'%s\', with externalid = \'%s\'' % (config['domjudge']['server'], problem['domjudge_externalid']))
     
-
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.yaml', mode='w',
-                                     encoding='utf-8') as f:
-        problem_yaml = f.name
-        yaml.safe_dump([{'id': externalid, 'label': problem['label'], 'name': problem['name']}],
-                       f, default_flow_style=False, sort_keys=False)
-
-    with open(problem_yaml, 'rb') as f:
-        res = call_domjudge_api(config, api_address, {}, {'data': (problem_yaml, f)})
-    os.unlink(problem_yaml)
-
-    if res.status_code != 200:
-        print(ERROR_SYMBOL, 'Error adding the problem to the contest:',
-              res.json())
-        return False
-
-    problem['id'] = res.json()[0]
-    problem['externalid'] = externalid
-
-    return True
-
 def prepare_argument_parser():
     parser = ArgumentParser(description='Utility script to import a whole contest from polygon into DOMjudge.')
-    parser.add_argument('--config', required=True, help='Yaml file describing the contest. It contains a list of the problems to convert (with some metadata). It contains also: where to find the Polygon packages, where to save the DOMjudge packages, how to access the DOMjudge server.')
-    parser.add_argument('--ignore-local-version', action='store_true', help='All packages are generated.')
-    parser.add_argument('--ignore-server-version', action='store_true', help='All packages are sent to the server.')
-    parser.add_argument('--hide-balloon', action='store_true', help='Whether the colored picture of a balloon shall be shown in the statement.')
-    parser.add_argument('--hide-tlml', action='store_true', help='Whether the time limit and the memory limit shall be shown in the statement.')
-    parser.add_argument('--import', action='store_true', dest='import_', help='Whether the packages updated shall be imported into the domjudge server instance.')
+    parser.add_argument('contest_directory', help='The directory containing the config.yaml file describing the contest. This directory will store also the polygon and DOMjudge packages.')
+    parser.add_argument('--problem', help='Use this flag to pass the name of a problem if you want to execute the script on a single problem instead of all the problems.')
+    parser.add_argument('--polygon', '--import', '--get', '--download', action='store_true', help='Whether the problem packages should be downloaded from Polygon. Otherwise only the packages already present in the system will be considered.')
+    parser.add_argument('--convert', action='store_true', help='Whether the polygon packages should be converted to DOMjudge packages. Otherwise only the DOMjudge packages already present in the system will be considered.')
+    parser.add_argument('--domjudge', '--export', '--send', '--upload', action='store_true', help='Whether the DOMjudge packages shall be uploaded to the DOMjudge instance specified in config.yaml.')
+    parser.add_argument('--verbosity', choices=['debug', 'info', 'warning'],
+                        default='info', help='Verbosity of the logs.')
+    parser.add_argument('--no-cache', action='store_true', help='If set, the various steps (polygon, convert, domjudge) are run even they would not be necessary taking into account the cache.')
+    #  parser.add_argument('--ignore-local-version', action='store_true', help='All packages are generated.')
+    #  parser.add_argument('--ignore-server-version', action='store_true', help='All packages are sent to the server.')
     
     return parser
 
-# params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
-def generate_problemset_pdf(labels, frontpage, domjudge, params):
-    labels.sort()
-    problemset_tex = ''
-
-    if frontpage:
-        frontpage = os.path.abspath(frontpage)
-        problemset_tex += '\\includepdf{%s}\n' % frontpage
-        problemset_tex += '\\insertblankpageifnecessary\n\n'
-
-    for label in labels:
-        maybe_tex = os.path.join(domjudge, 'tex', label + '-statement.tex')
-        if not os.path.isfile(maybe_tex):
-            continue
-        problemset_tex += '\\input{%s-statement.tex}\n' % label
-        problemset_tex += '\\insertblankpageifnecessary\n\n'
-
-    # Executing pdflatex twice because otherwise the command
-    # \insertblankpageifnecessary does not produce the correct output.
-    for _ in range(2):
-        p2d_problem.compile_statements_template(
-                os.path.join(p2d_problem.RESOURCES_PATH, 'statements_template.tex'),
-                problemset_tex,
-                os.path.join(domjudge, 'tex', 'problemset.tex'),
-                os.path.join(domjudge, 'problemset.pdf'),
-                params)
-
-# params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
-def generate_solutions_pdf(labels, frontpage, domjudge, params):
-    labels.sort()
-    solutions_tex = ''
-
-    if frontpage:
-        frontpage = os.path.abspath(frontpage)
-        solutions_tex += '\\includepdf{%s}\n\n' % frontpage
-
-    for label in labels:
-        maybe_tex = os.path.join(domjudge, 'tex', label + '-solution.tex')
-        if not os.path.isfile(maybe_tex):
-            continue
-        solutions_tex += '\\input{%s-solution.tex}\n' % label
-        solutions_tex += '\\clearpage\n'
-    
-    p2d_problem.compile_statements_template(
-            os.path.join(p2d_problem.RESOURCES_PATH, 'statements_template.tex'),
-            solutions_tex,
-            os.path.join(domjudge, 'tex', 'solutions.tex'),
-            os.path.join(domjudge, 'solutions.pdf'),
-            params)
-
 def p2d_contest(args):
-    with open(args.config, 'r') as f:
+    logging.basicConfig(
+        stream=sys.stdout,
+        format='%(levelname)s: %(message)s',
+        level=eval('logging.' + args.verbosity.upper())
+    )
+    
+    contest_dir = args.contest_directory
+    config_yaml = os.path.join(contest_dir, 'config.yaml')
+
+    if not os.path.isfile(config_yaml):
+        logging.error('The file %s was not found.' % config_yaml)
+        exit(1)
+    with open(config_yaml, 'r') as f:
         try:
             config = yaml.safe_load(f)
         except yaml.YAMLError as exc:
             print(exc)
             exit(1)
-    
-    if 'polygon_dir' not in config or 'domjudge_dir' not in config:
-        print(ERROR_SYMBOL, 'The yaml configuration file must have the entries \'polygon_dir\' and \'domjudge_dir\'.')
+
+    if args.polygon and ('polygon' not in config
+                         or 'key' not in config['polygon']
+                         or 'secret' not in config['polygon']):
+        logging.error('The entries polygon:key and polygon:secret must be '
+                      'present in config.yaml to download problems from polygon.')
         exit(1)
 
-    config['polygon_dir'] = os.path.expanduser(config['polygon_dir'])
-    config['domjudge_dir'] = os.path.expanduser(config['domjudge_dir'])
+    if args.domjudge and ('domjudge' not in config
+                         or 'contest_id' not in config['domjudge']
+                         or 'server' not in config['domjudge']
+                         or 'username' not in config['domjudge']
+                         or 'password' not in config['domjudge']):
+        logging.error('The entries domjudge:contest_id, domjudge:server, '
+                      'domjudge:username, domjudge:password must be present '
+                      'in config.yaml to download problems from polygon.')
+        exit(1)
 
-    pathlib.Path(config['domjudge_dir']).mkdir(exist_ok=True)
-    pathlib.Path(os.path.join(config['domjudge_dir'], 'tex')) \
-            .mkdir(exist_ok=True)
+    if not args.polygon and not args.convert and not args.domjudge:
+        logging.error('At least one of the flags --polygon, --convert, --domjudge '
+                      'is necessary.')
+        exit(1)
 
+    pathlib.Path(os.path.join(contest_dir, 'polygon')).mkdir(exist_ok=True)
+    pathlib.Path(os.path.join(contest_dir, 'domjudge')).mkdir(exist_ok=True)
+    pathlib.Path(os.path.join(contest_dir, 'tex')).mkdir(exist_ok=True)
+
+    # Process the problems, one at a time.
+    # For each problem some of the following operations are performed (depending
+    # on the command line flags used to run the command):
+    #  1. Download the polygon package (from polygon).
+    #  2. Convert the polygon package to a DOMjudge package.
+    #  3. Upload the DOMjudge package (to a running DOMjudge server).
+    problem_selected_exists = False
     problems = config['problems']
-    for p in problems:
-        print('\033[1m' + p['name'] + '\033[0m') # Bold
-        old_local_version = p.get('local_version', -1)
-        if args.ignore_local_version:
-            old_local_version = -1
-        p['local_version'] = run_p2d_problem(
-                old_local_version, p,
-                config['polygon_dir'],
-                config['domjudge_dir'],
-                {
-                    'contest_name': config['contest_name'],
-                    'hide_balloon': args.hide_balloon,
-                    'hide_tlml': args.hide_tlml
-                })
+    for problem in problems:
+        if args.problem and args.problem != problem['name']:
+            continue
+        problem_selected_exists = True
+        print('\033[1m' + problem['name'] + '\033[0m') # Bold
 
-        if not args.import_: continue
+        if 'label' not in problem:
+            logging.warning('The problem does not have a label.')
 
-        old_server_version = p.get('server_version', -1)
-        if args.ignore_server_version:
-            old_server_version = -1
-        if p['local_version'] <= old_server_version: continue
+        if args.polygon:
+            if args.no_cache:
+                problem['polygon_version'] = -1
+            manage_download(
+                config, os.path.join(contest_dir, 'polygon', problem['name']), problem)
 
-        if 'id' not in p:
-            if not add_problem_to_contest_api(p, config):
-                continue
-        assert('externalid' in p and 'id' in p)
-        zip_file = os.path.join(config['domjudge_dir'], p['label'] + '.zip')
-        zip_file_copy = os.path.join(config['domjudge_dir'],
-                                     p['externalid'] + '.zip')
-        os.rename(zip_file, zip_file_copy)
-        
-        if update_problem_api(zip_file_copy, p['id'], config):
-            p['server_version'] = p['local_version']
-        os.rename(zip_file_copy, zip_file)
+        if args.convert:
+            if args.no_cache:
+                problem['domjudge_local_version'] = -1
+            manage_convert(
+                config,
+                os.path.join(contest_dir, 'polygon', problem['name']),
+                os.path.join(contest_dir, 'domjudge', problem['name']),
+                os.path.join(contest_dir, 'tex'),
+                problem)
+            
+        if args.domjudge:
+            if args.no_cache:
+                problem['domjudge_server_version'] = -1
+            manage_domjudge(
+                config, os.path.join(
+                    contest_dir, 'domjudge', problem['name']), problem)
+
+    if args.problem and not problem_selected_exists:
+        logging.warning('The problem specified with --problem does not appear '
+                        'in config.yaml.')
+        return
     
-    with open(args.config, 'w', encoding='utf-8') as f:
+    # Save the updated config.yaml.
+    with open(config_yaml, 'w', encoding='utf-8') as f:
         yaml.safe_dump(config, f, default_flow_style=False, sort_keys=False)
 
-    pdf_generations_params = {
-        'contest_name': config['contest_name'],
-        'hide_balloon': args.hide_balloon,
-        'hide_tlml': args.hide_tlml
-    }
-    
-    generate_problemset_pdf(
-            [p['label'] for p in problems],
-            config.get('front_page_problemset'),
-            config['domjudge_dir'],
-            pdf_generations_params)
+    # Generate the pdfs of the full problemset and of the solutions.
+    if args.problem:
+        return
 
-    generate_solutions_pdf(
-            [p['label'] for p in problems],
+    pdf_generation_params = {
+        'contest_name': config['contest_name'],
+        'hide_balloon': config.get('hide_balloon', False),
+        'hide_tlml': config.get('hide_tlml', False)
+    }
+
+    label_and_name = [(p['label'], p['name']) for p in problems]
+    label_and_name.sort()
+    sorted_names = [p[1] for p in label_and_name]
+    
+    tex_utilities.generate_problemset_pdf(
+            sorted_names,
+            config.get('front_page_problemset'),
+            os.path.join(contest_dir, 'tex'),
+            pdf_generation_params)
+
+    tex_utilities.generate_solutions_pdf(
+            sorted_names,
             config.get('front_page_solutions'),
-            config['domjudge_dir'],
-            pdf_generations_params)
+            os.path.join(contest_dir, 'tex'),
+            pdf_generation_params)
 
 def main():
     args = prepare_argument_parser().parse_args()
@@ -314,6 +349,7 @@ def main():
 if __name__ == "__main__":
     main()
 
+# TODO:
 # Make the error printing uniform. Maybe using logging.
 #
 # Show uploading status in a progress bar.
@@ -324,16 +360,71 @@ if __name__ == "__main__":
 # Download the package directly from polygon if updated. Polygon API now allow
 # to specify the type of the package (which shall be linux!). This would make
 # the tool entirely automatic.
-# 
-# Improve the structure. Reformat as:
-#   parse_polygon_package: Takes a polygon package and construct a Problem object.
-#   write_domjudge_package: Takes a Problem object and generates a DOMJudge Package.
-#   generate_tex: Takes a Problem object and returns the .tex for statement and
-#                 editorial.
-#   polygon_api: Library to interact with Polygon APIs.
-#   domjudge_api: Library to interact with DOMjudge APIs.
-#   p2d_problem: The command line functionality handling single problems.
-#                This should not interact with the various APIs, or it should?
-#   p2d_contest: The command line functionality handling a whole contest.
-#                This should parse a .yaml configuration file and import
-#                various polygon problems into a DOMjudge contest.
+
+# contest dir structure:
+# config.yaml
+# polygon/
+#   problemname/
+#       the content of the package.
+#       problemname.zip = the zipped package itself.
+# domjudge/
+#   problemname/
+#       the content of the package
+#       problemname.zip = the zipped package itself
+# tex/
+#   samples/ (containing all the samples)
+#   images/ (containing all the images, for statements and solutions)
+#   problemset.pdf
+#   editorial.pdf
+#   For each problem:
+#   problemname-statement.pdf
+#   problemname-solution.pdf
+
+
+# config.yaml structure:
+
+#  contest_name: SWERC 2021-2022
+#  front_page_problemset: frontpages/officialproblemset.pdf
+#  front_page_solutions: frontpages/officialsolutions.pdf
+#  hide_balloons: 0
+#  hide_tlml: 0
+#  polygon:
+    #  key: ??
+    #  secret: ??
+#  domjudge:
+    #  contest_id: swerc2021
+    #  server: https://judge.swerc.eu
+    #  username: dario2994
+    #  password: ??
+#  problems:
+#  - name: fastlis # Must be the name used in polygon
+  #  label: C
+  #  color: CornflowerBlue # What are the valid colors?
+  
+  #  author: Federico Glaudo
+  #  preparation: Federico Glaudo
+
+  #  polygon_id: 193671
+
+  #  override_memory_limit: 2048 # MiB
+  #  override_time_limit: 3.5 # second
+
+  #  domjudge_id: C-fastlis-OSCSRC # TODO: So domjudge_id = domjudge_externalid??
+  #  domjudge_externalid: C-fastlis-OSCSRC
+
+  #  polygon_version: 10
+  #  domjudge_local_version: 9
+  #  domjudge_server_version: 3
+    
+# TODO: Everything should be tested appropriately.
+# TODO: The documentation must be updated.
+# TODO: The logging should be per-file, so that when p2d_contest calls
+#       p2d_problem is not a mess to get everything right.
+# TODO: Use logging everywhere for the error printing (maybe it is already true).
+# TODO: Samples and images should use problem['name'], not problem['label'],
+#       unless such a choice generates errors because latex does not support
+#       non-letters in the name of files to be included.
+# TODO: The samples should be put in a subdirectory of tex/. Same for the images.
+# TODO: Use exceptions more when appropriate.
+# TODO: The logic of p2d-contest calling p2d-problem for the conversion should
+#       be thought better (but most likely, it is good as it is now).
