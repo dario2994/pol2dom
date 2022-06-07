@@ -207,9 +207,10 @@ def generate_problemset_pdf(problems, frontpage, tex_dir, params):
         problemset_tex += '\\insertblankpageifnecessary\n\n'
 
     for problem in problems:
-        maybe_tex = os.path.join(tex_dir, 'tex', problem + '-statement.tex')
+        maybe_tex = os.path.join(tex_dir, problem + '-statement.tex')
         if not os.path.isfile(maybe_tex):
-            continue # TODO: Raise a warning?
+            logging.warning('The tex source \'%s\' does not exist; but it is required to generate the pdf with all problems.' % maybe_tex)
+            continue
         problemset_tex += '\\input{%s-statement.tex}\n' % problem
         problemset_tex += '\\insertblankpageifnecessary\n\n'
 
@@ -234,8 +235,9 @@ def generate_solutions_pdf(problems, frontpage, tex_dir, params):
         solutions_tex += '\\includepdf{%s}\n\n' % frontpage
 
     for problem in problems:
-        maybe_tex = os.path.join(tex_dir, 'tex', problem + '-solution.tex')
+        maybe_tex = os.path.join(tex_dir, problem + '-solution.tex')
         if not os.path.isfile(maybe_tex):
+            logging.warning('The tex source \'%s\' does not exist; but it is required to generate the pdf with all solutions.' % maybe_tex)
             continue
         solutions_tex += '\\input{%s-solution.tex}\n' % problem
         solutions_tex += '\\clearpage\n'

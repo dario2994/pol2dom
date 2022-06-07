@@ -421,10 +421,6 @@ if __name__ == "__main__":
 # TODO: The logging should be per-file, so that when p2d_contest calls
 #       p2d_problem is not a mess to get everything right.
 # TODO: Use logging everywhere for the error printing (maybe it is already true).
-# TODO: Samples and images should use problem['name'], not problem['label'],
-#       unless such a choice generates errors because latex does not support
-#       non-letters in the name of files to be included.
-# TODO: The samples should be put in a subdirectory of tex/. Same for the images.
 # TODO: Use exceptions more when appropriate.
 # TODO: The logic of p2d-contest calling p2d-problem for the conversion should
 #       be thought better (but most likely, it is good as it is now).
