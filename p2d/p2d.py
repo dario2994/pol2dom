@@ -307,6 +307,7 @@ def p2d_contest(args):
         if args.problem and args.problem != problem['name']:
             continue
         problem_selected_exists = True
+        print()
         print('\033[1m' + problem['name'] + '\033[0m') # Bold
 
         if 'label' not in problem:
@@ -454,5 +455,4 @@ if __name__ == "__main__":
 # TODO: Everything should be tested appropriately.
 # TODO: The documentation must be updated.
 # TODO: Use logging everywhere for the error printing (maybe it is already true).
-# TODO: Use exceptions more when appropriate.
-# TODO: Add --clear flag.
+# TODO: Use exceptions more when appropriate (maybe already done).
