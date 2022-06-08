@@ -15,7 +15,7 @@ def get_version():
 setup(
     name='pol2dom',
     version=get_version(),
-    description='Convert Polygon Problem Package to DOMjudge Problem Package.',
+    description='Convert Polygon Problem Package to DOMjudge Problem Package.', # TODO: Improve description
     author='dario2994',
     author_email='dario2994@gmail.com',
     url='https://github.com/dario2994/pol2dom',
@@ -25,8 +25,7 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'p2d-problem=p2d.p2d_problem:main',
-            'p2d-contest=p2d.p2d_contest:main'
+            'p2d=p2d.p2d:main'
         ]
     },
     python_requires='>=3.7',

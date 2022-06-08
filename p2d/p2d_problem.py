@@ -168,6 +168,3 @@ if __name__ == "__main__":
 # TODO: 
 #       Create tests for this tool.
 #       Interactive problems are not supported.
-
-# TODO:
-# In problem, it might be better to use name/title instead of shortname/name.

@@ -2,20 +2,22 @@
 
 Tool to import a problem/contest prepared in [Polygon](https://polygon.codeforces.com/) into a [DOMjudge](https://www.domjudge.org/) instance.
 
+The whole process is automated: downloading the Polygon package, converting it into a DOMjudge package, uploading the DOMjudge package to a DOMjudge server.
+
 This tool, offers two commands: `p2d-problem` and `p2d-contest`.
 
 - `p2d-problem` converts a Polygon (full) package into a DOMjudge package (which is a descendant of the [Problem Package Format](https://icpc.io/problem-package-format/)).
-- `p2d-contest` handles the conversion of a whole problem set, its import into a DOMjudge instance, the generation of the pdf of the whole problem set, the generation of the solutions of the whole problem set.
+- `p2d-contest` handles donwloading multiple packages from polygon, their conversion to the DOMjudge equivalent packages, its import into a DOMjudge instance, and the generation of the pdfs of the whole problem set and of its solutions.
 
 The main features are:
 
+- Download, with a caching mechanism, of the most recent Polygon package of a problem.
+- Upload, with a caching mechanism, of the converted DOMjudge package of a problem into a DOMjudge server.
 - The conversion from a Polygon package into a DOMjudge package is fully automatic and requires no human intervention.
-- Parses the statement from the Polygon package and generates the statement in pdf (with the possibility of [customizing the LaTeX template](#customization-of-the-latex-statement-template)). The samples' explanations are [detected from the notes section in polygon through the use of special markers](#samples-explanation-detection).
-- Can generate a pdf with the complete problem set of a contest featuring a custom front page.
-- Can generate a pdf with the solutions of a contest featuring a custom front page. In the solutions, the author of the problem and the person who prepared it are mentioned (see the section [Author Detection](#author-detection)).
+- Generation of the statement in pdf with the possibility of adding many nice features to it (the contest name, a balloon with the color of the problem, time-limit and memory-limit, etc..). The samples' explanations are [detected from the notes section in polygon through the use of special markers](#samples-explanation-detection).
+- Generation of a pdf with the complete problem set of a contest featuring a custom front page. Same for the pdf of the solutions of the problems.
 - Checkers using testlib.h are supported transparently (by using a modified testlib.h which is DOMjudge compatible).
 - Through the `Judging verifier` feature of DOMjudge, it enforces that the submissions present in polygon get the correct result also in DOMjudge.
-- Through DOMjudge APIs, it imports the problems (if updated) directly into the DOMjudge instance.
 
 This project was born as a refactoring of [polygon2domjudge](https://github.com/cubercsl/polygon2domjudge) and evolved into something more.
 
@@ -29,7 +31,7 @@ Running
 
 converts the Polygon problem package `polygon_package` into an equivalent DOMjudge problem package `domjudge_package`.
 The name of the file `domjudge_package` corresponds to the label used to identify the problem in DOMjudge.
-The arguments `polygon_package` and `domjudge_package` can be either folders or zip files.
+The arguments `polygon_package` and `domjudge_package` can be either directories or zip files.
 
 The polygon package must be a *full* package, i.e., it must contain the generated tests.
 
@@ -41,15 +43,17 @@ Use `p2d-problem --help` for a guide.
 
 Running 
 
-```p2d-contest --config contest.yaml --import```
+```p2d-contest  my_dir/contest_dir --download --convert --upload```
+
+TODO: Correct up to here, then completely wrong
 
 searches the latest package of the problems specified in `contest.yaml` in `polygon_dir` (specified in `contest.yaml`); converts them into DOMjudge packages in `domjudge_dir` (specified in `contest.yaml`) updating previous versions; and imports, through the APIs, the updated packages into the DOMjudge instance specified in `contest.yaml`. Moreover, it creates the document `domjudge_dir/problemset.pdf` containing all the problem statements. It is possible to use a custom front page for the problem set pdf through the argument `--front-page`.
 
-The content and the format of `contest.yaml` are described in [Structure of contest.yaml](#structure-of-contestyaml).
+The content and the format of `config.yaml` are described in [Structure of config.yaml](#structure-of-configyaml).
 
 Use `p2d-contest --help` for a guide.
 
-*Example*: `p2d-contest --config swerc.yaml --import`.
+*Example*: `p2d-contest comp_prog/swerc21 --download`.
 
 ## Installation
 ### Method 1: Install the Python package using `pipx`
@@ -65,29 +69,27 @@ This provides you with the commands `p2d-problem` and `p2d-contest` available in
 
 Clone the repository with `git clone https://github.com/dario2994/pol2dom` and run the commands with `bin/p2d-problem.sh` and `bin/p2d-contest.sh` directly from the repository folder.
 
-## Customization of the LaTeX statement template
+## Generation of the LaTeX statement template
 
-The statement is generated starting from `resources/problem_template.tex` by performing the following operations:
+The statement is generated starting from `resources/statement_template.tex` by performing the following operations:
 
-1. Replace the strings `??LABEL??`, `??NAME??`, `??TIMELIMIT??`, `??MEMORYLIMIT??` with the corresponding metadata.
+1. Replace the strings `??LABEL??`, `??TITLE??`, `??TIMELIMIT??`, `??MEMORYLIMIT??` with the corresponding metadata.
 2. Replace the string `??LEGEND??`, `??INPUT??`, `??OUTPUT??` with the content of the corresponding sections in the polygon statement;
 3. Generate an initially empty string `samples`.
 For each problem sample, create two files `sample_id.in` and `sample_id.out` and append to the string `samples` the code `\sample{sample_id}` or `\bigsample{sample_id}`. The command `\bigsample` is used if there is a line in `sample_id.in` or `sample_id.out` longer than `BIG_SAMPLE_CHARS_NUM=40` characters (the value of `BIG_SAMPLE_CHARS_NUM` can be configured via `--big_sample_chars_num`), so that big samples can have a different formatting if desired.
 If the sample has an explanation (see [Samples explanation detection](#samples-explanation-detection)), append also `\sampleexplanation{Content of the sample explanation.}`.
 4. Replace the string `??SAMPLES??` with the string `samples` generated in the previous step.
 
-It is clear from the operations performed that `resources/problem_template.tex` contains the placeholders `??LABEL??`, `??NAME??`, `??TIMELIMIT??`, `??MEMORYLIMIT??`, `??LEGEND??`, `??INPUT??`, `??OUTPUT??`, `??SAMPLES??`.
+It is clear from the operations performed that `resources/statement_template.tex` contains the placeholders `??LABEL??`, `??NAME??`, `??TIMELIMIT??`, `??MEMORYLIMIT??`, `??LEGEND??`, `??INPUT??`, `??OUTPUT??`, `??SAMPLES??`.
 
-Then, the tex source code generated is inserted in `resources/statements_template.tex` (by replacing the string `??DOCUMENTCONTENT??`). Finally the string `??CONTEST??` is replaced with the corresponding metadata (given by the argument `--contest`).
+Then, the tex source code generated is inserted in `resources/document_template.tex` (by replacing the string `??DOCUMENTCONTENT??`). Finally the string `??CONTEST??` is replaced with the corresponding metadata (given by the argument `--contest`).
 
-The tex file `resources/statements_template.tex` implements the commands: `\problemlabel`, `\problemtitle`, `\timelimit`, `\memorylimit`, `\problemheader`, `\inputsection`, `\outputsection`, `\samplessection`, `\sample`, `\bigsample`, `\sampleexplanation`.
-
-If you want to customize the visual aspect of the generated pdf, use the command argument `--statements_template 'my_statements_template.tex'` (it will be used instead of `resources/statements_template.tex`).
+The tex file `resources/document_template.tex` implements the commands: `\problemlabel`, `\problemtitle`, `\timelimit`, `\memorylimit`, `\problemheader`, `\inputsection`, `\outputsection`, `\samplessection`, `\sample`, `\bigsample`, `\sampleexplanation`.
 
 ## Samples explanation detection
 
 In polygon the explanation of samples (when present) is contained in the Notes section without a specific structure.
-Since we want to parse explanation "sample-wise", we need to add some structure.
+Since we want to parse the explanations "sample-wise", we need to add some structure.
 
 The explanation of the i-th sample shall be preceded by the line `%BEGIN i` and followed by the line `%END`. For example:
 
@@ -107,28 +109,13 @@ there are $5$ people and...
 
 Notice that only the explanation itself shall be among the two magic lines, and not the title. The first letter of the explanation of each sample will be capitalized.
 
-## Author Detection
-
-In order to include in the booklet with the solutions the names of those who authored and prepared the various problems, one shall include such metadata in the `tutorial` section in Polygon.
-
-In particolar, the first two lines of the `tutorial` section shall be
-
-```
-%AUTHOR: Name Of The Author Of The Problem
-%PREPARATION: Name Of The Person Who Prepared The Problem
-```
-
-For example, a correctly formatted `tutorial` section may start with
-
-```
-%AUTHOR: Will Smith
-%PREPARATION: ac1112
-The problem is equivalent to...
-```
 
 ## Structure of `contest.yaml`
 
-The file `contest.yaml` (passed to `p2d-contest` via the argument `--config`) must be a valid `yaml` file containing the following top-level keys:
+The file `config.yaml` must be present in the contest directory to instruct `p2d-contest` on the properties of the contest.
+It must be a valid `yaml` file containing the following top-level keys:
+
+TODO: Complete nonsense from here on.
 
 - polygon_dir: The directory where the polygon packages shall be searched. It is handy to set it to the local Downloads folder, so that after downloading the packages from Polygon no further action is required.
 - domjudge_dir: The directory where the DOMjudge packages shall be saved. The pdf of the whole problem set is saved in this directory too, with the name `problemset.pdf`.

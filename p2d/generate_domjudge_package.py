@@ -51,7 +51,7 @@ RESULT_POLYGON2DOMJUDGE = {
 #              is empty)
 #   params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
 def generate_domjudge_package(problem, domjudge, params):
-    logging.info('Creating the DOMjudge package directory \'%s\'.' % domjudge)
+    logging.debug('Creating the DOMjudge package directory \'%s\'.' % domjudge)
 
     problem_yaml_data = {}
 
@@ -73,7 +73,7 @@ def generate_domjudge_package(problem, domjudge, params):
         problem, os.path.join(domjudge, 'problem.pdf'), params)
 
     # Tests
-    logging.info('Copying the tests in the DOMjudge package.')
+    logging.debug('Copying the tests in the DOMjudge package.')
 
     sample_dir = os.path.join(domjudge, 'data', 'sample')
     secret_dir = os.path.join(domjudge, 'data', 'secret')

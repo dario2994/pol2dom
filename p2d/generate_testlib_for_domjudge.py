@@ -118,9 +118,12 @@ def replace_function(lines, function):
 # The applied patch is copied from
 #   https://github.com/cn-xcpc-tools/testlib-for-domjudge.
 def generate_testlib_for_domjudge(dst_path):
-    req = requests.get('https://raw.githubusercontent.com/MikeMirzayanov/testlib/master/testlib.h')
+    logging.debug('Downloading testlib.h from github.')
+    req = requests.get(
+        'https://raw.githubusercontent.com/MikeMirzayanov/testlib/master/testlib.h')
     lines = req.text.splitlines()
 
+    logging.debug('Patching testlib.h')
     lines = add_header(lines, HEADER_COMMENT)
     for exit_code in NEW_EXIT_CODES:
         lines = replace_exit_code(lines, exit_code, NEW_EXIT_CODES[exit_code])
@@ -130,3 +133,4 @@ def generate_testlib_for_domjudge(dst_path):
     with open(dst_path, 'w') as f:
         for line in lines:
             f.write(line + '\n')
+    logging.info('The file testlib.h was successfully downloaded and patched. The local version can be found at \'%s\'.' % dst_path)

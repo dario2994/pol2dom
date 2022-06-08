@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import pathlib
@@ -10,8 +11,14 @@ import zipfile
 from argparse import ArgumentParser
 
 from p2d._version import __version__
-from p2d import polygon_api, p2d_problem, domjudge_api, tex_utilities
-
+from p2d import (domjudge_api,
+                 generate_domjudge_package,
+                 generate_testlib_for_domjudge,
+                 parse_polygon_package,
+                 polygon_api,
+                 tex_utilities)
+RESOURCES_PATH = os.path.join(
+    os.path.split(os.path.realpath(__file__))[0], 'resources')
 
 # TODO
 #  OK_SYMBOL = u'\u2705'
@@ -94,63 +101,48 @@ def manage_convert(config, polygon_dir, domjudge_dir, tex_dir, problem):
         logging.info('The local domjudge package is already up to date.')
         return
 
-    # Prepare the p2d-problem command.
-    pathlib.Path(domjudge_dir).mkdir(exist_ok=True)
+    # Parse the polygon package
+    problem = parse_polygon_package.parse_problem_from_polygon(polygon_dir)
 
-    args_list = \
-        ['--from', polygon_dir,
-        '--to', domjudge_dir,
-        '--label', problem.get('label', '?'),
-        '--color', problem.get('color', 'Black'),
-        '--contest', config['contest_name'],
-        '--save-tex', tex_dir,
-        '--verbosity', 'warning',
-        '--force']
-
-    # TODO: This shall be removed, but a --ignore-version flag shall be added
-    #       so that if something is changed in config.yaml (e.g., contest name)
-    #       the domjudge packages are generated in any case.
-    #  if local_version == old_local_version:
-        #  args_list.append('--only-tex')
+    problem['label'] = problem.get('label', '?')
+    problem['color'] = problem.get('color', 'Black')
 
     if 'override_time_limit' in problem:
-        args_list.append('--override-time-limit')
-        args_list.append(str(problem['override_time_limit'])) # in seconds
+        problem['timelimit'] = problem['override_time_limit']
 
     if 'override_memory_limit' in problem:
-        args_list.append('--override-memory-limit')
-        args_list.append(str(problem['override_memory_limit'])) # in MiB
+        problem['memorylimit'] = problem['override_memory_limit']
 
-    if config.get('hide_balloon', 0):
-        args_list.append('--hide-balloon')
+    problem['author'] = problem.get('author', '')
+    problem['preparation'] = problem.get('preparation', '')
+    # TODO: Issue warnings if label, color, author, preparation are missing?
+
+    logging.debug(json.dumps(problem, sort_keys=True, indent=4))
+
+    # Generate the tex sources of statement and solution.
+    tex_dir = os.path.abspath(tex_dir) # TODO: Necessary?
+            
+    problem_tex = tex_utilities.generate_statement_tex(problem, tex_dir)
+    solution_tex = tex_utilities.generate_solution_tex(problem, tex_dir)
+
+    with open(os.path.join(tex_dir, problem['name'] + '-statement.tex'), 'w') as f:
+        f.write(problem_tex)
+    with open(os.path.join(tex_dir, problem['name'] + '-solution.tex'), 'w') as f:
+        f.write(solution_tex)
+
+    # Generate the DOMjudge package.
     
-    if config.get('hide_balloon', 0):
-        args_list.append('--hide-tlml')
-    
-    args = p2d_problem.prepare_argument_parser().parse_args(args_list)
+    # The following three lines guarantee that in the end domjudge_dir
+    # directory is empty.
+    pathlib.Path(domjudge_dir).mkdir(exist_ok=True)
+    shutil.rmtree(domjudge_dir)
+    pathlib.Path(domjudge_dir).mkdir()
 
-    # Run p2d-problem.
-    try:
-        # This is lengthy in order to have the proper level of logging.
-        logging_level = logging.root.getEffectiveLevel()
-
-        for handler in logging.root.handlers[:]:
-            logging.root.removeHandler(handler)
-
-        p2d_problem.p2d_problem(args)
-
-        for handler in logging.root.handlers[:]:
-            logging.root.removeHandler(handler)
-
-        logging.basicConfig(
-            stream=sys.stdout,
-            format='%(levelname)s: %(message)s',
-            level=logging_level
-        )        
-    except:
-        logging.error(
-            'Error during the execution of p2d-problem with arguments %s.' % args)
-        raise
+    generate_domjudge_package.generate_domjudge_package(problem, domjudge_dir, {
+        'contest_name': config['contest_name'],
+        'hide_balloon': config.get('hide_balloon', 0),
+        'hide_tlml': config.get('hide_tlml', 0)
+    })
 
     logging.info('Converted the polygon package to the DOMjudge package \'%s\'',
                  domjudge_dir)
@@ -216,8 +208,7 @@ def prepare_argument_parser():
     parser.add_argument('--verbosity', choices=['debug', 'info', 'warning'],
                         default='info', help='Verbosity of the logs.')
     parser.add_argument('--no-cache', action='store_true', help='If set, the various steps (polygon, convert, domjudge) are run even they would not be necessary taking into account the cache.')
-    #  parser.add_argument('--ignore-local-version', action='store_true', help='All packages are generated.')
-    #  parser.add_argument('--ignore-server-version', action='store_true', help='All packages are sent to the server.')
+    parser.add_argument('--update-testlib', action='store_true', help='Whether to update the local version of testlib (syncing it with the latest version from the official github repository and patching it for DOMjudge). If this flag is passed, all the other flags/arguments are ignored and only this operation is performed.') # TODO: Make contest_dir not mandatory in this case!
     
     return parser
 
@@ -227,6 +218,12 @@ def p2d_contest(args):
         format='%(levelname)s: %(message)s',
         level=eval('logging.' + args.verbosity.upper())
     )
+
+    # Downloading and patching testlib.h if necessary.
+    testlib_h = os.path.join(RESOURCES_PATH, 'testlib.h')
+    if not os.path.isfile(testlib_h) or args.update_testlib:
+        generate_testlib_for_domjudge.generate_testlib_for_domjudge(testlib_h)
+        exit(0)
     
     contest_dir = args.contest_directory
     config_yaml = os.path.join(contest_dir, 'config.yaml')
@@ -342,6 +339,11 @@ def p2d_contest(args):
             os.path.join(contest_dir, 'tex'),
             pdf_generation_params)
 
+    print()
+    logging.info('Successfully generated \'%s\' and \'%s\'.' %
+        (os.path.join(contest_dir, 'tex', 'problemset.tex'),
+        os.path.join(contest_dir, 'tex', 'solutions.tex')))
+    
 def main():
     args = prepare_argument_parser().parse_args()
     p2d_contest(args)
@@ -423,4 +425,12 @@ if __name__ == "__main__":
 # TODO: Use logging everywhere for the error printing (maybe it is already true).
 # TODO: Use exceptions more when appropriate.
 # TODO: The logic of p2d-contest calling p2d-problem for the conversion should
-#       be thought better (but most likely, it is good as it is now).
+#       be thought better (but most likely, it is good as it is now). Maybe the
+#       point is that p2d-problem should disappear as it is not very useful.
+#       This would effectively solve also the logging issue.
+#       Then the name of the command should become p2d.
+#       p2d-problem is not handy to use because it requires a lot of flags
+#       to work (--from, --to, --label, --color, --author, --save-tex...,
+#       --override-time-limit, --override-memory-limit, --hide-balloons, etc..).
+#       Currently it is a middle-man exposed to the final user without a clear
+#       reason. And it makes the implementation more convoluted.
