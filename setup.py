@@ -15,7 +15,7 @@ def get_version():
 setup(
     name='pol2dom',
     version=get_version(),
-    description='Convert Polygon Problem Package to DOMjudge Problem Package.', # TODO: Improve description
+    description='Transform a set of Polygon problems into a DOMjudge contest. Downloading from polygon, converting to the DOMjudge package format, and importing into a DOMjudge server.',
     author='dario2994',
     author_email='dario2994@gmail.com',
     url='https://github.com/dario2994/pol2dom',

@@ -7,3 +7,13 @@ p2d/resources/*.aux
 p2d/resources/*.out
 p2d/resources/*.pdf
 p2d/experimental/
+testing/**/config.yaml
+testing/**/*.pdf
+testing/**/*.out
+testing/**/*.log
+testing/**/*.aux
+testing/**/*.zip
+testing/**/images/
+testing/**/polygon/**/tests/
+testing/**/domjudge/**/problem.pdf
+testing/**/domjudge/**/data/secret
