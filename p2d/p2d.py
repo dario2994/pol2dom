@@ -38,7 +38,6 @@ def manage_download(config, polygon_dir, problem):
 
     logging.debug('For problem %s the selected package is %s.'
                   % (problem['name'], latest_package[1]))
-    # TODO: Check problem['name'] calling a polygon api?
 
     if latest_package[0] == -1:
         logging.warning('No packages were found on polygon.')
@@ -75,7 +74,6 @@ def manage_download(config, polygon_dir, problem):
                  '\'%s\'.' % os.path.join(polygon_dir))
     problem['polygon_version'] = latest_package[0]
 
-# TODO: Should this call p2d_problem? Or something at a lower-level?
 # Transforms the polygon package contained in polygon_dir (already extracted)
 # into an equivalent domjudge package in domjudge_dir. In domjudge_dir the
 # package is contained extracted, but also a zip of the package itself is
@@ -130,14 +128,15 @@ def manage_convert(config, polygon_dir, domjudge_dir, tex_dir, problem):
     logging.debug(json.dumps(problem_package, sort_keys=True, indent=4))
 
     # Generate the tex sources of statement and solution.
-    tex_dir = os.path.abspath(tex_dir) # TODO: Necessary?
-            
     problem_tex = tex_utilities.generate_statement_tex(problem_package, tex_dir)
     solution_tex = tex_utilities.generate_solution_tex(problem_package, tex_dir)
 
-    with open(os.path.join(tex_dir, problem['name'] + '-statement.tex'), 'w') as f:
+    statement_file = problem['name'] + '-statement-content.tex'
+    solution_file = problem['name'] + '-solution-content.tex'
+    
+    with open(os.path.join(tex_dir, statement_file), 'w') as f:
         f.write(problem_tex)
-    with open(os.path.join(tex_dir, problem['name'] + '-solution.tex'), 'w') as f:
+    with open(os.path.join(tex_dir, solution_file), 'w') as f:
         f.write(solution_tex)
 
     # Generate the DOMjudge package.
@@ -149,7 +148,7 @@ def manage_convert(config, polygon_dir, domjudge_dir, tex_dir, problem):
     pathlib.Path(domjudge_dir).mkdir()
 
     generate_domjudge_package.generate_domjudge_package(
-        problem_package, domjudge_dir,
+        problem_package, domjudge_dir, tex_dir,
         {
             'contest_name': config['contest_name'],
             'hide_balloon': config.get('hide_balloon', 0),
@@ -220,7 +219,7 @@ def prepare_argument_parser():
     parser.add_argument('--verbosity', choices=['debug', 'info', 'warning'],
                         default='info', help='Verbosity of the logs.')
     parser.add_argument('--no-cache', action='store_true', help='If set, the various steps (polygon, convert, domjudge) are run even if they would not be necessary (according to the caching mechanism).')
-    parser.add_argument('--clear-dir', action='store_true', help='Whether to remove all the files and directory, apart from \'config.yaml\' from the contest directory (as a consequence, all the cache is deleted). It is useful if a problem changes name.')
+    parser.add_argument('--clear-dir', action='store_true', help='Whether to remove all the files and directory, apart from \'config.yaml\' from the contest directory (as a consequence, all the cache is deleted).')
     parser.add_argument('--update-testlib', action='store_true', help='Whether to update the local version of testlib (syncing it with the latest version from the official github repository and patching it for DOMjudge).')
     
     return parser
@@ -383,7 +382,8 @@ def main():
 if __name__ == "__main__":
     main()
 
-# TODO:
+# On error tracing and logging:
+#
 # For errors, use logging.error and exit(1) or raise an exception.
 # For warnings, use logging.warning.
 #
@@ -394,6 +394,7 @@ if __name__ == "__main__":
 #
 #
 # contest dir structure:
+#
 # config.yaml
 # polygon/
 #   problemname/
@@ -448,10 +449,6 @@ if __name__ == "__main__":
   #  domjudge_local_version: 9
   #  domjudge_server_version: 3
 
-# TODO: Generate also per-problem statement and editorial (useful to upload it
-#       on the website after the contest ends). The generation of tex should
-#       be handled entirely in the tex/ directory, instead of using temporary
-#       directories. Doing so simplifies the logic and is more natural.
 # TODO: Everything should be tested appropriately.
 # TODO: The documentation must be updated.
 # TODO: Use logging everywhere for the error printing (maybe it is already true).

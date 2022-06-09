@@ -12,23 +12,19 @@ RESOURCES_PATH = os.path.join(
     os.path.split(os.path.realpath(__file__))[0], 'resources')
 
 
-# Execute pdflatex on `from_` and copies the generated pdf document
-# in the `to` file.
-# from_ is a .tex file, to is a .pdf file.
-def tex2pdf(from_, to):
-    logging.debug('Compiling \'%s\' into \'%s\' (pdflatex).' % (from_, to))
-    if not from_.endswith('.tex'):
-        logging.error('The argument from_=\'%s\' passed to tex2pdf is not a .tex file.' % from_)
-        exit(1)
-    if not to.endswith('.pdf'):
-        logging.error('The argument to=\'%s\' passed to tex2pdf is not a .pdf file.' % to)
+# Execute pdflatex on tex_file.
+# tex_file is a .tex file
+def tex2pdf(tex_file):
+    logging.debug('Executing pdflatex on \'%s\'.' % tex_file)
+    if not tex_file.endswith('.tex'):
+        logging.error('The argument tex_file=\'%s\' passed to tex2pdf is not a .tex file.' % tex_file)
         exit(1)
     
-    from_dir = os.path.dirname(from_)
-    from_name = os.path.basename(from_)[:-4] # Without extension
+    tex_dir = os.path.dirname(tex_file)
+    tex_name = os.path.basename(tex_file)[:-4] # Without extension
     command_as_list = ['pdflatex', '-interaction=nonstopmode', '--shell-escape',
-                       '-output-dir=' + from_dir, '-jobname=%s' % from_name,
-                       from_]
+                       '-output-dir=' + tex_dir, '-jobname=%s' % tex_name,
+                       tex_file]
     logging.debug('pdflatex command = ' + ' '.join(command_as_list))
     pdflatex = subprocess.run(command_as_list, stdout=subprocess.PIPE,
                               shell=False)
@@ -38,9 +34,7 @@ def tex2pdf(from_, to):
         logging.error('The pdflatex command returned an error.')
         exit(1)
 
-    from_pdf = os.path.join(from_dir, from_name + '.pdf')
-    if not os.path.isfile(to) or not os.path.samefile(from_pdf, to):
-        shutil.copyfile(from_pdf, to)
+    tex_pdf = os.path.join(tex_dir, tex_name + '.pdf')
 
 # Returns a string containing the tex of the statement (only what shall go
 # inside \begin{document} \end{document}).
@@ -136,12 +130,12 @@ def generate_solution_tex(problem, tex_dir):
 # It performs the following operations:
 # 1. Fill document_template.tex document tag with document_content;
 # 2. Replace the placeholders in params using params;
-# 3. Save the resulting tex in from_;
-# 4. Compile from_ into the pdf to.
+# 3. Save the resulting tex in tex_file;
+# 4. Compile tex_file. If tex_file = 'path/name.tex', the pdf file produced is
+#    'path/name.pdf'.
 #
-# from_ is a .tex file, to is a .pdf file.
 # params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
-def compile_document_template(document_content, from_, to, params):
+def compile_document_template(document_content, tex_file, params):
     replacements_document = {
         'CONTESTNAME': params['contest_name'],
         'SHOWBALLOON': 0 if params['hide_balloon'] else 1,
@@ -155,48 +149,36 @@ def compile_document_template(document_content, from_, to, params):
         document_template = document_template.replace(
             '??%s??' % placeholder, str(replacements_document[placeholder]))
 
-    with open(from_, 'w') as f:
+    with open(tex_file, 'w') as f:
         f.write(document_template)
 
-    tex2pdf(from_, to)
+    tex2pdf(tex_file)
 
-# Produces the statement (in pdf) of a problem in pdf_file.
+# Produces problemname-statement.{tex,pdf}, which are respectively the tex source
+# and the pdf of the statement, in the directory tex_dir.
 #   params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
-def generate_statement_pdf(problem, pdf_file, params):
-    tex_dir = tempfile.mkdtemp(
-        prefix='%s-p2d-pdflatex' % problem['name'])
-    logging.debug('Temporary directory for pdflatex: \'%s\'.' % tex_dir)
-
+def generate_statement_pdf(problem, tex_dir, params):
     statement_tex = generate_statement_tex(problem, tex_dir)
-    compile_document_template(statement_tex,
-                              os.path.join(tex_dir, 'statement.tex'),
-                              pdf_file,
-                              params)
+    compile_document_template(
+        statement_tex,
+        os.path.join(tex_dir, problem['name'] + '-statement.tex'),
+        params)
 
-    # TODO: Handle debugging in some way
-    #  if not args.keep_dirs:
-        #  shutil.rmtree(tex_dir)
-
-# Produces the solution (in pdf) of a problem in pdf_file.
+# Produces problemname-solution.{tex,pdf}, which are respectively the tex source
+# and the pdf of the solution, in the directory tex_dir.
 #   params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
-def generate_solution_pdf(problem, pdf_file, params):
-    tex_dir = tempfile.mkdtemp(prefix='%s-p2d-pdflatex' % problem['name'])
-    logging.debug('Temporary directory for pdflatex: \'%s\'.' % tex_dir)
-
+def generate_solution_pdf(problem, tex_dir, params):
     solution_tex = generate_solution_tex(problem, tex_dir)
-    compile_document_template(solution_tex,
-                                os.path.join(tex_dir, 'solution.tex'),
-                                pdf_file,
-                                params)
-
-    # TODO: Handle debugging in some way
-    #  if not args.keep_dirs:
-        #  shutil.rmtree(tex_dir)
+    compile_document_template(
+        solution_tex,
+        os.path.join(tex_dir, problem['name'] + '-solution.tex'),
+        params)
 
 # Produces the complete problem set of a contest and saves it as
 # tex_dir/problemset.pdf.
 #   problems is a list of problem names, in the order they shall appear.
-#   tex_dir must contain problem-statement.tex for each problem in problems.
+#   tex_dir must contain problem-statement-content.tex for each problem in
+#   problems.
 #   params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
 def generate_problemset_pdf(problems, frontpage, tex_dir, params):
     problemset_tex = ''
@@ -207,11 +189,11 @@ def generate_problemset_pdf(problems, frontpage, tex_dir, params):
         problemset_tex += '\\insertblankpageifnecessary\n\n'
 
     for problem in problems:
-        maybe_tex = os.path.join(tex_dir, problem + '-statement.tex')
+        maybe_tex = os.path.join(tex_dir, problem + '-statement-content.tex')
         if not os.path.isfile(maybe_tex):
             logging.warning('The tex source \'%s\' does not exist; but it is required to generate the pdf with all problems.' % maybe_tex)
             continue
-        problemset_tex += '\\input{%s-statement.tex}\n' % problem
+        problemset_tex += '\\input{%s-statement-content.tex}\n' % problem
         problemset_tex += '\\insertblankpageifnecessary\n\n'
 
     # Executing pdflatex twice because otherwise the command
@@ -220,12 +202,12 @@ def generate_problemset_pdf(problems, frontpage, tex_dir, params):
         compile_document_template(
                 problemset_tex,
                 os.path.join(tex_dir, 'problemset.tex'),
-                os.path.join(tex_dir, 'problemset.pdf'),
                 params)
 
 # Produces the complete editorial of a contest and saves it as tex_dir/solutions.pdf.
 #   problems is a list of problem names, in the order they shall appear.
-#   tex_dir must contain problem-solution.tex for each problem in problems.
+#   tex_dir must contain problemname-solution-content.tex for each problem
+#   in problems.
 #   params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
 def generate_solutions_pdf(problems, frontpage, tex_dir, params):
     solutions_tex = ''
@@ -235,15 +217,14 @@ def generate_solutions_pdf(problems, frontpage, tex_dir, params):
         solutions_tex += '\\includepdf{%s}\n\n' % frontpage
 
     for problem in problems:
-        maybe_tex = os.path.join(tex_dir, problem + '-solution.tex')
+        maybe_tex = os.path.join(tex_dir, problem + '-solution-content.tex')
         if not os.path.isfile(maybe_tex):
             logging.warning('The tex source \'%s\' does not exist; but it is required to generate the pdf with all solutions.' % maybe_tex)
             continue
-        solutions_tex += '\\input{%s-solution.tex}\n' % problem
+        solutions_tex += '\\input{%s-solution-content.tex}\n' % problem
         solutions_tex += '\\clearpage\n'
     
     compile_document_template(
             solutions_tex,
             os.path.join(tex_dir, 'solutions.tex'),
-            os.path.join(tex_dir, 'solutions.pdf'),
             params)
