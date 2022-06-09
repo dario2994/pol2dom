@@ -1,5 +1,7 @@
 # pol2dom
 
+TODO: BROKEN DOCUMENTATION!
+
 Tool to import a problem/contest prepared in [Polygon](https://polygon.codeforces.com/) into a [DOMjudge](https://www.domjudge.org/) instance.
 
 The whole process is automated: downloading the Polygon package, converting it into a DOMjudge package, uploading the DOMjudge package to a DOMjudge server.
