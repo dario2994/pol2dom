@@ -49,13 +49,12 @@ def update_problem_api(package_zip, problem_id, credentials):
 
 # Adds an "empty" problem to a contest.
 # Returns true if the problem was successfully added. In such case, it set
-# the 'externalid' of the problem.
+# the 'domjudge_id' of the problem.
 # credentials is a dictionary with keys contest_id, server, username, password.
 def add_problem_to_contest_api(problem, credentials):
     api_address = '/api/v4/contests/%s/problems/add-data' % credentials['contest_id']
     externalid = generate_externalid(problem)
     
-
     with tempfile.NamedTemporaryFile(delete=False, suffix='.yaml', mode='w',
                                      encoding='utf-8') as f:
         problem_yaml = f.name
@@ -74,33 +73,6 @@ def add_problem_to_contest_api(problem, credentials):
         logging.error('Error adding the problem to the contest: %s.' % res.json())
         return False
 
-    problem['domjudge_id'] = res.json()[0]
-    problem['domjudge_externalid'] = externalid
+    problem['domjudge_id'] = externalid
 
     return True
-
-
-# TODO: Put this somewhere appropriate
-#  def debug_requests_on():
-    #  HTTPConnection.debuglevel = 1
-    #  logging.basicConfig()
-    #  logging.getLogger().setLevel(logging.DEBUG)
-    #  requests_log = logging.getLogger("requests.packages.urllib3")
-    #  requests_log.setLevel(logging.DEBUG)
-    #  requests_log.propagate = True
-
-#  def debug_requests_off():
-    #  HTTPConnection.debuglevel = 0
-    #  root_logger = logging.getLogger()
-    #  root_logger.setLevel(logging.WARNING)
-    #  root_logger.handlers = []
-    #  requests_log = logging.getLogger("requests.packages.urllib3")
-    #  requests_log.setLevel(logging.WARNING)
-    #  requests_log.propagate = False
-
-#  @contextlib.contextmanager
-#  def debug_requests():
-    #  '''Use with 'with'!'''
-    #  debug_requests_on()
-    #  yield
-    #  debug_requests_off()

@@ -20,11 +20,6 @@ from p2d import (domjudge_api,
 RESOURCES_PATH = os.path.join(
     os.path.split(os.path.realpath(__file__))[0], 'resources')
 
-# TODO
-#  OK_SYMBOL = u'\u2705'
-#  NEUTRAL_SYMBOL = '  '
-#  ERROR_SYMBOL = u'\u274C'
-
 
 def manage_download(config, polygon_dir, problem):
     if 'polygon_id' not in problem:
@@ -192,21 +187,21 @@ def manage_domjudge(config, domjudge_dir, problem):
             return
 
     # Sending the problem package to the server.
-    assert('domjudge_id' in problem and 'domjudge_externalid' in problem)
+    assert('domjudge_id' in problem)
     zip_file = os.path.join(domjudge_dir, problem['name'] + '.zip')
     zip_file_copy = os.path.join(domjudge_dir,
-                                 problem['domjudge_externalid'] + '.zip')
+                                 problem['domjudge_id'] + '.zip')
     shutil.copyfile(zip_file, zip_file_copy)
     
     if not domjudge_api.update_problem_api(
-            zip_file_copy, problem['domjudge_externalid'], config['domjudge']):
+            zip_file_copy, problem['domjudge_id'], config['domjudge']):
         logging.error('There was an error while updating the problem '
                       'in the DOMjudge server.')
         return
             
     problem['domjudge_server_version'] = local_version
 
-    logging.info('Updated the DOMjudge package on the server \'%s\', with externalid = \'%s\'.' % (config['domjudge']['server'], problem['domjudge_externalid']))
+    logging.info('Updated the DOMjudge package on the server \'%s\', with externalid = \'%s\'.' % (config['domjudge']['server'], problem['domjudge_id']))
     
 def prepare_argument_parser():
     parser = ArgumentParser(description='Utility script to import a whole contest from polygon into DOMjudge.')
@@ -218,7 +213,8 @@ def prepare_argument_parser():
     parser.add_argument('--verbosity', choices=['debug', 'info', 'warning'],
                         default='info', help='Verbosity of the logs.')
     parser.add_argument('--no-cache', action='store_true', help='If set, the various steps (polygon, convert, domjudge) are run even if they would not be necessary (according to the caching mechanism).')
-    parser.add_argument('--clear-dir', action='store_true', help='Whether to remove all the files and directory, apart from \'config.yaml\' from the contest directory (as a consequence, all the cache is deleted).')
+    parser.add_argument('--clear-dir', action='store_true', help='If set, all files and directories, apart from \'config.yaml\', in the contest directory are deleted (as a consequence, the cache is deleted).')
+    parser.add_argument('--clear-domjudge-ids', action='store_true', help='If set, the domjudge IDs saved in config.yaml (for the problems that were uploaded to the DOMjudge server) are deleted. As a consequence, next time the flag `--domjudge` is passed, the problems will be uploaded as new problems to DOMjudge. This should be used either if the DOMjudge server changed, if the DOMjudge contest changed, or if the problems were deleted in the DOMjudge server.')
     parser.add_argument('--update-testlib', action='store_true', help='Whether to update the local version of testlib (syncing it with the latest version from the official github repository and patching it for DOMjudge).')
     
     return parser
@@ -243,11 +239,16 @@ def prepare_argument_parser():
 #   problemname-statement.pdf
 #   problemname-solution.pdf
 def p2d(args):
+    # Configuring logging
     logging.basicConfig(
         stream=sys.stdout,
         format='%(levelname)s: %(message)s',
         level=eval('logging.' + args.verbosity.upper())
     )
+    
+    requests_log = logging.getLogger("requests.packages.urllib3")
+    requests_log.setLevel(logging.DEBUG)
+    requests_log.propagate = True
 
     # Downloading and patching testlib.h if necessary.
     testlib_h = os.path.join(RESOURCES_PATH, 'testlib.h')
@@ -289,6 +290,15 @@ def p2d(args):
                 shutil.rmtree(dir_path)
 
         logging.info('Deleted the content of \'%s\' apart from config.yaml.' % contest_dir)
+
+    if args.clear_domjudge_ids:
+        for problem in config['problems']:
+            problem['domjudge_server_version'] = -1
+            problem.pop('domjudge_id', None)
+
+        save_config_yaml()
+
+        logging.info('Deleted the DOMjudge IDs from config.yaml.')
         
     if args.polygon and ('polygon' not in config
                          or 'key' not in config['polygon']
@@ -308,7 +318,7 @@ def p2d(args):
         exit(1)
 
     if not args.polygon and not args.convert and not args.domjudge \
-       and not args.clear_dir:
+       and not args.clear_dir and not args.clear_domjudge_ids:
         logging.error('At least one of the flags --polygon, --convert, --domjudge, --clear is necessary.')
         exit(1)
 
@@ -417,6 +427,5 @@ if __name__ == "__main__":
 
 
 # TODO: Everything should be tested appropriately.
-# TODO: Polish the documentation.
+# TODO: Polish the documentation (reread README.md).
 # TODO: The colors belong to what list?
-# TODO: --clear-domjudge-ids.
