@@ -67,14 +67,14 @@ The file `config.yaml` must be present in the contest directory to instruct `p2d
 It must be a valid `yaml` file containing the following top-level keys:
 
 - contest_name (mandatory): The name of the contest. It appears in the statements of the problems (and in the solutions).
-- front_page_problemset: Path to the single-page pdf to use for the front page of the full problem set. This key is not mandatory, if it is not provided then the pdf with the problem set will not have a front page.
-- front_page_solutions: Path to the single-page pdf to use for the front page of the editorial containing the solutions to all the problems. This key is not mandatory, if it is not provided then the pdf with the solutions will not have a front page.
+- front_page_problemset: Absolute path of the single-page pdf to use for the front page of the full problem set. This key is not mandatory, if it is not provided then the pdf with the problem set will not have a front page.
+- front_page_solutions: Absolute path of the single-page pdf to use for the front page of the editorial containing the solutions to all the problems. This key is not mandatory, if it is not provided then the pdf with the solutions will not have a front page.
 - polygon: A dictionary containing the credentials to use polygon's APIs. This is necessary only if you want to use `p2d` to download the problem packages from polygon. It must have the keys `key` and `secret`. The credentials can be generated in the menu `settings` in polygon.
 - domjudge: A dictionary containing the credentials to use DOMjudge's APIs. This is necessary only if you want to use `p2d` to upload the problems in a DOMjudge instance (i.e., if you want to use the flag `--domjudge`). This subdictionary must contain the following keys:
     - server: Address of the server hosting the DOMjudge instance.
     - username: The username of an admin user of the DOMjudge instance.
     - password: The password of the abovementioned user.
-    - contest_id: The external-id of the DOMjudge contest. 
+    - contest_id: The external ID of the DOMjudge contest. 
 - problems: This is a list of problems. A problem is a dictionary with the following keys:
   - name (mandatory): Short-name, in polygon, of the problem. This is used as identifier of the problem (denoted above as `problem_name`).
   - polygon_id: The problem id in polygon. Can be found in the right-side menu after opening the problem in polygon. It is necessary to download the polygon package.
