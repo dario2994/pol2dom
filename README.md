@@ -63,52 +63,35 @@ Additional flags:
 
 ## Structure of `config.yaml`
 
-The file `config.yaml` must be present in the contest directory to instruct `p2d-contest` on the properties of the contest.
+The file `config.yaml` must be present in the contest directory to instruct `p2d` on the properties of the contest.
 It must be a valid `yaml` file containing the following top-level keys:
 
-TODO: This section is badly outdated.
-
-- polygon_dir: The directory where the polygon packages shall be searched. It is handy to set it to the local Downloads folder, so that after downloading the packages from Polygon no further action is required.
-- domjudge_dir: The directory where the DOMjudge packages shall be saved. The pdf of the whole problem set is saved in this directory too, with the name `problemset.pdf`.
-- server: The URL of the DOMjudge instance (necessary only if you want to directly import the problems with `--send`).
-- username: Username of an admin user of the DOMjudge instance (necessary only if you want to directly import the problems with `--send`).
-- password: Password of the admin user (necessary only if you want to directly import the problems with `--send`).
-- contest_id: Id of the contest in the DOMjudge instance (necessary only if you want to directly import the problems with `--send`).
-- contest_name: Name of the contest, used to generate properly the pdf of the statements.
-- front_page_problemset: The single-page pdf file to be used as front page of the problem set. This key is not mandatory, if it is not provided then the problem set will not have a front page.
-- front_page_solutions: The single-page pdf file to be used as front page of the pdf with the solutions. This key is not mandatory, if it is not provided then the pdf with the solutions will not have a front page.
+- contest_name (mandatory): The name of the contest. It appears in the statements of the problems (and in the solutions).
+- front_page_problemset: Path to the single-page pdf to use for the front page of the full problem set. This key is not mandatory, if it is not provided then the pdf with the problem set will not have a front page.
+- front_page_solutions: Path to the single-page pdf to use for the front page of the editorial containing the solutions to all the problems. This key is not mandatory, if it is not provided then the pdf with the solutions will not have a front page.
+- polygon: A dictionary containing the credentials to use polygon's APIs. This is necessary only if you want to use `p2d` to download the problem packages from polygon. It must have the keys `key` and `secret`. The credentials can be generated in the menu `settings` in polygon.
+- domjudge: A dictionary containing the credentials to use DOMjudge's APIs. This is necessary only if you want to use `p2d` to upload the problems in a DOMjudge instance (i.e., if you want to use the flag `--domjudge`). This subdictionary must contain the following keys:
+    - server: Address of the server hosting the DOMjudge instance.
+    - username: The username of an admin user of the DOMjudge instance.
+    - password: The password of the abovementioned user.
+    - contest_id: The external-id of the DOMjudge contest. 
 - problems: This is a list of problems. A problem is a dictionary with the following keys:
-  - name: Short-name, in polygon, of the problem. This is used to find the polygon package in the directory specified by `--polygon`.
-          So, if the name is `lis`, the tool will look for a file (in the directory `--polygon`) with name `lis-VERSION$windows.zip` or `lis-VERSION$linux.zip` (depending on the platform). Notice that this name format is exactly the one used by polygon, so after downloading the package no renaming is necessary.
-  - label: The label used to identify the problem in the scoreboard (usually it is an uppercase letter).
+  - name (mandatory): Short-name, in polygon, of the problem. This is used as identifier of the problem (denoted above as `problem_name`).
+  - polygon_id: The problem id in polygon. Can be found in the right-side menu after opening the problem in polygon. It is necessary to download the polygon package.
+  - label: The label used to identify the problem in the DOMjudge scoreboard (usually it is an uppercase letter). Problems will be appear in DOMjudge sorted according to this label.
   - color: Color of the problem in DOMjudge.
+  - author: The author of the problem. Used in the pdf of the solutions.
+  - preparation: The person who prepared the problems. Used in the pdf of the solutions.
   - override_time_limit: Value (in seconds) of the time limit of the problem in DOMjudge. If this is present the value set in polygon is ignored.
   - override_memory_limit: Value (in MiB) of the memory limit of the problem in DOMjudge. If this is present the value set in polygon is ignored.
-  - local-version: This key is created, and updated, by `p2d-contest`. It is the version of the latest Polygon package which was succesfully converted in a DOMjudge package.
-  - server-version: This key is created, and updated, by `p2d-contest`. It is the version of the latest Polygon package which was succesfully imported into the DOMjudge instance.
-  - id: This key is created by `p2d-contest`. It corresponds to the (numeric) id of the problem in the DOMjudge instance.
-  - externalid: This key is created by `p2d-contest`. It corresponds to the (alphanumeric) id of the problem in the DOMjudge instance and it must be unique among all problems (it is generated appending a random string to the name of the problem).
 
-*Example*: The following one is a valid `contest.yaml` file.
+Some more keys are added (and managed) by `p2d` for caching purposes. Namely each problem will also contains the additional keys: `polygon_version`, `domjudge_local_version`, `domjudge_server_version`.
+These additional keys are managed by `p2d` and should not be touched by the user. In order to clear entirely the keys related to caching, use the flag `--clear-dir` (which will also clear the directory of the contest).
 
-```
-polygon_dir: ~/Downloads/
-domjudge_dir: all_problems/
-server: https://www.domjudge.org/demoweb/
-username: admin
-password: admin
-contest_id: 123
-contest_name: International Competition of Programmers
-front_page_problemset: data/officialproblemset.pdf
-front_page_solutions: data/solutions_frontpage.pdf
-problems:
-- name: maximum-subarray
-  label: A
-  color: red
-- name: lis
-  label: B
-  color: purple
-```
+Moreover, each problem (after being uploaded for the first time on DOMjudge) will also have the keys `domjudge_id` and `domjudge_externalid`.
+These keys can be deleted only by modifying the file (which may be necessary if, for example, the DOMjudge instance changes).
+
+See `examples/config.yaml` for a valid `config.yaml` file.
 
 ## Samples explanation detection
 

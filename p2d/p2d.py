@@ -251,6 +251,10 @@ def p2d_contest(args):
             print(exc)
             exit(1)
 
+    def save_config_yaml():
+        with open(config_yaml, 'w', encoding='utf-8') as f:
+            yaml.safe_dump(config, f, default_flow_style=False, sort_keys=False)
+
     if args.clear_dir:
         # Remove the versions from config.yaml
         for problem in config['problems']:
@@ -258,8 +262,7 @@ def p2d_contest(args):
             problem['domjudge_local_version'] = -1
             problem['domjudge_server_version'] = -1
 
-        with open(config_yaml, 'w', encoding='utf-8') as f:
-            yaml.safe_dump(config, f, default_flow_style=False, sort_keys=False)
+        save_config_yaml()
 
         # Delete the directories polygon/, domjudge/, tex/.
         for dir_name in ['polygon', 'domjudge', 'tex']:
@@ -286,9 +289,9 @@ def p2d_contest(args):
                       'in config.yaml to download problems from polygon.')
         exit(1)
 
-    if not args.polygon and not args.convert and not args.domjudge:
-        logging.error('At least one of the flags --polygon, --convert, --domjudge '
-                      'is necessary.')
+    if not args.polygon and not args.convert and not args.domjudge \
+       and not args.clear_dir:
+        logging.error('At least one of the flags --polygon, --convert, --domjudge, --clear is necessary.')
         exit(1)
 
     pathlib.Path(os.path.join(contest_dir, 'polygon')).mkdir(exist_ok=True)
@@ -317,6 +320,7 @@ def p2d_contest(args):
                 problem['polygon_version'] = -1
             manage_download(
                 config, os.path.join(contest_dir, 'polygon', problem['name']), problem)
+            save_config_yaml()
 
         if args.convert:
             if args.no_cache:
@@ -327,6 +331,7 @@ def p2d_contest(args):
                 os.path.join(contest_dir, 'domjudge', problem['name']),
                 os.path.join(contest_dir, 'tex'),
                 problem)
+            save_config_yaml()
             
         if args.domjudge:
             if args.no_cache:
@@ -334,15 +339,12 @@ def p2d_contest(args):
             manage_domjudge(
                 config, os.path.join(
                     contest_dir, 'domjudge', problem['name']), problem)
+            save_config_yaml()
 
     if args.problem and not problem_selected_exists:
         logging.warning('The problem specified with --problem does not appear '
                         'in config.yaml.')
         return
-    
-    # Save the updated config.yaml.
-    with open(config_yaml, 'w', encoding='utf-8') as f:
-        yaml.safe_dump(config, f, default_flow_style=False, sort_keys=False)
 
     # Generate the pdfs of the full problemset and of the solutions.
     if args.problem:
@@ -408,7 +410,7 @@ if __name__ == "__main__":
 #   samples/ (containing all the samples)
 #   images/ (containing all the images, for statements and solutions)
 #   problemset.pdf
-#   editorial.pdf
+#   solutions.pdf
 #   For each problem:
 #   problemname-statement.pdf
 #   problemname-solution.pdf
@@ -454,6 +456,8 @@ if __name__ == "__main__":
 # TODO: Use logging everywhere for the error printing (maybe it is already true).
 # TODO: Use exceptions more when appropriate (maybe already done).
 # TODO: Use - instead of _ in config.yaml (and everywhere else too).
-# TODO: Save config.yaml after every operation, not only at the end.
-# TODO: In parse_polygon_package.py:93, logging.error if the directory does not
-#       contain problem.xml (i.e., it is not a polygon package).
+# TODO: Use editorial.pdf (solutions.pdf is a bad name).
+# TODO: The colors belong to what list?
+# TODO: The path to the front pages, is relative to what?
+# TODO: The contest_id is the external id or it is something else?
+# TODO: --clear-domjudge-ids.

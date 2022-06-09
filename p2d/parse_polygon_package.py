@@ -85,11 +85,14 @@ def parse_problem_from_polygon(polygon):
         return os.path.join(polygon, *path)
 
     logging.debug('Parsing the polygon package directory \'%s\'.' % polygon)
-    logging.debug('Parsing \'%s\'' % pol_path('problem.xml'))
+    if not os.path.isfile(pol_path('problem.xml')):
+        logging.error('The directory \'%s\' is not a polygon package (as it does not contain the file \'problem.xml\'.' % polygon)
+        exit(1)
 
     problem = {}
 
     # Metadata
+    logging.debug('Parsing \'%s\'' % pol_path('problem.xml'))
     problem_xml = xml.etree.ElementTree.parse(pol_path('problem.xml'))
     problem['name'] = problem_xml.getroot().attrib['short-name']
     problem['title'] = problem_xml.find('names').find('name').attrib['value']
