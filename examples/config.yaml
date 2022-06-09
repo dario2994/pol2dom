@@ -1,0 +1,35 @@
+contest_name: Testing pol2dom
+polygon: # Credentials for polygon APIs. Can be generated in polygon -> settings.
+  key: ??? 
+  secret: ???
+domjudge: # Credentials for the DOMjudge instance APIs. Must be an admin user.
+  server: https://www.domjudge.org/demoweb
+  username: admin
+  password: admin
+  # The external-id of the contest in DOMjudge. TODO: Check
+  # The contest is NOT created by pol2dom and must be manually created by the user.
+  contest_id: testing_contest_id 
+problems:
+- name: gianni
+  label: A
+  color: CornflowerBlue
+  override_memory_limit: 2048 # MiB
+  # To find the problem id in polygon:
+  # 1. Open the problem in polygon
+  # 2. The first row of the right-side menu contains id = ???.
+  polygon_id: ???
+  author: Federico Glaudo
+  preparation: Federico Glaudo
+- name: drone-photo
+  label: B
+  color: PineGreen
+  override_time_limit: 3 # seconds
+  polygon_id: ???
+  author: Andrea Ciprietti
+  preparation: Filippo Baroni
+- name: referee-match
+  label: C
+  color: Red
+  polygon_id: ???
+  author: Gerard Orriols
+  preparation: Gerard Orriols

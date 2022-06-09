@@ -453,3 +453,7 @@ if __name__ == "__main__":
 # TODO: The documentation must be updated.
 # TODO: Use logging everywhere for the error printing (maybe it is already true).
 # TODO: Use exceptions more when appropriate (maybe already done).
+# TODO: Use - instead of _ in config.yaml (and everywhere else too).
+# TODO: Save config.yaml after every operation, not only at the end.
+# TODO: In parse_polygon_package.py:93, logging.error if the directory does not
+#       contain problem.xml (i.e., it is not a polygon package).

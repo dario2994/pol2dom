@@ -1,0 +1,307 @@
+\documentclass[11pt,final,twoside]{article}
+
+%%%%%%%%%%%%%%%%%%% PACKAGES %%%%%%%%%%%%%%%%%%%%
+\usepackage[a4paper, top=2.5cm, bottom=3.5cm, inner=2cm, outer=2.5cm]{geometry}
+
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage[T1]{fontenc}    
+\usepackage[utf8]{inputenc}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage{layout}
+\usepackage{fancyhdr}
+\usepackage{ifthen}
+\usepackage{graphicx}
+\usepackage{pdfpages}
+\usepackage{calc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    urlcolor=blue
+}
+\usepackage{tikz}
+\usepackage[strict]{changepage}
+\usepackage{xparse}
+
+
+% Set max width of \includegraphics to \linewidth.
+\usepackage[export]{adjustbox}
+\let\oldincludegraphics\includegraphics
+\renewcommand{\includegraphics}[2][]{%
+    \oldincludegraphics[#1,max width=\linewidth]{#2}%
+}
+
+%%%%%%%%%%%%%%%%%%% GLOBAL SPACING CONFIGURATION %%%%%%%%%%%%%%%%%%%%
+\setlist{leftmargin=2em,topsep=0.5em}
+\setlength{\parindent}{0em}
+\setlength{\parskip}{0.5em}
+\raggedbottom
+
+\usepackage{titlesec}
+\titlespacing*{\section}{0em}{1.5em}{0.2em}
+\titleformat*{\section}{\Large\scshape\bfseries}
+
+\titlespacing*{\subsection}{0em}{-1.5em}{-0.4em}
+\titleformat*{\subsection}{\normalsize\bfseries}
+
+%%%%%%%%%%%%%%%%%%% HEADER AND FOOTER %%%%%%%%%%%%%%%%%%%%
+
+\fancypagestyle{problem}{
+\fancyhf{}
+    \renewcommand{\headrulewidth}{0.1pt}
+\setlength\headheight{14pt}
+\lhead{\textsc{Problem \problemlabel: \problemtitle}}
+\rhead{\textsc{\contestname}} % e.g., SWERC 2021/22 - Milan
+\rfoot{\thepage\hspace{2em}}
+}
+
+\fancypagestyle{solution}{
+\fancyhf{}
+    \renewcommand{\headrulewidth}{0.1pt}
+\setlength\headheight{14pt}
+\lhead{\textsc{\problemlabel: \problemtitle}}
+\rhead{\textsc{Solutions of \contestname}} % e.g., SWERC 2021/22 - Milan
+\rfoot{\thepage\hspace{2em}}
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%% BLANK PAGES %%%%%%%%%%%%%%%%%%%%%%%
+
+\fancypagestyle{blank}{
+    \fancyhf{}
+    \renewcommand{\headrulewidth}{0pt}    
+    \rfoot{\thepage\hspace{2em}}
+}
+
+\newcommand{\insertblankpageifnecessary}{
+    \clearpage
+    \checkoddpage
+    \ifoddpage\else
+    \thispagestyle{blank}
+    \vspace*{\fill}
+    \begin{center}
+    \scalebox{3}{\rotatebox{45}{\color{black!6}\Huge\textbf{BLANK PAGE}}}
+    \vspace{80pt}
+    \end{center}
+    \vspace*{\fill}
+    \fi
+    \cleardoublepage
+}
+
+%%%%%%%%%%%%%%%%%%% PROBLEM TITLE %%%%%%%%%%%%%%%%%%%%
+
+\newcommand\balloon{%
+\if \showballoon 1
+\begin{tikzpicture}[scale=0.5, overlay, shift={(34.5, 0.5)}]
+    \shade[ball color = \problemcolor] ellipse (1.75 and 2);
+    \shade[ball color = \problemcolor] (-.1,-2) -- (-.3,-2.2) -- (.3,-2.2) -- (.1,-2) -- cycle;
+    \path (0, -2.2) edge [out=250, in=120] (0.3, -4);
+    \path (0.3, -4) edge [out=-60, in=60] (0, -6);
+\end{tikzpicture}
+\fi
+}
+
+\newcommand\tlml{%
+\if \showtlml 1
+\begin{flushright}
+    \begin{minipage}[t]{4.5cm}
+        \textsc{Time limit: \hspace{1.55em}\timelimit{}s} \\
+        \textsc{Memory limit: \memorylimit{}MB}
+        % The memory limit is in MiB, but most contestants don't know the difference and the difference is minimal, so we prefer to write MB.
+    \end{minipage}
+\end{flushright}
+\fi
+}
+
+\newcommand\problemheader{%
+\setcounter{samplescnt}{0}
+\balloon
+{\bf \huge \fbox{\textsc{\problemlabel}} \problemtitle}
+\tlml
+\vspace{2em}%
+}
+
+\newcommand\solutionheader{%
+{\bf \huge \fbox{\textsc{\problemlabel}} \problemtitle}
+\begin{flushright}
+    \begin{tabular}{l l}
+        \textsc{Author:} & \textsc{\problemauthor{}} \\ 
+        \textsc{Preparation:} & \textsc{\problempreparation{}}     
+    \end{tabular}
+\end{flushright}
+\vspace{1em}%
+}
+
+%%%%%%%%%%%%%%%%%%% SAMPLES PRETTY PRINTING %%%%%%%%%%%%%%%%%%%%
+\newcounter{samplescnt}
+
+\newcommand\printfile[2]{%
+\begin{minipage}[t]{#1}
+\vspace{-0.1em}
+{\verbatiminput{#2} }
+\vspace{-0.5em}
+\end{minipage}%
+\ignorespacesafterend
+}
+
+\newcommand\sampleexplanation[1]{
+\subsection*{Explanation of sample \arabic{samplescnt}.}
+#1%
+
+\addvspace{2em}
+}%
+
+
+%%%%%%%%%%%%%%%%%%% SMALL SAMPLE %%%%%%%%%%%%%%%%%%%%
+\newlength\smallsamplewidth
+\setlength\smallsamplewidth{8.08cm}
+
+\newcommand\smallsample[1]{
+\stepcounter{samplescnt}%
+\begin{tabular}{| c | c |}
+    \hline
+    \textbf{Sample input \arabic{samplescnt}} & \textbf{Sample output \arabic{samplescnt}} \\
+    \hline
+    \printfile{\smallsamplewidth}{#1.in}
+    &
+    \printfile{\smallsamplewidth}{#1.out}
+    \\
+    \hline
+\end{tabular}%
+
+\addvspace{2em}
+\ignorespacesafterend
+}
+
+
+%%%%%%%%%%%%%%%%%%% BIG SAMPLE %%%%%%%%%%%%%%%%%%%%
+\newlength\bigsamplewidth
+\setlength\bigsamplewidth{16.58cm}
+
+\newcommand\bigsample[1]{
+\stepcounter{samplescnt}%
+\begin{tabular}{| c |}
+    \hline
+    \textbf{Sample input \arabic{samplescnt}} \\
+    \hline
+    \printfile{\bigsamplewidth}{#1.in}
+    \\
+    \hline
+\end{tabular}%
+\\[1em]
+\begin{tabular}{| c |}
+    \hline
+    \textbf{Sample output \arabic{samplescnt}} \\
+    \hline
+    \printfile{\bigsamplewidth}{#1.out} 
+    \\
+    \hline
+\end{tabular}%
+
+\addvspace{2em}
+\ignorespacesafterend
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%% SAMPLE %%%%%%%%%%%%%%%%%%%%%%%%%
+% This magic trick to capture the shell output was copied from
+% tex.stackexchange.com/questions/16790
+\ExplSyntaxOn
+\NewDocumentCommand{\captureshell}{som}
+ {
+  \sdaau_captureshell:Ne \l__sdaau_captureshell_out_tl { #3 }
+  \IfBooleanT { #1 }
+   {% we may need to stringify the result
+    \tl_set:Nx \l__sdaau_captureshell_out_tl
+     { \tl_to_str:N \l__sdaau_captureshell_out_tl }
+   }
+  \IfNoValueTF { #2 }
+   {
+    \tl_use:N \l__sdaau_captureshell_out_tl
+   }
+   {
+    \tl_set_eq:NN #2 \l__sdaau_captureshell_out_tl
+   }
+ }
+
+\tl_new:N \l__sdaau_captureshell_out_tl
+
+\cs_new_protected:Nn \sdaau_captureshell:Nn
+ {
+  \sys_get_shell:nnN { #2 } { } #1
+  \tl_trim_spaces:N #1 % remove leading and trailing spaces
+ }
+\cs_generate_variant:Nn \sdaau_captureshell:Nn { Ne }
+\ExplSyntaxOff
+
+\newcommand\sample[1]{
+    \captureshell*[\linelengthin]{cat #1.in | wc -L}
+    \captureshell*[\linelengthout]{cat #1.out | wc -L}
+    \ifnum \linelengthin>40
+        \bigsample{#1}
+    \else
+        \ifnum \linelengthout>40
+            \bigsample{#1}
+        \else
+            \smallsample{#1}
+        \fi
+    \fi
+}
+
+%%%%%%%%%%%%%%%%%%% CONTEST METADATA %%%%%%%%%%%%%%%%%%%%
+\newcommand\contestname{Testing pol2dom}
+\newcommand\showballoon{1}
+\newcommand\showtlml{1}
+
+%%%%%%%%%%%%%%%%%%% PROBLEM METADATA %%%%%%%%%%%%%%%%%%%%
+
+\newcommand\problemlabel{undefined}
+\newcommand\problemcolor{undefined}
+\newcommand\problemtitle{undefined}
+\newcommand\timelimit{undefined}
+\newcommand\memorylimit{undefined}
+\newcommand\problemauthor{undefined}
+\newcommand\problempreparation{undefined}
+
+ 
+\begin{document}
+
+\renewcommand\problemlabel{C}
+\renewcommand\problemcolor{BlueViolet}
+\renewcommand\problemtitle{Il Derby della Madonnina}
+\renewcommand\timelimit{2.0}
+\renewcommand\memorylimit{2048}
+
+\pagestyle{problem}
+
+\problemheader
+
+The derby between Milan and Inter is happening soon, and you have been chosen as the assistant referee for the match, also known as linesman. Your task is to move along the touch-line, namely the side of the field, always looking very carefully at the match to check for offside positions and other offences.
+
+Football is an extremely serious matter in Italy, and thus it is fundamental that you keep very close track of the ball for as much time as possible. This means that you want to maximise the number of kicks which you monitor closely. You are able to monitor closely a kick if, when it happens, you are in the position along the touch-line with minimum distance from the place where the kick happens.
+
+Fortunately, expert analysts have been able to accurately predict all the kicks which will occur during the game. That is, you have been given two lists of integers, $t_1, \ldots, t_n$ and $a_1, \ldots, a_n$, indicating that $t_i$ seconds after the beginning of the match the ball will be kicked and you can monitor closely such kick if you are at the position $a_i$ along the touch-line. 
+
+At the beginning of the game you start at position $0$ and the maximum speed at which you can walk along the touch-line is $v$ units per second (i.e., you can change your position by at most $v$ each second). What is the maximum number of kicks that you can monitor closely?
+
+\section*{Input}
+The first line contains two integers $n$ and $v$ ($1 \le n \le 2 \cdot 10^5$, $1 \le v \le 10^6$) --- the number of kicks that will take place and your maximum speed.
+
+The second line contains $n$ integers $t_1, \ldots, t_n$ ($1 \le t_i \le 10^9$) --- the times of the kicks in the match. The sequence of times is guaranteed to be strictly increasing, i.e., $t_1 < t_2 < \cdots < t_n$.
+
+The third line contains $n$ integers $a_1, \ldots, a_n$ ($-10^9 \le a_i \le 10^9$) --- the positions along the touch-line where you have to be to monitor closely each kick.
+
+\section*{Output}
+Print the maximum number of kicks that you can monitor closely.
+
+\section*{Samples}
+\sample{p2d/testing/testing_contest/tex/samples/referee-match-1}
+\sampleexplanation{It is possible to move to the right at maximum speed for the first $3.5$ seconds and stay at position $7$ until the first kick happens, and then immediately move right also at maximum speed to watch the second kick at position $17$. There is no way to monitor closely the third kick after the second kick, so at most $2$ kicks can be seen.
+}
+\sample{p2d/testing/testing_contest/tex/samples/referee-match-2}
+\sample{p2d/testing/testing_contest/tex/samples/referee-match-3}
+
+
+
+\end{document}
