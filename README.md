@@ -60,21 +60,21 @@ Here is a schematic description of the structure of `contest_directory` after th
 ```
 config.yaml
 polygon/
-    problemname/
+    problem_name/
         the content of the package.
-        problemname.zip = the zipped package itself.
+        problem_name.zip = the zipped package itself
 domjudge/
-    problemname/
+    problem_name/
         the content of the package
-        problemname.zip = the zipped package itself
+        problem_name.zip = the zipped package itself
 tex/
     samples/ (containing all the samples)
     images/ (containing all the images, for statements and solutions)
     problemset.pdf
     solutions.pdf
     For each problem:
-    problemname-statement.pdf
-    problemname-solution.pdf
+    problem_name-statement.pdf
+    problem_name-solution.pdf
 ```
 
 Let us describe some additional flags:
