@@ -1,6 +1,6 @@
 # pol2dom
 
-Tool to set of problems prepared in [Polygon](https://polygon.codeforces.com/) into a [DOMjudge](https://www.domjudge.org/) contest.
+Tool to convert a set of problems prepared in [Polygon](https://polygon.codeforces.com/) into a [DOMjudge](https://www.domjudge.org/) contest.
 
 The whole process is automated: downloading the Polygon package, converting it into a DOMjudge package (which is a descendant of the [Problem Package Format](https://icpc.io/problem-package-format/)), and uploading the DOMjudge package to a DOMjudge server.
 
@@ -9,9 +9,9 @@ Its main features are:
 
 - Download, with a caching mechanism, the most recent Polygon package of a problem through polygon APIs.
 - Upload, with a caching mechanism, the converted DOMjudge package of a problem into a DOMjudge server.
-- Handling many problems as a contest
+- Handling many problems as a contest.
 - Convert a Polygon package into a DOMjudge package without human intervention (with the possibility to tweak time and memory limit in the process).
-- Generation of the statement in pdf with the option to add some custom features to it (e.g., the contest name, a balloon with the color of the problem, time limit and memory limit, etc..). The samples' explanations are [detected from the notes section in polygon through the use of special markers](#samples-explanation-detection).
+- Generation of the statement (here is an [example of statement](tree/master/examples/statement.pdf)) in pdf with the option to add some custom features to it (e.g., the contest name, a balloon with the color of the problem, time limit and memory limit, etc..). The samples' explanations are [detected from the notes section in polygon through the use of special markers](#samples-explanation-detection).
 - Generation of a pdf with the complete problem set of a contest featuring a custom front page. Same for the pdf of the solutions of the problems.
 - Checkers using testlib.h are supported transparently (by using a modified `testlib.h` which is DOMjudge compatible).
 - Through the `Judging verifier` feature of DOMjudge, it enforces that the submissions present in polygon get the correct result also in DOMjudge.
@@ -21,7 +21,7 @@ It was used for [SWERC 2021-2022](https://swerc.eu/2021/about/).
 
 ## Installation
 ### Method 1: Install the Python package using `pipx`
-The tool `pipx` is like `pip` (so it allows to install python packages in the local system) but uses virtual-environments transparently to avoid polluting the global python environment)
+<sub>The tool `pipx` is like `pip` (so it allows to install python packages in the local system) but uses virtual-environments transparently to avoid polluting the global python environment.</sub>
 
 Run
 ```bash
@@ -31,7 +31,7 @@ This provides you with the command `p2d` available in any shell terminal.
 
 ### Method 2: Run directly from the repository
 
-Clone the repository with `git clone https://github.com/dario2994/pol2dom` and run the command with `bin/p2d.sh` directly from the repository directory.
+Clone the repository with `git clone https://github.com/dario2994/pol2dom` and run the command with `./p2d.sh` directly from the repository directory.
 
 ## Usage
 
@@ -42,7 +42,7 @@ Running
 downloads the packages of the problems of the contest from polygon, converts them to DOMjudge packages, and uploads them to the DOMjudge server.
 The list of the problems, as well as the credentials to access polygon and the DOMjudge server are contained in the configuration file `contest_directory/config.yaml`. The content and the format of `config.yaml` are described in [Structure of config.yaml](#structure-of-configyaml).
 
-Let us describe the three, almost independent, operations that can be performed by `p2d`:
+Let us describe the three, almost independent, fundamental operations that can be performed by `p2d`:
 
 - `--polygon`: For each problem, download its latest valid package from polygon. A caching mechanism is employed to avoid downloading a package which is already up to date locally.
 For this to work, `config.yaml` must contain the credentials to access polygon APIs.
@@ -91,7 +91,7 @@ These additional keys are managed by `p2d` and should not be touched by the user
 Moreover, each problem (after being uploaded for the first time on DOMjudge) is assigned a `domjudge_id` (which corresponds to the external ID of the problem in DOMjudge).
 This key can be deleted only by modifying the file (which may be necessary if, for example, the DOMjudge instance changes).
 
-See `examples/config.yaml` for a valid `config.yaml` file.
+See [this example](tree/master/examples/config.yaml) for a valid `config.yaml` file.
 
 ## Samples explanation detection
 
