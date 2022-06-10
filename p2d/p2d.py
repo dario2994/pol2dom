@@ -429,4 +429,9 @@ if __name__ == "__main__":
 # TODO: Everything should be tested appropriately.
 # TODO: Polish the documentation (reread README.md).
 # TODO: The colors belong to what list?
+#       Must work with latex and must also work with Utils::convertToHex
+#       github.com/DOMjudge/domjudge/blob/main/webapp/src/Utils/Utils.php#L268
+#       The easiest and most consistent solution, but not user-friendly, is to
+#       require the colors to be hexadecimal (and add support for them in latex).
 # TODO: --problem should be important also for --clear-dir and --clear-domjudge-ids.
+# TODO: Check that config.yaml does not contain unrelated keys.

@@ -55,6 +55,28 @@ For this to work, `config.yaml` must contain the credentials to access DOMjudge 
 Moreover, in `contest_directory/tex/` the full problem set `problemset.pdf` and the editorial of the contest `solutions.pdf` are generated (for the problems that were ever converted to a valid DOMjudge package by the command).
 For each problem, also `contest_directory/tex/problem_name-statement.pdf` and `contest_directory/tex/problem_name-solution.pdf` are generated.
 
+Here is a schematic description of the structure of `contest_directory` after the execution of the command (the user needs only to create a properly set up `config.yaml`):
+
+```
+config.yaml
+polygon/
+    problemname/
+        the content of the package.
+        problemname.zip = the zipped package itself.
+domjudge/
+    problemname/
+        the content of the package
+        problemname.zip = the zipped package itself
+tex/
+    samples/ (containing all the samples)
+    images/ (containing all the images, for statements and solutions)
+    problemset.pdf
+    solutions.pdf
+    For each problem:
+    problemname-statement.pdf
+    problemname-solution.pdf
+```
+
 Let us describe some additional flags:
 - `--problem problem_name`: Process a single problem.
 - `--no-cache`: Ignore the cache for a single run.
@@ -79,15 +101,15 @@ It must be a valid `yaml` file containing the following top-level keys:
 - `problems`: This is a list of problems. A problem is a dictionary with the following keys:
   - `name` (mandatory): Short-name, in polygon, of the problem. This is used as identifier of the problem (denoted above as `problem_name`).
   - `polygon_id`: The problem id in polygon. Can be found in the right-side menu after opening the problem in polygon. It is necessary to download the polygon package.
-  - `label`: The label used to identify the problem in the DOMjudge scoreboard (usually it is an uppercase letter). Problems will be appear in DOMjudge sorted according to this label.
+  - `label`: The label -- usually an uppercase letter -- used to identify the problem in the DOMjudge scoreboard. Problems will be appear in DOMjudge sorted according to this label.
   - `color`: Color of the problem in DOMjudge.
   - `author`: The author of the problem. Used in the pdf of the solutions.
   - `preparation`: The person who prepared the problems. Used in the pdf of the solutions.
   - `override_time_limit`: Value (in seconds) of the time limit of the problem in DOMjudge. If this is present the value set in polygon is ignored.
   - `override_memory_limit`: Value (in MiB) of the memory limit of the problem in DOMjudge. If this is present the value set in polygon is ignored.
 
-Some more keys are added (and managed) by `p2d` for caching purposes. Namely each problem will also contains the additional keys: `polygon_version`, `domjudge_local_version`, `domjudge_server_version`.
-These additional keys are managed by `p2d` and should not be touched by the user. In order to clear entirely the keys related to caching, use the flag `--clear-dir` (which will also clear the directory of the contest).
+Some more keys are added (and managed) by `p2d` for caching purposes. Namely each problem will also contain the additional keys: `polygon_version`, `domjudge_local_version`, `domjudge_server_version`.
+These additional keys are managed by `p2d` and should not be created or modified by the user. In order to clear entirely the keys related to caching, use the flag `--clear-dir` (which will also clear the directory of the contest).
 
 Moreover, each problem (after being uploaded for the first time on DOMjudge) is assigned a `domjudge_id` (which corresponds to the external ID of the problem in DOMjudge).
 In order to clear the DOMjudge IDs, use the flag `--clear-domjudge-ids`.
