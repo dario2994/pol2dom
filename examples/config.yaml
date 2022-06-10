@@ -13,7 +13,7 @@ domjudge: # Credentials for the DOMjudge instance APIs. Must be an admin user.
   password: admin
   # The external ID of the contest in DOMjudge.
   # The contest is NOT created by pol2dom and must be manually created by the user.
-  contest_id: testing_contest_id 
+  contest_id: testing_contest 
 
 problems:
 - name: gianni
