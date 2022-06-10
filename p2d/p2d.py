@@ -429,3 +429,4 @@ if __name__ == "__main__":
 # TODO: Everything should be tested appropriately.
 # TODO: Polish the documentation (reread README.md).
 # TODO: The colors belong to what list?
+# TODO: --problem should be important also for --clear-dir and --clear-domjudge-ids.
