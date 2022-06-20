@@ -102,7 +102,7 @@ It must be a valid `yaml` file containing the following top-level keys:
   - `name` (mandatory): Short-name, in polygon, of the problem. This is used as identifier of the problem (denoted above as `problem_name`).
   - `polygon_id`: The problem id in polygon. Can be found in the right-side menu after opening the problem in polygon. It is necessary to download the polygon package.
   - `label`: The label -- usually an uppercase letter -- used to identify the problem in the DOMjudge scoreboard. Problems will be appear in DOMjudge sorted according to this label.
-  - `color`: Color of the problem in DOMjudge.
+  - `color`: Color of the problem in DOMjudge. It can be either the name of an HTML color (see the list https://htmlcolorcodes.com/color-names/) or the hexadecimal representation of a color (e.g., '#FF12AB'). If the hexadecimal representation is used, it must start with # and it must be enclosed in single or double quotes. 
   - `author`: The author of the problem. Used in the pdf of the solutions.
   - `preparation`: The person who prepared the problems. Used in the pdf of the solutions.
   - `override_time_limit`: Value (in seconds) of the time limit of the problem in DOMjudge. If this is present the value set in polygon is ignored.

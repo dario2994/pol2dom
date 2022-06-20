@@ -18,7 +18,7 @@ domjudge: # Credentials for the DOMjudge instance APIs. Must be an admin user.
 problems:
 - name: gianni
   label: A
-  color: CornflowerBlue
+  color: CornflowerBlue # HTML color: https://htmlcolorcodes.com/color-names/
   override_memory_limit: 2048 # MiB
   # To find the problem id in polygon:
   # 1. Open the problem in polygon
@@ -28,7 +28,7 @@ problems:
   preparation: Federico Glaudo
 - name: drone-photo
   label: B
-  color: PineGreen
+  color: '#FFFF00' # Also hexadecimal colors are valid.
   override_time_limit: 3 # seconds
   polygon_id: ???
   author: Andrea Ciprietti

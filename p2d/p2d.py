@@ -2,10 +2,12 @@ import json
 import logging
 import os
 import pathlib
+import re
 import shutil
 import string
 import sys
 import tempfile
+import webcolors
 import yaml
 import zipfile
 from argparse import ArgumentParser
@@ -20,6 +22,28 @@ from p2d import (domjudge_api,
 RESOURCES_PATH = os.path.join(
     os.path.split(os.path.realpath(__file__))[0], 'resources')
 
+# Get a color in one of the following formats:
+# - #FF11AB (hexadecimal, upper case, with #)
+# - #ff11ab (hexadecimal, lower case, with #)
+# - PapayaWhip (HTML color https://htmlcolorcodes.com/color-names/, camel case)
+# - papayawhip (HTML color https://htmlcolorcodes.com/color-names/, lower case)
+# and converts it to its standard 6-digit hexadecimal representation (e.g., FF11AB).
+def convert_to_hex(color):
+    error_message = 'The color \'%s\' specified in config.yaml is not a valid html color (see https://htmlcolorcodes.com/color-names/) or a valid hexadecimal color (e.g., #ABC123). ' % color
+    
+    if color[0] == '#':
+        color = color[1:]
+        if not re.fullmatch(r'[A-Fa-f0-9]{6}', color):
+            logging.error(error_message)
+            exit(1)
+    else:
+        try:
+            color = webcolors.name_to_hex(color)[1:]
+        except ValueError:
+            logging.error(error_message)
+            exit(1)
+    
+    return color.upper()
 
 def manage_download(config, polygon_dir, problem):
     if 'polygon_id' not in problem:
@@ -108,7 +132,7 @@ def manage_convert(config, polygon_dir, domjudge_dir, tex_dir, problem):
         logging.warning('The keys %s are not set in config.yaml for this problem.' % missing_keys)
     
     problem_package['label'] = problem.get('label', '?')
-    problem_package['color'] = problem.get('color', 'Black')
+    problem_package['color'] = convert_to_hex(problem.get('color', 'Black'))
 
     if 'override_time_limit' in problem:
         problem_package['timelimit'] = problem['override_time_limit']
@@ -384,8 +408,8 @@ def p2d(args):
 
     print()
     logging.info('Successfully generated \'%s\' and \'%s\'.' %
-        (os.path.join(contest_dir, 'tex', 'problemset.tex'),
-        os.path.join(contest_dir, 'tex', 'solutions.tex')))
+        (os.path.join(contest_dir, 'tex', 'problemset.pdf'),
+        os.path.join(contest_dir, 'tex', 'solutions.pdf')))
 
 # On error tracing and logging:
 #
@@ -409,11 +433,6 @@ if __name__ == "__main__":
 
 
 # TODO: Everything should be tested appropriately.
-# TODO: The colors belong to what list?
-#       Must work with latex and must also work with Utils::convertToHex
-#       github.com/DOMjudge/domjudge/blob/main/webapp/src/Utils/Utils.php#L268
-#       The easiest and most consistent solution, but not user-friendly, is to
-#       require the colors to be hexadecimal (and add support for them in latex).
 # TODO: --problem should be considered also for --clear-dir and --clear-domjudge-ids.
 # TODO: Check that config.yaml does not contain unrelated keys.
 # TODO: Add the support for interactive problems.

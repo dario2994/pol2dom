@@ -32,6 +32,7 @@ setup(
     platforms='any',
     install_requires=[
         'pyyaml >= 5.3',
-        'requests >= 2.26'
+        'requests >= 2.26',
+        'webcolors >= 1.0'
     ]
 )

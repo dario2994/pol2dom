@@ -95,8 +95,8 @@
 \newcommand\balloon{%
 \if \showballoon 1
 \begin{tikzpicture}[scale=0.5, overlay, shift={(34.5, 0.5)}]
-    \shade[ball color = \problemcolor] ellipse (1.75 and 2);
-    \shade[ball color = \problemcolor] (-.1,-2) -- (-.3,-2.2) -- (.3,-2.2) -- (.1,-2) -- cycle;
+    \shade[ball color = \problemcolorname] ellipse (1.75 and 2);
+    \shade[ball color = \problemcolorname] (-.1,-2) -- (-.3,-2.2) -- (.3,-2.2) -- (.1,-2) -- cycle;
     \path (0, -2.2) edge [out=250, in=120] (0.3, -4);
     \path (0.3, -4) edge [out=-60, in=60] (0, -6);
 \end{tikzpicture}
@@ -258,6 +258,7 @@
 
 \newcommand\problemlabel{undefined}
 \newcommand\problemcolor{undefined}
+\newcommand\problemcolorname{undefined}
 \newcommand\problemtitle{undefined}
 \newcommand\timelimit{undefined}
 \newcommand\memorylimit{undefined}

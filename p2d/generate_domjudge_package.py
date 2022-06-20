@@ -66,7 +66,7 @@ def generate_domjudge_package(problem, domjudge, tex_dir, params):
         'short-name = %s' % problem['name'],
         'name = %s' % problem['title'].replace("'", "`"),
         'timelimit = %s' % problem['timelimit'],
-        'color = %s' % problem['color']
+        'color = #%s' % problem['color']
     ]
     with open(ini_file, 'w', encoding='utf-8') as f:
         f.writelines(map(lambda s: s + '\n', ini_content))
