@@ -237,7 +237,7 @@ def prepare_argument_parser():
     parser.add_argument('--verbosity', choices=['debug', 'info', 'warning'],
                         default='info', help='Verbosity of the logs.')
     parser.add_argument('--no-cache', action='store_true', help='If set, the various steps (polygon, convert, domjudge) are run even if they would not be necessary (according to the caching mechanism).')
-    parser.add_argument('--clear-dir', action='store_true', help='If set, all files and directories, apart from \'config.yaml\', in the contest directory are deleted (as a consequence, the cache is deleted).')
+    parser.add_argument('--clear-dir', action='store_true', help='If set, problems\' data in the contest directory is deleted (as a consequence, the cache is deleted). The file \'config.yaml\' is not deleted.')
     parser.add_argument('--clear-domjudge-ids', action='store_true', help='If set, the domjudge IDs saved in config.yaml (for the problems that were uploaded to the DOMjudge server) are deleted. As a consequence, next time the flag `--domjudge` is passed, the problems will be uploaded as new problems to DOMjudge. This should be used either if the DOMjudge server changed, if the DOMjudge contest changed, or if the problems were deleted in the DOMjudge server.')
     parser.add_argument('--update-testlib', action='store_true', help='Whether to update the local version of testlib (syncing it with the latest version from the official github repository and patching it for DOMjudge).')
     
@@ -281,24 +281,50 @@ def p2d(args):
             yaml.safe_dump(config, f, default_flow_style=False, sort_keys=False)
 
     if args.clear_dir:
-        # Remove the versions from config.yaml
         for problem in config['problems']:
+            if args.problem and args.problem != problem['name']:
+                continue
+            
+            # Remove the versions from config.yaml.
             problem['polygon_version'] = -1
             problem['domjudge_local_version'] = -1
             problem['domjudge_server_version'] = -1
 
+            # Delete the directories polygon/problem_name, domjudge/problem_name.
+            for dir_name in ['polygon', 'domjudge']:
+                dir_path = os.path.join(contest_dir, dir_name, problem['name'])
+                if os.path.isdir(dir_path):
+                    shutil.rmtree(dir_path)
+
+            # Delete the files of the problem from tex/.
+            for file_name in ['statement', 'statement-content',
+                              'solution', 'solution-content']:
+                for extension in ['tex', 'aux', 'log', 'out', 'pdf']:
+                    file_path = os.path.join(contest_dir, 'tex',
+                            problem['name'] + '-' + file_name + '.' + extension)
+                    if os.path.isfile(file_path):
+                        os.remove(file_path)
+
+            for sample_in in pathlib.Path(contest_dir, 'tex', 'samples').glob(
+                    problem['name'] + '*.in'):
+                sample_in.unlink()
+
+            for sample_out in pathlib.Path(contest_dir, 'tex', 'samples').glob(
+                    problem['name'] + '-*.out'):
+                sample_out.unlink()
+
+            for image in pathlib.Path(contest_dir, 'tex', 'images').glob(
+                    problem['name'] + '-*'):
+                image.unlink()
+            
         save_config_yaml()
 
-        # Delete the directories polygon/, domjudge/, tex/.
-        for dir_name in ['polygon', 'domjudge', 'tex']:
-            dir_path = os.path.join(contest_dir, dir_name)
-            if os.path.isdir(dir_path):
-                shutil.rmtree(dir_path)
-
-        logging.info('Deleted the content of \'%s\' apart from config.yaml.' % contest_dir)
+        logging.info('Deleted the problems\' data from \'%s\'.' % contest_dir)
 
     if args.clear_domjudge_ids:
         for problem in config['problems']:
+            if args.problem and args.problem != problem['name']:
+                continue
             problem['domjudge_server_version'] = -1
             problem.pop('domjudge_id', None)
 
@@ -342,6 +368,9 @@ def p2d(args):
     for problem in config['problems']:
         if args.problem and args.problem != problem['name']:
             continue
+        if not args.polygon and not args.convert and not args.domjudge:
+            continue
+
         problem_selected_exists = True
         print()
         print('\033[1m' + problem['name'] + '\033[0m') # Bold
@@ -433,6 +462,19 @@ if __name__ == "__main__":
 
 
 # TODO: Everything should be tested appropriately.
-# TODO: --problem should be considered also for --clear-dir and --clear-domjudge-ids.
+# TODO: Handle better the logic pipeline for the generation of problemset
+#       and solutions.
+#       Here is a proposal:
+#           Add a flag, like --problemset or --editorial (or a single flag for
+#           both) which generates the problemset and the editorial.
+#           The problem_name-statement-content.tex are still generated all the
+#           time (and the single statements and single solutions are still
+#           generated all the time).
+# TODO: Create p2d_utils.py because p2d.py is exploding in size.
+#       This should hold only the high level logic, while p2d_utils all the
+#       details of the pipeline.
+#       Functions in p2d_utils should not have access to config. They should
+#       get only the minimum amount of data they need and they should not be
+#       able to modify it.
 # TODO: Check that config.yaml does not contain unrelated keys.
 # TODO: Add the support for interactive problems.
