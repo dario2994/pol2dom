@@ -276,6 +276,41 @@ def p2d(args):
             print(exc)
             exit(1)
 
+    def validate_config_yaml():
+        if 'contest_name' not in config or 'problems' not in config:
+            logging.error('The keys \'contest_name\' and \'problems\' must be present in \'config.yaml\'.')
+            exit(1)
+        
+        top_level_keys = ['contest_name', 'polygon', 'domjudge', 'front_page_problemset', 'front_page_solutions', 'problems']
+
+        wrong_keys = list(set(config.keys()) - set(top_level_keys))
+        if wrong_keys:
+            logging.warning(
+                'The key \'%s\' is not expected as top-level key in \'config.yaml\'. The expected keys are: %s.' % (wrong_keys[0], ', '.join(top_level_keys)))
+
+        polygon_keys = ['key', 'secret']
+        domjudge_keys = ['server', 'username', 'password', 'contest_id']
+        if 'polygon' in config and\
+                set(config['polygon'].keys()) != set(polygon_keys):
+            logging.warning('The subdictionary \'polygon\' of \'config.yaml\' must contain they keys: %s.' % ', '.join(polygon_keys))
+
+        if 'domjudge' in config and\
+                set(config['domjudge'].keys()) != set(domjudge_keys):
+            logging.warning('The subdictionary \'domjudge\' of \'config.yaml\' must contain they keys: %s.' % ', '.join(domjudge_keys))
+
+        problem_keys = ['name', 'label', 'color', 'author', 'preparation', 'override_time_limit', 'override_memory_limit', 'polygon_id', 'polygon_version', 'domjudge_local_version', 'domjudge_server_version']
+
+        for problem in config['problems']:
+            if 'name' not in problem:
+                logging.error('All problems described in \'config.yaml\' must contain the key \'name\'.')
+                exit(1)
+            wrong_keys = list(set(problem.keys()) - set(problem_keys))
+            if wrong_keys:
+                logging.warning('The key \'%s\' in the description of problem \'%s\' in \'config.yaml\' is not expected. The expected keys are: %s.' % (wrong_keys[0], problem['name'], ', '.join(problem_keys)))
+        
+        
+    validate_config_yaml()
+
     def save_config_yaml():
         with open(config_yaml, 'w', encoding='utf-8') as f:
             yaml.safe_dump(config, f, default_flow_style=False, sort_keys=False)
@@ -351,7 +386,7 @@ def p2d(args):
 
     if not args.polygon and not args.convert and not args.domjudge \
        and not args.clear_dir and not args.clear_domjudge_ids:
-        logging.error('At least one of the flags --polygon, --convert, --domjudge, --clear is necessary.')
+        logging.error('At least one of the flags --polygon, --convert, --domjudge, --clear-dir, --clear-domjudge-ids is necessary.')
         exit(1)
 
     pathlib.Path(os.path.join(contest_dir, 'polygon')).mkdir(exist_ok=True)
@@ -468,13 +503,12 @@ if __name__ == "__main__":
 #           Add a flag, like --problemset or --editorial (or a single flag for
 #           both) which generates the problemset and the editorial.
 #           The problem_name-statement-content.tex are still generated all the
-#           time (and the single statements and single solutions are still
-#           generated all the time).
+#           time (and the pdf of single statements and single solutions are
+#           still generated all the time).
 # TODO: Create p2d_utils.py because p2d.py is exploding in size.
 #       This should hold only the high level logic, while p2d_utils all the
 #       details of the pipeline.
 #       Functions in p2d_utils should not have access to config. They should
 #       get only the minimum amount of data they need and they should not be
 #       able to modify it.
-# TODO: Check that config.yaml does not contain unrelated keys.
 # TODO: Add the support for interactive problems.
