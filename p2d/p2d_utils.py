@@ -229,7 +229,6 @@ def generate_problemset_solutions(config, contest_dir):
             os.path.join(contest_dir, 'tex'),
             pdf_generation_params)
 
-    print()
     logging.info('Successfully generated \'%s\' and \'%s\'.' %
         (os.path.join(contest_dir, 'tex', 'problemset.pdf'),
         os.path.join(contest_dir, 'tex', 'solutions.pdf')))

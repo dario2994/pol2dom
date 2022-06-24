@@ -23,6 +23,7 @@ def prepare_argument_parser():
     parser.add_argument('--polygon', '--import', '--get', '--download', action='store_true', help='Whether the problem packages should be downloaded from Polygon. Otherwise only the packages already present in the system will be considered.')
     parser.add_argument('--convert', action='store_true', help='Whether the polygon packages should be converted to DOMjudge packages. Otherwise only the DOMjudge packages already present in the system will be considered.')
     parser.add_argument('--domjudge', '--export', '--send', '--upload', action='store_true', help='Whether the DOMjudge packages shall be uploaded to the DOMjudge instance specified in config.yaml.')
+    parser.add_argument('--pdf-contest', action='store_true', help='Whether the pdf of the whole problemset and the pdf with all the solutions should be generated. If set, the files are created in \'contest_dir/tex/problemset.pdf\' and \'contest_dir/tex/solutions.pdf\'.')
     parser.add_argument('--verbosity', choices=['debug', 'info', 'warning'],
                         default='info', help='Verbosity of the logs.')
     parser.add_argument('--no-cache', action='store_true', help='If set, the various steps (polygon, convert, domjudge) are run even if they would not be necessary (according to the caching mechanism).')
@@ -47,6 +48,12 @@ def p2d(args):
     config = p2d_utils.load_config_yaml(contest_dir)
 
     p2d_utils.validate_config_yaml(config)
+
+    if not args.polygon and not args.convert and not args.domjudge \
+       and not args.pdf_contest \
+       and not args.clear_dir and not args.clear_domjudge_ids:
+        logging.error('At least one of the flags --polygon, --convert, --domjudge, --contestpdf, --clear-dir, --clear-domjudge-ids is necessary.')
+        exit(1)
 
     if args.clear_dir:
         for problem in config['problems']:
@@ -84,11 +91,6 @@ def p2d(args):
                       'in config.yaml to download problems from polygon.')
         exit(1)
 
-    if not args.polygon and not args.convert and not args.domjudge \
-       and not args.clear_dir and not args.clear_domjudge_ids:
-        logging.error('At least one of the flags --polygon, --convert, --domjudge, --clear-dir, --clear-domjudge-ids is necessary.')
-        exit(1)
-
     pathlib.Path(os.path.join(contest_dir, 'polygon')).mkdir(exist_ok=True)
     pathlib.Path(os.path.join(contest_dir, 'domjudge')).mkdir(exist_ok=True)
     pathlib.Path(os.path.join(contest_dir, 'tex')).mkdir(exist_ok=True)
@@ -107,7 +109,6 @@ def p2d(args):
             continue
 
         problem_selected_exists = True
-        print()
         print('\033[1m' + problem['name'] + '\033[0m') # Bold
 
         if 'label' not in problem:
@@ -139,6 +140,8 @@ def p2d(args):
                     contest_dir, 'domjudge', problem['name']), problem)
             p2d_utils.save_config_yaml(config, contest_dir)
 
+        print()
+
     if args.problem and not problem_selected_exists:
         logging.warning('The problem specified with --problem does not appear '
                         'in config.yaml.')
@@ -147,7 +150,8 @@ def p2d(args):
     if args.problem:
         return
 
-    p2d_utils.generate_problemset_solutions(config, contest_dir)
+    if args.pdf_contest:
+        p2d_utils.generate_problemset_solutions(config, contest_dir)
 
 # Guidelines for error tracing and logging:
 #
@@ -171,11 +175,4 @@ if __name__ == "__main__":
 
 
 # TODO: Everything should be tested appropriately.
-# TODO: Handle better the logic for generating the problemset and the solutions.
-#       Here is a proposal:
-#           Add a flag, like --problemset or --editorial (or a single flag for
-#           both) which generates the problemset and the editorial.
-#           The problem_name-statement-content.tex are still generated all the
-#           time (and the pdf of single statements and single solutions are
-#           still generated all the time).
 # TODO: Add the support for interactive problems.

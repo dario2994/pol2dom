@@ -37,23 +37,22 @@ Clone the repository with `git clone https://github.com/dario2994/pol2dom` and r
 
 Running
 
-```p2d contest_directory --polygon --convert --domjudge```
+```p2d contest_directory --polygon --convert --domjudge --pdf-contest```
 
-downloads the packages of the problems of the contest from polygon, converts them to DOMjudge packages, and uploads them to the DOMjudge server.
+downloads the packages of the problems of the contest from polygon, converts them to DOMjudge packages, and uploads them to the DOMjudge server, and generates the pdf of the whole problem set and of the solutions.
 The list of the problems, as well as the credentials to access polygon and the DOMjudge server are contained in the configuration file `contest_directory/config.yaml`. The content and the format of `config.yaml` are described in [Structure of config.yaml](#structure-of-configyaml).
 
-Let us describe the three, almost independent, fundamental operations that can be performed by `p2d`:
+Let us describe the four, almost independent, fundamental operations that can be performed by `p2d`:
 
 - `--polygon`: For each problem, download its latest valid package from polygon. A caching mechanism is employed to avoid downloading a package which is already up to date locally.
 For this to work, `config.yaml` must contain the credentials to access polygon APIs.
 For each problem, the directory `contest_directory/polygon/problem_name/` is generated. Such directory contains the polygon package (extracted) as well as its zip (named `problem_name.zip`).
 - `--convert`: For each problem (which was previously, possibly during a different execution, downloaded from polygon), convert it to a DOMjudge package, adding the information needed by DOMjudge but absent in polygon (i.e., the label, the color, the statement in pdf, possibly changing time and memory limit) as described in `config.yaml`. A caching mechanism is employed to avoid converting problems that were converted previously and whose polygon package did not change in the meanwhile.
 For each problem, the directory `contest_directory/DOMjudge/problem_name` is generated. Such directory contains the DOMjudge package (extracted) as well as its zip (named `problem_name.zip`).
+For each problem, also `contest_directory/tex/problem_name-statement.pdf` and `contest_directory/tex/problem_name-solution.pdf` are generated.
 - `--domjudge`: For each problem, upload its package to the DOMjudge server. A caching mechanism is employed to avoid uploading a package which is already up to date in the DOMjudge server.
 For this to work, `config.yaml` must contain the credentials to access DOMjudge APIs.
-
-Moreover, in `contest_directory/tex/` the full problem set `problemset.pdf` and the editorial of the contest `solutions.pdf` are generated (for the problems that were ever converted to a valid DOMjudge package by the command).
-For each problem, also `contest_directory/tex/problem_name-statement.pdf` and `contest_directory/tex/problem_name-solution.pdf` are generated.
+- `--pdf-contest`: Generate in `contest_directory/tex/` the full problem set `problemset.pdf` and the editorial of the contest `solutions.pdf`. The problems that will appear in these files are those that were ever converted to a valid DOMjudge package by the command (even in a previous execution).
 
 Here is a schematic description of the structure of `contest_directory` after the execution of the command (the user needs only to create a properly set up `config.yaml`):
 
