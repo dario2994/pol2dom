@@ -27,9 +27,6 @@ def call_domjudge_api(api_address, data, files, credentials):
 
 # Updates the problem on the server with the package_zip.
 # Returns true if the update was successful.
-# TODO: This depends on the (still to be merged) PR
-#       https://github.com/DOMjudge/domjudge/pull/1522.
-# credentials is a dictionary with keys contest_id, server, username, password.
 def update_problem_api(package_zip, problem_id, credentials):
     api_address = '/api/v4/contests/%s/problems' % credentials['contest_id']
     
