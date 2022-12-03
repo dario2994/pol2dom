@@ -70,6 +70,7 @@ def p2d(args):
                 continue
             problem['domjudge_server_version'] = -1
             problem.pop('domjudge_id', None)
+            problem.pop('domjudge_externalid', None)
 
         p2d_utils.save_config_yaml(config, contest_dir)
         logging.info('Deleted the DOMjudge IDs from config.yaml.')

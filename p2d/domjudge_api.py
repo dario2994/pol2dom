@@ -27,12 +27,12 @@ def call_domjudge_api(api_address, data, files, credentials):
 
 # Updates the problem on the server with the package_zip.
 # Returns true if the update was successful.
-def update_problem_api(package_zip, problem_id, credentials):
+def update_problem_api(package_zip, problem_domjudge_id, credentials):
     api_address = '/api/v4/contests/%s/problems' % credentials['contest_id']
     
     with open(package_zip, 'rb') as f:
         res = call_domjudge_api(api_address,
-                                {'problem': problem_id},
+                                {'problem': problem_domjudge_id},
                                 {'zip': (package_zip, f)},
                                 credentials)
 
@@ -45,8 +45,8 @@ def update_problem_api(package_zip, problem_id, credentials):
         return True
 
 # Adds an "empty" problem to a contest.
-# Returns true if the problem was successfully added. In such case, it set
-# the 'domjudge_id' of the problem.
+# Returns true if the problem was successfully added. In such case, it sets
+# the 'domjudge_id' and 'domjudge_externalid' of the problem.
 # credentials is a dictionary with keys contest_id, server, username, password.
 def add_problem_to_contest_api(problem, credentials):
     api_address = '/api/v4/contests/%s/problems/add-data' % credentials['contest_id']
@@ -70,6 +70,7 @@ def add_problem_to_contest_api(problem, credentials):
         logging.error('Error adding the problem to the contest: %s.' % res.json())
         return False
 
-    problem['domjudge_id'] = externalid
+    problem['domjudge_id'] = res.json()[0]
+    problem['domjudge_externalid'] = externalid
 
     return True

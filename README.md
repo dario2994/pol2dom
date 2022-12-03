@@ -110,7 +110,7 @@ It must be a valid `yaml` file containing the following top-level keys:
 Some more keys are added (and managed) by `p2d` for caching purposes. Namely each problem will also contain the additional keys: `polygon_version`, `domjudge_local_version`, `domjudge_server_version`.
 These additional keys are managed by `p2d` and should not be created or modified by the user. In order to clear entirely the keys related to caching, use the flag `--clear-dir` (which will also clear the directory of the contest).
 
-Moreover, each problem (after being uploaded for the first time on DOMjudge) is assigned a `domjudge_id` (which corresponds to the external ID of the problem in DOMjudge).
+Moreover, each problem (after being uploaded for the first time on DOMjudge) is assigned a `domjudge_id` (a number) and a `domjudge_externalid` (which corresponds to the external ID of the problem in DOMjudge).
 In order to clear the DOMjudge IDs, use the flag `--clear-domjudge-ids`.
 
 See [this example](examples/config.yaml) for a valid `config.yaml` file.

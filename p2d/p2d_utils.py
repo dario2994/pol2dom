@@ -191,7 +191,7 @@ def manage_domjudge(config, domjudge_dir, problem):
     assert('domjudge_id' in problem)
     zip_file = os.path.join(domjudge_dir, problem['name'] + '.zip')
     zip_file_copy = os.path.join(domjudge_dir,
-                                 problem['domjudge_id'] + '.zip')
+                                 problem['domjudge_externalid'] + '.zip')
     shutil.copyfile(zip_file, zip_file_copy)
     
     if not domjudge_api.update_problem_api(
@@ -202,7 +202,7 @@ def manage_domjudge(config, domjudge_dir, problem):
             
     problem['domjudge_server_version'] = local_version
 
-    logging.info('Updated the DOMjudge package on the server \'%s\', with externalid = \'%s\'.' % (config['domjudge']['server'], problem['domjudge_id']))
+    logging.info('Updated the DOMjudge package on the server \'%s\', with id = \'%s\'.' % (config['domjudge']['server'], problem['domjudge_id']))
 
 # Generates contest_dir/tex/problemset.pdf and contest_dir/tex/solutions.pdf.
 def generate_problemset_solutions(config, contest_dir):
@@ -283,7 +283,7 @@ def validate_config_yaml(config):
             set(config['domjudge'].keys()) != set(domjudge_keys):
         logging.warning('The subdictionary \'domjudge\' of \'config.yaml\' must contain they keys: %s.' % ', '.join(domjudge_keys))
 
-    problem_keys = ['name', 'label', 'color', 'author', 'preparation', 'override_time_limit', 'override_memory_limit', 'polygon_id', 'polygon_version', 'domjudge_local_version', 'domjudge_server_version']
+    problem_keys = ['name', 'label', 'color', 'author', 'preparation', 'override_time_limit', 'override_memory_limit', 'polygon_id', 'polygon_version', 'domjudge_local_version', 'domjudge_server_version', 'domjudge_id', 'domjudge_externalid']
 
     for problem in config['problems']:
         if 'name' not in problem:
