@@ -181,7 +181,6 @@ def parse_problem_from_polygon(polygon):
     # Interactor
     problem['interactor'] = None
     if problem_xml.find('assets').find('interactor'):
-        raise NotImplemented('Interactive problems are not supported.')
         logging.debug('The problem is interactive.')
         problem['interactor'] = {
             'source': pol_path(problem_xml.find('assets').find('interactor')
