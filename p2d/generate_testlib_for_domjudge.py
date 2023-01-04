@@ -23,6 +23,7 @@ NEW_EXIT_CODES = {
 NEW_REGISTER_INTERACTION = '''\
 void registerInteraction(int argc, char *argv[]) {
     __testlib_ensuresPreconditions();
+    TestlibFinalizeGuard::registered = true;
 
     testlibMode = _interactor;
     __testlib_set_binary(stdin);
@@ -57,6 +58,7 @@ void registerInteraction(int argc, char *argv[]) {
 NEW_REGISTER_TESTLIB_CMD = '''\
 void registerTestlibCmd(int argc, char *argv[]) {
     __testlib_ensuresPreconditions();
+    TestlibFinalizeGuard::registered = true;
 
     testlibMode = _checker;
     __testlib_set_binary(stdin);
