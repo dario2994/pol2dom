@@ -132,6 +132,7 @@ def generate_testlib_for_domjudge(dst_path):
         lines = replace_exit_code(lines, exit_code, NEW_EXIT_CODES[exit_code])
     lines = replace_function(lines, NEW_REGISTER_INTERACTION)
     lines = replace_function(lines, NEW_REGISTER_TESTLIB_CMD)
+    lines = [line for line in lines if line.strip() != 'skipBom();']
 
     with open(dst_path, 'w') as f:
         for line in lines:
