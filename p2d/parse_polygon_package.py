@@ -175,7 +175,8 @@ def parse_problem_from_polygon(polygon):
         'name': checker_xml.attrib.get('name')
     }
 
-    if not problem['checker']['source'].endswith('.cpp'):
+    checker_name = problem['checker']['source']
+    if not checker_name.endswith('.cpp') and not checker_name.endswith('.cc'):
         raise RuntimeError('Only C++ checkers (using testlib) are supported.')
 
     # Interactor
