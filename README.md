@@ -44,7 +44,7 @@ The list of the problems, as well as the credentials to access polygon and the D
 
 Let us describe the four, almost independent, fundamental operations that can be performed by `p2d`:
 
-- `--polygon`: For each problem, download its latest valid package from polygon. A caching mechanism is employed to avoid downloading a package which is already up to date locally.
+- `--polygon`: For each problem, download its latest valid package from polygon. The package must be a *full* package (and the linux version will be downloaded). A caching mechanism is employed to avoid downloading a package which is already up to date locally.
 For this to work, `config.yaml` must contain the credentials to access polygon APIs.
 For each problem, the directory `contest_directory/polygon/problem_name/` is generated. Such directory contains the polygon package (extracted) as well as its zip (named `problem_name.zip`).
 - `--convert`: For each problem (which was previously, possibly during a different execution, downloaded from polygon), convert it to a DOMjudge package, adding the information needed by DOMjudge but absent in polygon (i.e., the label, the color, the statement in pdf, possibly changing time and memory limit) as described in `config.yaml`. A caching mechanism is employed to avoid converting problems that were converted previously and whose polygon package did not change in the meanwhile.
