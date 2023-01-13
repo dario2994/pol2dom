@@ -154,13 +154,13 @@ def parse_problem_from_polygon(polygon):
 
         input_format = testset.find('input-path-pattern').text
         output_format = testset.find('answer-path-pattern').text
-        # Fetch samples from statements directory (for custum output)
+        # Fetch samples from statements directory (for custom output)
         sample_input_format = input_format.replace('tests/', os.path.join('statements', 'english') + '/example.')
         sample_output_format = output_format.replace('tests/', os.path.join('statements', 'english') + '/example.')
 
         for test in testset.iter('test'):
             if 'sample' in test.attrib and not cmp(pol_path(input_format % local_id), pol_path(sample_input_format % local_id)):
-                raise RuntimeError('Custom inputs are not supported.')  # Becase DomJudge evaluates the same sample inputs that are provided to contestants.
+                raise RuntimeError('Custom inputs are not supported.')  # Because DOMjudge evaluates the same sample inputs that are provided to contestants.
             t = {
                 'num': test_id,
                 'in': pol_path(input_format % local_id),
