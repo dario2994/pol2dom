@@ -150,14 +150,18 @@ def parse_problem_from_polygon(polygon):
             logging.warning('testset \'%s\' ignored: only the testset \'tests\' is exported in DOMjudge (apart from the samples).' % testset.attrib['name'])
         local_id = 1
         # Pretests are processed only to collect samples.
+
         input_format = testset.find('input-path-pattern').text
         output_format = testset.find('answer-path-pattern').text
+        # Fetch samples from statements directory (for custum input/output)
+        sample_input_format = input_format.replace('tests/', os.path.join('statements', 'english') + '/example.')
+        sample_output_format = output_format.replace('tests/', os.path.join('statements', 'english') + '/example.')
 
         for test in testset.iter('test'):
             t = {
                 'num': test_id,
-                'in': pol_path(input_format % local_id),
-                'out': pol_path(output_format % local_id),
+                'in': pol_path(sample_input_format % local_id) if 'sample' in test.attrib else pol_path(input_format % local_id),
+                'out': pol_path(sample_output_format % local_id) if 'sample' in test.attrib else pol_path(output_format % local_id),
                 'is_sample': 'sample' in test.attrib
             }
             local_id += 1
