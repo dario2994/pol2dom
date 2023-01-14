@@ -27,8 +27,7 @@ def parse_samples_explanations(notes):
                 exit(1)
             assert(test_id != -1)
             assert(test_id not in explanations)
-            curr = curr[0].upper() + curr[1:]  # Capitalize first letter.
-            explanations[test_id] = curr
+            explanations[test_id] = curr.capitalize()   # Capitalize first letter.
             curr = ''
             test_id = -1
         elif test_id != -1:
@@ -119,6 +118,7 @@ def parse_problem_from_polygon(polygon):
         problem['statement']['legend'] = statement_json['legend']
         problem['statement']['input'] = statement_json['input']
         problem['statement']['output'] = statement_json['output']
+        problem['statement']['interaction'] = statement_json['interaction']
         problem['statement']['tutorial'] = statement_json['tutorial']
         explanations = parse_samples_explanations(statement_json['notes'])
 
