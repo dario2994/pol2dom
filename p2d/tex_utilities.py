@@ -67,6 +67,14 @@ def generate_statement_tex(problem, tex_dir):
 
     with open(os.path.join(RESOURCES_PATH, 'statement_template.tex')) as f:
         statement_template = f.read()
+    
+    # Some of these sections may be empty, in that case remove them.
+    for section_title in ['input', 'output', 'interaction']:
+        section_content = problem['statement'][section_title]
+        if section_content is None or str(section_content).strip() == '':
+            statement_template = statement_template.replace(
+                '\\section*{%s}' % section_title.capitalize(), ''
+            )
 
     replacements_statement = {
         'LABEL': problem['label'],
@@ -77,6 +85,7 @@ def generate_statement_tex(problem, tex_dir):
         'LEGEND': problem['statement']['legend'],
         'INPUT': problem['statement']['input'],
         'OUTPUT': problem['statement']['output'],
+        'INTERACTION': '' if problem['statement']['interaction'] is None else problem['statement']['interaction'],
         'SAMPLES': samples_tex
     }
     for placeholder in replacements_statement:
