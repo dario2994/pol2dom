@@ -227,6 +227,11 @@ def fill_config_from_contest(config, contest_id):
         config_problem = [p for p in config['problems'] if p['polygon_id'] == problem['id']][0]
         if 'label' not in config_problem:
             config_problem['label'] = label
+        if 'color' not in config_problem:
+            config_problem['color'] = 'Black'
+        for field in ['author', 'preparation']:
+            if field not in config_problem:
+                config_problem['field'] = ''
     
     if len(new_problems) > 0:
         logger.info('Found new problems: {}.'.format(', '.join(new_problems)))
