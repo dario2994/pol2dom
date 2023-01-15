@@ -23,6 +23,7 @@ def prepare_argument_parser():
     parser.add_argument('--polygon', '--import', '--get', '--download', action='store_true', help='Whether the problem packages should be downloaded from Polygon. Otherwise only the packages already present in the system will be considered.')
     parser.add_argument('--convert', action='store_true', help='Whether the polygon packages should be converted to DOMjudge packages. Otherwise only the DOMjudge packages already present in the system will be considered.')
     parser.add_argument('--domjudge', '--export', '--send', '--upload', action='store_true', help='Whether the DOMjudge packages shall be uploaded to the DOMjudge instance specified in config.yaml.')
+    parser.add_argument('--from-contest', type=int, help='Update config.yaml with the problems of the specified Polygon contest.')
     parser.add_argument('--pdf-contest', action='store_true', help='Whether the pdf of the whole problemset and the pdf with all the solutions should be generated. If set, the files are created in \'contest_dir/tex/problemset.pdf\' and \'contest_dir/tex/solutions.pdf\'.')
     parser.add_argument('--verbosity', choices=['debug', 'info', 'warning'],
                         default='info', help='Verbosity of the logs.')
@@ -50,9 +51,10 @@ def p2d(args):
     p2d_utils.validate_config_yaml(config)
 
     if not args.polygon and not args.convert and not args.domjudge \
+       and args.from_contest is None \
        and not args.pdf_contest \
        and not args.clear_dir and not args.clear_domjudge_ids:
-        logging.error('At least one of the flags --polygon, --convert, --domjudge, --contestpdf, --clear-dir, --clear-domjudge-ids is necessary.')
+        logging.error('At least one of the flags --polygon, --convert, --domjudge, --from-contest, --contestpdf, --clear-dir, --clear-domjudge-ids is necessary.')
         exit(1)
 
     if args.clear_dir:
@@ -75,11 +77,12 @@ def p2d(args):
         p2d_utils.save_config_yaml(config, contest_dir)
         logging.info('Deleted the DOMjudge IDs from config.yaml.')
         
-    if args.polygon and ('polygon' not in config
-                         or 'key' not in config['polygon']
-                         or 'secret' not in config['polygon']):
+    if (args.polygon or args.from_contest) \
+        and ('polygon' not in config
+          or 'key' not in config['polygon']
+          or 'secret' not in config['polygon']):
         logging.error('The entries polygon:key and polygon:secret must be '
-                      'present in config.yaml to download problems from polygon.')
+                      'present in config.yaml to access Polygon problems.')
         exit(1)
 
     if args.domjudge and ('domjudge' not in config
@@ -89,12 +92,16 @@ def p2d(args):
                          or 'password' not in config['domjudge']):
         logging.error('The entries domjudge:contest_id, domjudge:server, '
                       'domjudge:username, domjudge:password must be present '
-                      'in config.yaml to download problems from polygon.')
+                      'in config.yaml to upload problems on DOMjudge.')
         exit(1)
 
     pathlib.Path(os.path.join(contest_dir, 'polygon')).mkdir(exist_ok=True)
     pathlib.Path(os.path.join(contest_dir, 'domjudge')).mkdir(exist_ok=True)
     pathlib.Path(os.path.join(contest_dir, 'tex')).mkdir(exist_ok=True)
+
+    if args.from_contest is not None:
+        p2d_utils.fill_config_from_contest(config, args.from_contest)
+        p2d_utils.save_config_yaml(config, contest_dir)
 
     # Process the problems, one at a time.
     # For each problem some of the following operations are performed (depending

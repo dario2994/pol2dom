@@ -73,4 +73,7 @@ def download_package(key, secret, problem_id, package_id, polygon_zip):
                                 'type': 'linux'})
     with open(polygon_zip, "wb") as f:
         f.write(io.BytesIO(package.content).getbuffer())
-    
+
+# Fetches the list of problems of the specified contest.
+def get_contest_problems(key , secret, contest_id):
+    return call_polygon_api(key, secret, 'contest.problems', {'contestId': contest_id}).json()['result']

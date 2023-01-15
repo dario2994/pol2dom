@@ -204,6 +204,35 @@ def manage_domjudge(config, domjudge_dir, problem):
 
     logging.info('Updated the DOMjudge package on the server \'%s\', with id = \'%s\'.' % (config['domjudge']['server'], problem['domjudge_id']))
 
+# Updates config with the data of the problems in the specified contest.
+def fill_config_from_contest(config, contest_id):
+    contest_problems = polygon_api.get_contest_problems(
+        config['polygon']['key'], config['polygon']['secret'],
+        contest_id
+    )
+    logging.info('Fetched problems from contest {}.'.format(contest_id))
+
+    new_problems = []
+
+    for label in contest_problems:
+        problem = contest_problems[label]
+        if problem['deleted']:
+            continue
+        if problem['id'] not in [p['polygon_id'] for p in config['problems']]:
+            config['problems'].append({
+                'name': problem['name'],
+                'polygon_id': problem['id']
+            })
+            new_problems.append(problem['name'])
+        config_problem = [p for p in config['problems'] if p['polygon_id'] == problem['id']][0]
+        if 'label' not in config_problem:
+            config_problem['label'] = label
+    
+    if len(new_problems) > 0:
+        logging.info('Found new problems: {}.'.format(', '.join(new_problems)))
+    else:
+        logging.info('No new problems were found in the contest.')
+
 # Generates contest_dir/tex/problemset.pdf and contest_dir/tex/solutions.pdf.
 def generate_problemset_solutions(config, contest_dir):
     pdf_generation_params = {
