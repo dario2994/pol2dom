@@ -27,7 +27,8 @@ def parse_samples_explanations(notes):
                 exit(1)
             assert(test_id != -1)
             assert(test_id not in explanations)
-            explanations[test_id] = curr.capitalize()   # Capitalize first letter.
+            curr = curr[0].upper() + curr[1:]   # Capitalize first letter.
+            explanations[test_id] = curr
             curr = ''
             test_id = -1
         elif test_id != -1:
