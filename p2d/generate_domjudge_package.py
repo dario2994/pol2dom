@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import pathlib
 import re
@@ -12,6 +11,7 @@ import yaml
 import zipfile
 
 from p2d._version import __version__
+from p2d.logging_utils import logger
 from p2d import tex_utilities
 
 RESOURCES_PATH = os.path.join(
@@ -55,12 +55,12 @@ RESULT_POLYGON2DOMJUDGE = {
 #             - problemname-solution.{tex,pdf}
 #   params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
 def generate_domjudge_package(problem, domjudge, tex_dir, params):
-    logging.debug('Creating the DOMjudge package directory \'%s\'.' % domjudge)
+    logger.debug('Creating the DOMjudge package directory \'%s\'.' % domjudge)
 
     problem_yaml_data = {}
 
     # Metadata
-    logging.debug('Writing \'domjudge-problem.ini\'.')
+    logger.debug('Writing \'domjudge-problem.ini\'.')
     ini_file = os.path.join(domjudge, 'domjudge-problem.ini')
     ini_content = [
         'short-name = %s' % problem['name'],
@@ -81,7 +81,7 @@ def generate_domjudge_package(problem, domjudge, tex_dir, params):
     tex_utilities.generate_solution_pdf(problem, tex_dir, params)
 
     # Tests
-    logging.debug('Copying the tests in the DOMjudge package.')
+    logger.debug('Copying the tests in the DOMjudge package.')
 
     sample_dir = os.path.join(domjudge, 'data', 'sample')
     secret_dir = os.path.join(domjudge, 'data', 'secret')
@@ -105,7 +105,7 @@ def generate_domjudge_package(problem, domjudge, tex_dir, params):
                 os.path.join(domjudge, 'output_validators', 'interactor.cpp'))
     elif problem['checker']['name'] is not None:
         checker_name = problem['checker']['name']
-        logging.debug('Standard checker \'%s\'.' % checker_name)
+        logger.debug('Standard checker \'%s\'.' % checker_name)
 
         checker_name_match = re.match(r'std\:\:([a-z0-9]+)\.cpp', checker_name)
         assert(checker_name_match)
@@ -117,7 +117,7 @@ def generate_domjudge_package(problem, domjudge, tex_dir, params):
             problem_yaml_data['validator_flags'] = \
                 CHECKER_POLYGON2DOMJUDGE[checker_name]
     else:
-        logging.debug('Custom checker.')
+        logger.debug('Custom checker.')
         problem_yaml_data['validation'] = 'custom'
         pathlib.Path(domjudge, 'output_validators').mkdir()
         shutil.copyfile(
@@ -141,7 +141,7 @@ def generate_domjudge_package(problem, domjudge, tex_dir, params):
 
     # Write problem.yaml
     yaml_path = os.path.join(domjudge, 'problem.yaml')
-    logging.debug(
+    logger.debug(
             'Writing into \'%s\' the dictionary %s'
             % (yaml_path, problem_yaml_data))
     with open(yaml_path, 'w', encoding='utf-8') as f:

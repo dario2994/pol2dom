@@ -1,5 +1,4 @@
 import io
-import logging
 import os
 import random
 import requests
@@ -9,6 +8,7 @@ import tempfile
 import yaml
 
 from p2d._version import __version__
+from p2d.logging_utils import logger
 
 def generate_externalid(problem):
     random_suffix = ''.join(random.choice(string.ascii_uppercase) for _ in range(6))
@@ -37,11 +37,11 @@ def update_problem_api(package_zip, problem_domjudge_id, credentials):
                                 credentials)
 
     if res.status_code != 200 or not res.json()['problem_id']:
-        logging.error('Error sending the package to the DOMjudge server: %s.'
+        logger.error('Error sending the package to the DOMjudge server: %s.'
                       % res.json())
         return False
     else:
-        logging.debug('Successfully sent the package to the DOMjudge server.')
+        logger.debug('Successfully sent the package to the DOMjudge server.')
         return True
 
 # Adds an "empty" problem to a contest.
@@ -67,7 +67,7 @@ def add_problem_to_contest_api(problem, credentials):
     os.unlink(problem_yaml)
 
     if res.status_code != 200:
-        logging.error('Error adding the problem to the contest: %s.' % res.json())
+        logger.error('Error adding the problem to the contest: %s.' % res.json())
         return False
 
     problem['domjudge_id'] = res.json()[0]

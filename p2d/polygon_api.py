@@ -1,6 +1,5 @@
 import hashlib
 import io
-import logging
 import os
 import random
 import requests
@@ -9,6 +8,7 @@ import sys
 import time
 
 from p2d._version import __version__
+from p2d.logging_utils import logger
 
 POLYGON_ADDRESS = 'https://polygon.codeforces.com/api/'
 
@@ -34,13 +34,13 @@ def call_polygon_api(key, secret, method_name, params):
     to_hash = pref + middle + suff
     params['apiSig'] = rand + hashlib.sha512(to_hash.encode()).hexdigest()
 
-    logging.debug('Sending API request:\n'
+    logger.debug('Sending API request:\n'
                   + ('\t method = %s\n' % method_name)
                   + '\t params = %s' % params)
 
     res = requests.post(POLYGON_ADDRESS + method_name, data = params)
     if not res.ok:
-        logging.error('API call to polygon returned status %s. The content of the response is %s.' % (res.status_code, res.text))
+        logger.error('API call to polygon returned status %s. The content of the response is %s.' % (res.status_code, res.text))
         exit(1)
     assert(res.ok)
     return res
@@ -53,7 +53,7 @@ def get_latest_package_id(key, secret, problem_id):
                                      {'problemId': problem_id}).json()
 
     if packages_list['status'] != 'OK':
-        logging.error('API problem.packages request to polygon failed with error: %s'              % packages_list['comment'])
+        logger.error('API problem.packages request to polygon failed with error: %s'              % packages_list['comment'])
         exit(1)
 
     revision = -1

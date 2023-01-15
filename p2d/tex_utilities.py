@@ -1,4 +1,3 @@
-import logging
 import os
 import pathlib
 import re
@@ -8,6 +7,7 @@ import sys
 import tempfile
 
 from p2d._version import __version__
+from p2d.logging_utils import logger
 RESOURCES_PATH = os.path.join(
     os.path.split(os.path.realpath(__file__))[0], 'resources')
 
@@ -15,9 +15,9 @@ RESOURCES_PATH = os.path.join(
 # Execute pdflatex on tex_file.
 # tex_file is a .tex file
 def tex2pdf(tex_file):
-    logging.debug('Executing pdflatex on \'%s\'.' % tex_file)
+    logger.debug('Executing pdflatex on \'%s\'.' % tex_file)
     if not tex_file.endswith('.tex'):
-        logging.error('The argument tex_file=\'%s\' passed to tex2pdf is not a .tex file.' % tex_file)
+        logger.error('The argument tex_file=\'%s\' passed to tex2pdf is not a .tex file.' % tex_file)
         exit(1)
     
     tex_dir = os.path.dirname(tex_file)
@@ -25,13 +25,13 @@ def tex2pdf(tex_file):
     command_as_list = ['pdflatex', '-interaction=nonstopmode', '--shell-escape',
                        '-output-dir=' + tex_dir, '-jobname=%s' % tex_name,
                        tex_file]
-    logging.debug('pdflatex command = ' + ' '.join(command_as_list))
+    logger.debug('pdflatex command = ' + ' '.join(command_as_list))
     pdflatex = subprocess.run(command_as_list, stdout=subprocess.PIPE,
                               shell=False)
     if pdflatex.returncode != 0:
-        logging.error(' '.join(command_as_list) + '\n'
+        logger.error(' '.join(command_as_list) + '\n'
                       + pdflatex.stdout.decode("utf-8"))
-        logging.error('The pdflatex command returned an error.')
+        logger.error('The pdflatex command returned an error.')
         exit(1)
 
     tex_pdf = os.path.join(tex_dir, tex_name + '.pdf')
@@ -62,7 +62,7 @@ def generate_statement_tex(problem, tex_dir):
             samples_tex += '\\sampleexplanation{%s}\n' % sample['explanation']
 
     if sample_cnt == 0:
-        logging.error('No samples found.')
+        logger.error('No samples found.')
         exit(1)
 
     with open(os.path.join(RESOURCES_PATH, 'statement_template.tex')) as f:
@@ -200,7 +200,7 @@ def generate_problemset_pdf(problems, frontpage, tex_dir, params):
     for problem in problems:
         maybe_tex = os.path.join(tex_dir, problem + '-statement-content.tex')
         if not os.path.isfile(maybe_tex):
-            logging.warning('The tex source \'%s\' does not exist; but it is required to generate the pdf with all problems.' % maybe_tex)
+            logger.warning('The tex source \'%s\' does not exist; but it is required to generate the pdf with all problems.' % maybe_tex)
             continue
         problemset_tex += '\\input{%s-statement-content.tex}\n' % problem
         problemset_tex += '\\insertblankpageifnecessary\n\n'
@@ -228,7 +228,7 @@ def generate_solutions_pdf(problems, frontpage, tex_dir, params):
     for problem in problems:
         maybe_tex = os.path.join(tex_dir, problem + '-solution-content.tex')
         if not os.path.isfile(maybe_tex):
-            logging.warning('The tex source \'%s\' does not exist; but it is required to generate the pdf with all solutions.' % maybe_tex)
+            logger.warning('The tex source \'%s\' does not exist; but it is required to generate the pdf with all solutions.' % maybe_tex)
             continue
         solutions_tex += '\\input{%s-solution-content.tex}\n' % problem
         solutions_tex += '\\clearpage\n'
