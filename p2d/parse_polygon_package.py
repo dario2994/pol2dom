@@ -27,7 +27,7 @@ def parse_samples_explanations(notes):
                 exit(1)
             assert(test_id != -1)
             assert(test_id not in explanations)
-            curr = curr[0].upper() + curr[1:]   # Capitalize first letter.
+            curr = curr[0].upper() + curr[1:]  # Capitalize first letter.
             explanations[test_id] = curr
             curr = ''
             test_id = -1
@@ -116,11 +116,9 @@ def parse_problem_from_polygon(polygon):
         'statements', 'english', 'problem-properties.json')
     with open(statement_json_path) as f:
         statement_json = json.load(f)
-        problem['statement']['legend'] = statement_json['legend']
-        problem['statement']['input'] = statement_json['input']
-        problem['statement']['output'] = statement_json['output']
-        problem['statement']['interaction'] = statement_json['interaction']
-        problem['statement']['tutorial'] = statement_json['tutorial']
+        for section in ['legend', 'input', 'output', 'interaction', 'tutorial']:
+            content = statement_json[section]
+            problem['statement'][section] = content if content is not None else ''
         explanations = parse_samples_explanations(statement_json['notes'])
 
         sample_id = 1

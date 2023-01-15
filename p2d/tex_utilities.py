@@ -85,7 +85,7 @@ def generate_statement_tex(problem, tex_dir):
         'LEGEND': problem['statement']['legend'],
         'INPUT': problem['statement']['input'],
         'OUTPUT': problem['statement']['output'],
-        'INTERACTION': '' if problem['statement']['interaction'] is None else problem['statement']['interaction'],
+        'INTERACTION': problem['statement']['interaction'],
         'SAMPLES': samples_tex
     }
     for placeholder in replacements_statement:
