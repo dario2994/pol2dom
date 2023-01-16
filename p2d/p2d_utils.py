@@ -386,6 +386,7 @@ def wrap_iterable_in_tqdm(iterable, total, desc=None):
     return tqdm(
         iterable,
         total=total,
+        ncols=100,
         desc=desc,
         leave=False,
         file=sys.stdout,
