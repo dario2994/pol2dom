@@ -9,6 +9,7 @@ import tempfile
 import webcolors
 import yaml
 import zipfile
+from tqdm import tqdm
 
 from p2d._version import __version__
 from p2d.logging_utils import logger
@@ -379,3 +380,17 @@ def convert_to_hex(color):
             exit(1)
     
     return color.upper()
+
+# Returns a tqdm object that wraps the iterable.
+def wrap_iterable_in_tqdm(iterable, total, desc=None):
+    return tqdm(
+        iterable,
+        total=total,
+        desc=desc,
+        leave=False,
+        file=sys.stdout,
+        colour='cyan',
+        unit='kB',
+        bar_format='{l_bar}{bar}| \033[33m[ETA: {remaining}, {rate_fmt}]\033[0m',
+        delay=1
+    )
