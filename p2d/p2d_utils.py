@@ -391,6 +391,6 @@ def wrap_iterable_in_tqdm(iterable, total, desc=None):
         file=sys.stdout,
         colour='cyan',
         unit='kB',
-        bar_format='{l_bar}{bar}| \033[33m[ETA: {remaining}, {rate_fmt}]\033[0m',
+        bar_format='{l_bar}{bar}| \033[33m[ETA: {remaining}, {rate:6.2f} {unit}/s]\033[0m',
         delay=1
     )
