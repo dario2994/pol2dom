@@ -6,9 +6,9 @@ import requests
 import string
 import sys
 import time
+import logging
 
 from p2d._version import __version__
-from p2d.logging_utils import logger
 
 POLYGON_ADDRESS = 'https://polygon.codeforces.com/api/'
 
@@ -34,13 +34,13 @@ def call_polygon_api(key, secret, method_name, params):
     to_hash = pref + middle + suff
     params['apiSig'] = rand + hashlib.sha512(to_hash.encode()).hexdigest()
 
-    logger.debug('Sending API request:\n'
+    logging.debug('Sending API request:\n'
                   + ('\t method = %s\n' % method_name)
                   + '\t params = %s' % params)
 
     res = requests.post(POLYGON_ADDRESS + method_name, data = params)
     if not res.ok:
-        logger.error('API call to polygon returned status %s. The content of the response is %s.' % (res.status_code, res.text))
+        logging.error('API call to polygon returned status %s. The content of the response is %s.' % (res.status_code, res.text))
         exit(1)
     assert(res.ok)
     return res
@@ -53,7 +53,7 @@ def get_latest_package_id(key, secret, problem_id):
                                      {'problemId': problem_id}).json()
 
     if packages_list['status'] != 'OK':
-        logger.error('API problem.packages request to polygon failed with error: %s'              % packages_list['comment'])
+        logging.error('API problem.packages request to polygon failed with error: %s'              % packages_list['comment'])
         exit(1)
 
     revision = -1
@@ -74,6 +74,7 @@ def download_package(key, secret, problem_id, package_id, polygon_zip):
     with open(polygon_zip, "wb") as f:
         f.write(io.BytesIO(package.content).getbuffer())
 
-# Fetches the list of problems of the specified contest.
+# Fetches the list of problems of the specified contest
+# as a dictionary {problem_label: problem_info}.
 def get_contest_problems(key , secret, contest_id):
     return call_polygon_api(key, secret, 'contest.problems', {'contestId': contest_id}).json()['result']
