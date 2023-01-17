@@ -36,9 +36,9 @@ def call_polygon_api(key, secret, method_name, params, desc=None, decode=False):
     to_hash = pref + middle + suff
     params['apiSig'] = rand + hashlib.sha512(to_hash.encode()).hexdigest()
 
-    logger.debug('Sending API request:\n'
-                  + ('\t method = %s\n' % method_name)
-                  + '\t params = %s' % params)
+    logger.debug(('Sending API request:\n'
+                  '\t method = {}\n'
+                  '\t params = {}').format(method_name, params))
     
     response = requests.post(POLYGON_ADDRESS + method_name, data=params, stream=True)
     content = bytes()   # Request stream yields chunks in bytes

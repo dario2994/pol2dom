@@ -33,8 +33,8 @@ def manage_download(config, polygon_dir, problem):
     latest_package = polygon_api.get_latest_package_id(
         config['polygon']['key'], config['polygon']['secret'], problem['polygon_id'])
 
-    logger.debug('For problem %s the selected package is %s.'
-                  % (problem['name'], latest_package[1]))
+    logger.debug('The selected package for problem {} is {}.'
+                 .format(problem['name'], latest_package[1]))
 
     if latest_package[0] == -1:
         logger.warning('No packages were found on polygon.')
@@ -51,6 +51,7 @@ def manage_download(config, polygon_dir, problem):
     pathlib.Path(polygon_dir).mkdir(exist_ok=True)
     
     # Download the package
+    logger.info('Preparing to download Polygon package...')
     package_zip = os.path.join(polygon_dir, problem['name'] + '.zip')
     polygon_api.download_package(
         config['polygon']['key'], config['polygon']['secret'],
@@ -59,16 +60,16 @@ def manage_download(config, polygon_dir, problem):
     # Unzip the package
     if not zipfile.is_zipfile(package_zip):
         logger.error(
-            'There was an error downloading the package zip to \'%s\'.'
-            % package_zip)
-        return
+            'There was an error downloading the package zip to \'{}}\'.'
+            .format(package_zip))
+        exit(1)
 
     with zipfile.ZipFile(package_zip, 'r') as f:
-        logger.debug('Unzipping the polygon package \'%s\'.' % package_zip)
+        logger.debug('Unzipping the polygon package \'{}\'.'.format(package_zip))
         f.extractall(polygon_dir)
 
     logger.info('Downloaded and unzipped the polygon package into '
-                 '\'%s\'.' % os.path.join(polygon_dir))
+                 '\'{}\'.'.format(os.path.join(polygon_dir)))
     problem['polygon_version'] = latest_package[0]
 
 # Transforms the polygon package contained in polygon_dir (already extracted)
@@ -100,14 +101,16 @@ def manage_convert(config, polygon_dir, domjudge_dir, tex_dir, problem):
     problem_package = parse_polygon_package.parse_problem_from_polygon(polygon_dir)
 
     if problem_package['name'] != problem['name']:
-        logger.error('The name of the problem does not coincide with the name of the problem in polygon, which is \'%s\'.' % problem_package['name'])
+        logger.error('The name of the problem does not coincide with the name of the problem in polygon, which is \'{}\'.'
+                     .format(problem_package['name']))
         exit(1)
 
     # Set some additional properties of the problem (not present in polygon)
     missing_keys = list(filter(lambda key: key not in problem or not problem[key],
                                ['label', 'color', 'author', 'preparation']))
     if missing_keys:
-        logger.warning('The keys %s are not set in config.yaml for this problem.' % missing_keys)
+        logger.warning('The following keys are not set in config.yaml for this problem: {}.'
+                       .format(', '.join(missing_keys)))
     
     problem_package['label'] = problem.get('label', '?')
     problem_package['color'] = convert_to_hex(problem.get('color', 'Black'))
@@ -134,6 +137,8 @@ def manage_convert(config, polygon_dir, domjudge_dir, tex_dir, problem):
         f.write(problem_tex)
     with open(os.path.join(tex_dir, solution_file), 'w') as f:
         f.write(solution_tex)
+    
+    logger.info('Compiled statement and solution PDFs.')
 
     # Generate the DOMjudge package.
     
@@ -143,6 +148,8 @@ def manage_convert(config, polygon_dir, domjudge_dir, tex_dir, problem):
     shutil.rmtree(domjudge_dir)
     pathlib.Path(domjudge_dir).mkdir()
 
+    logger.info('Generating DOMjudge pagkage...')
+
     generate_domjudge_package.generate_domjudge_package(
         problem_package, domjudge_dir, tex_dir,
         {
@@ -151,8 +158,8 @@ def manage_convert(config, polygon_dir, domjudge_dir, tex_dir, problem):
             'hide_tlml': config.get('hide_tlml', 0)
         })
 
-    logger.info('Converted the polygon package to the DOMjudge package \'%s\'.',
-                 domjudge_dir)
+    logger.info('Converted the Polygon package to the DOMjudge package \'{}\'.'
+                .format(domjudge_dir))
 
     # Zip the package
     # A temporary file is necessary since make_archive goes crazy if the .zip
@@ -179,14 +186,14 @@ def manage_domjudge(config, domjudge_dir, problem):
     if local_version == server_version:
         logger.info('The DOMjudge package on the server is already up to date.')
         return
-
         
     # Adding the problem to the contest if it was not already done.
     if 'domjudge_id' not in problem:
+        logger.info('Adding the problem to the contest...')
         if not domjudge_api.add_problem_to_contest_api(problem, config['domjudge']):
             logger.error('There was an error while adding the problem '
                           'to the contest in the DOMjudge server.')
-            return
+            exit(1)
 
     # Sending the problem package to the server.
     assert('domjudge_id' in problem)
@@ -195,15 +202,17 @@ def manage_domjudge(config, domjudge_dir, problem):
                                  problem['domjudge_externalid'] + '.zip')
     shutil.copyfile(zip_file, zip_file_copy)
     
+    logger.info('Updating the problem...')
     if not domjudge_api.update_problem_api(
             zip_file_copy, problem['domjudge_id'], config['domjudge']):
         logger.error('There was an error while updating the problem '
                       'in the DOMjudge server.')
-        return
+        exit(1)
             
     problem['domjudge_server_version'] = local_version
 
-    logger.info('Updated the DOMjudge package on the server \'%s\', with id = \'%s\'.' % (config['domjudge']['server'], problem['domjudge_id']))
+    logger.info('Updated the DOMjudge package on the server {}, with id = {}.'
+                .format(config['domjudge']['server'], problem['domjudge_id']))
 
 # Updates config with the data of the problems in the specified contest.
 def fill_config_from_contest(config, contest_id):
@@ -264,15 +273,15 @@ def generate_problemset_solutions(config, contest_dir):
             os.path.join(contest_dir, 'tex'),
             pdf_generation_params)
 
-    logger.info('Successfully generated \'%s\' and \'%s\'.' %
-        (os.path.join(contest_dir, 'tex', 'problemset.pdf'),
-        os.path.join(contest_dir, 'tex', 'solutions.pdf')))
+    logger.info('Successfully generated {} and {}.'
+        .format(os.path.join(contest_dir, 'tex', 'problemset.pdf'),
+                os.path.join(contest_dir, 'tex', 'solutions.pdf')))
 
 def load_config_yaml(contest_dir):
     config_yaml = os.path.join(contest_dir, 'config.yaml')
 
     if not os.path.isfile(config_yaml):
-        logger.error('The file %s was not found.' % config_yaml)
+        logger.error('The file {} was not found.'.format(config_yaml))
         exit(1)
     with open(config_yaml, 'r') as f:
         try:
@@ -280,7 +289,7 @@ def load_config_yaml(contest_dir):
             logger.debug(config)
             return config
         except yaml.YAMLError as exc: # TODO: Is this except meaningful?
-            print(exc)
+            logger.error('Exception raised while loading {}: {}'.format(config_yaml, exc))
             exit(1)
 
 # Validation of the structure of config.yaml, enforcing the presence of
@@ -295,27 +304,32 @@ def validate_config_yaml(config):
     wrong_keys = list(set(config.keys()) - set(top_level_keys))
     if wrong_keys:
         logger.warning(
-            'The key \'%s\' is not expected as top-level key in \'config.yaml\'. The expected keys are: %s.' % (wrong_keys[0], ', '.join(top_level_keys)))
+            'The key \'{}\' is not expected as top-level key in config.yaml. The expected keys are: {}.'
+             .format(wrong_keys[0], ', '.join('\'{}\''.format(key) for key in top_level_keys)))
 
     polygon_keys = ['key', 'secret']
     domjudge_keys = ['server', 'username', 'password', 'contest_id']
     if 'polygon' in config and\
             set(config['polygon'].keys()) != set(polygon_keys):
-        logger.warning('The subdictionary \'polygon\' of \'config.yaml\' must contain they keys: %s.' % ', '.join(polygon_keys))
+        logger.warning('The subdictionary \'polygon\' of config.yaml must contain they keys: {}.'
+                       .format(', '.join('\'{}\''.format(key) for key in polygon_keys)))
 
-    if 'domjudge' in config and\
-            set(config['domjudge'].keys()) != set(domjudge_keys):
-        logger.warning('The subdictionary \'domjudge\' of \'config.yaml\' must contain they keys: %s.' % ', '.join(domjudge_keys))
+    if ('domjudge' in config and
+            set(config['domjudge'].keys()) != set(domjudge_keys)):
+        logger.warning('The subdictionary \'domjudge\' of config.yaml must contain they keys: {}.'
+                       .format(', '.join('\'{}\''.format(key) for key in domjudge_keys)))
 
     problem_keys = ['name', 'label', 'color', 'author', 'preparation', 'override_time_limit', 'override_memory_limit', 'polygon_id', 'polygon_version', 'domjudge_local_version', 'domjudge_server_version', 'domjudge_id', 'domjudge_externalid']
 
     for problem in config['problems']:
         if 'name' not in problem:
-            logger.error('All problems described in \'config.yaml\' must contain the key \'name\'.')
+            logger.error('All problems listed in config.yaml must contain the key \'name\'.')
             exit(1)
         wrong_keys = list(set(problem.keys()) - set(problem_keys))
         if wrong_keys:
-            logger.warning('The key \'%s\' in the description of problem \'%s\' in \'config.yaml\' is not expected. The expected keys are: %s.' % (wrong_keys[0], problem['name'], ', '.join(problem_keys)))
+            logger.warning('The key \'{}\' in the description of problem \'{}\' in config.yaml is not expected. '
+                           'The expected keys are: {}.'
+                           .format(wrong_keys[0], problem['name'], ', '.join('\'{}\''.format(key) for key in problem_keys)))
 
 def save_config_yaml(config, contest_dir):
     with open(os.path.join(contest_dir, 'config.yaml'), 'w', encoding='utf-8') as f:
@@ -365,7 +379,7 @@ def remove_problem_data(problem, contest_dir):
 # - papayawhip (HTML color https://htmlcolorcodes.com/color-names/, lower case)
 # and converts it to its standard 6-digit hexadecimal representation (e.g., FF11AB).
 def convert_to_hex(color):
-    error_message = 'The color \'%s\' specified in config.yaml is not a valid html color (see https://htmlcolorcodes.com/color-names/) or a valid hexadecimal color (e.g., #ABC123). ' % color
+    error_message = 'The color \'{}\' specified in config.yaml is not a valid html color (see https://htmlcolorcodes.com/color-names/) or a valid hexadecimal color (e.g. #ABC123).'.format(color)
     
     if color[0] == '#':
         color = color[1:]
