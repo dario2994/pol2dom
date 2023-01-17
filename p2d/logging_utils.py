@@ -12,8 +12,8 @@ class Pol2DomLoggingFormatter(logging.Formatter):
     bold_green = '\033[1;92m'
     bold_yellow = '\033[1;33m'
     bold_red = '\033[1;91m'
-    yellow = '\033[33m'
-    red = '\033[91m'
+    yellow = '\033[0;33m'
+    red = '\033[0;91m'
     reset = '\033[0m'
 
     COLORS = {
@@ -26,25 +26,26 @@ class Pol2DomLoggingFormatter(logging.Formatter):
     def format(self, record):
         level_color, message_color = self.COLORS.get(record.levelno)
         padding = ' ' * (10 - len(record.levelname))
-        log_fmt = '  ' * self.INDENT + level_color + '{levelname}' + self.reset + padding + message_color + '{message}' + self.reset
+        log_fmt = '  ' * self.INDENT + level_color + '{levelname}' + padding + message_color + '{message}' + self.reset
         formatter = logging.Formatter(log_fmt, style='{')
         return formatter.format(record)
 
 def configure_logging(verbosity):
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
+    console_handler.setFormatter(Pol2DomLoggingFormatter())
+
     logging.basicConfig(
-        stream=sys.stdout,
         format='{levelname}\t{message}',
         style='{',
-        level=eval('logging.' + verbosity.upper())
+        level=eval('logging.' + verbosity.upper()),
+        handlers=[console_handler]
     )
-    
+
     requests_log = logging.getLogger('requests.packages.urllib3')
     requests_log.setLevel(logging.DEBUG)
     requests_log.propagate = True
 
     logger.setLevel(eval('logging.' + verbosity.upper()))
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(eval('logging.' + verbosity.upper()))
-    console_handler.setFormatter(Pol2DomLoggingFormatter())
     logger.addHandler(console_handler)
     logger.propagate = False
