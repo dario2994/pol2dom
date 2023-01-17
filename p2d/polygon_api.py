@@ -14,7 +14,7 @@ from p2d import p2d_utils
 
 POLYGON_ADDRESS = 'https://polygon.codeforces.com/api/'
 
-# Call to a polygon API.
+# Call to a Polygon API.
 # It returns the response, checking that the return status is ok.
 def call_polygon_api(key, secret, method_name, params, desc=None, decode=False):
     params['apiKey'] = key
@@ -76,7 +76,7 @@ def get_latest_package_id(key, secret, problem_id):
             package_id = p['id']
     return (revision, package_id)
 
-# Downloads the polygon package into polygon_zip (as a .zip archive).
+# Downloads the Polygon package into polygon_zip (as a .zip archive).
 def download_package(key, secret, problem_id, package_id, polygon_zip):
     package = call_polygon_api(key, secret, 'problem.package',
                                {'problemId': problem_id,

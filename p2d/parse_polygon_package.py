@@ -17,13 +17,15 @@ def parse_samples_explanations(notes):
     for line in lines:
         if re.fullmatch(r'%BEGIN (\d+)', line.strip()):
             if test_id != -1:
-                logger.error('In the samples explanations, there are two %BEGIN lines without an %END line in between: %s.' % notes)
+                logger.error('In the samples explanations, there are two %BEGIN lines without an %END line in between:\n{}.'
+                             .format(notes))
                 exit(1)
             assert(test_id == -1)
             test_id = int(re.fullmatch(r'%BEGIN (\d+)', line.strip()).group(1))
         elif re.fullmatch(r'%END', line.strip()):
             if test_id == -1:
-                logger.error('In the samples explanations, there is an %END line which does not close any %BEGIN line: %s.' % notes)
+                logger.error('In the samples explanations, there is an %END line which does not close any %BEGIN line:\n{}.'
+                             .format(notes))
                 exit(1)
             assert(test_id != -1)
             assert(test_id not in explanations)
@@ -34,25 +36,26 @@ def parse_samples_explanations(notes):
         elif test_id != -1:
             curr += line + '\n'
     if test_id != -1:
-        logger.error('In the samples explanations, the last %BEGIN line is not matched by an %END line: %s.' % notes)
+        logger.error('In the samples explanations, the last %BEGIN line is not matched by an %END line:\n{}.'
+                     .format(notes))
         exit(1)
     assert(test_id == -1)
     return explanations
 
 
 # Parsing a Polygon package to a Dictionary object.
-#   polygon = path of the root of the polygon package directory
+#   polygon = path of the root of the Polygon package directory
 #
 # The returned dictionary has the following structure ('[]' denotes a list):
 '''
-color: string (not set in this function as it is not present in polygon)
-label: string (not set in this function as it is not present in polygon)
+color: string (not set in this function as it is not present in Polygon)
+label: string (not set in this function as it is not present in Polygon)
 name: string
 title: string
 timelimit: float (seconds)
 memorylimit: int (MiB)
-author: string (not set in this function as it is not present in polygon)
-preparation: string (not set in this function as it is not present in polygon)
+author: string (not set in this function as it is not present in Polygon)
+preparation: string (not set in this function as it is not present in Polygon)
 
 statement:
     legend: string
@@ -85,15 +88,16 @@ def parse_problem_from_polygon(polygon):
     def pol_path(*path):
         return os.path.join(polygon, *path)
 
-    logger.debug('Parsing the polygon package directory \'%s\'.' % polygon)
+    logger.debug('Parsing the Polygon package directory {}.'.format(polygon))
     if not os.path.isfile(pol_path('problem.xml')):
-        logger.error('The directory \'%s\' is not a polygon package (as it does not contain the file \'problem.xml\'.' % polygon)
+        logger.error('The directory {} is not a Polygon package (as it does not contain the file problem.xml.'
+                     .format(polygon))
         exit(1)
 
     problem = {}
 
     # Metadata
-    logger.debug('Parsing \'%s\'' % pol_path('problem.xml'))
+    logger.debug('Parsing {}'.format(pol_path('problem.xml')))
     problem_xml = xml.etree.ElementTree.parse(pol_path('problem.xml'))
     problem['name'] = problem_xml.getroot().attrib['short-name']
     problem['title'] = problem_xml.find('names').find('name').attrib['value']
@@ -102,11 +106,11 @@ def parse_problem_from_polygon(polygon):
             tl_str = testset.find('time-limit').text
             ml_str = testset.find('memory-limit').text
             problem['timelimit'] = float(tl_str) / 1000.0
-            # In the polygon package the memory limit is given in byte.
-            # The memory limit written in polygon is interpreted as MiB, thus
+            # In the Polygon package the memory limit is given in bytes.
+            # The memory limit written in Polygon is interpreted as MiB, thus
             # here we recover such number dividing by 2**20.
-            # DOMjudge interpret this value in MiB, so the conversion is exact
-            # see icpc.io/problem-package-format/spec/problem_package_format#limits).
+            # DOMjudge interprets this value in MiB, so the conversion is exact
+            # (see icpc.io/problem-package-format/spec/problem_package_format#limits).
             problem['memorylimit'] = int(ml_str) // 2**20 # MiB
     assert('timelimit' in problem and 'memorylimit' in problem)
     
@@ -147,7 +151,8 @@ def parse_problem_from_polygon(polygon):
     test_id = 1
     for testset in problem_xml.find('judging').iter('testset'):
         if testset.attrib['name'] not in ['pretests', 'tests']:
-            logger.warning('testset \'%s\' ignored: only the testset \'tests\' is exported in DOMjudge (apart from the samples).' % testset.attrib['name'])
+            logger.warning('testset \'{}\' ignored: only the testset \'tests\' is exported to DOMjudge (apart from the samples).'
+                           .format(testset.attrib['name']))
         local_id = 1
         # Pretests are processed only to collect samples.
 

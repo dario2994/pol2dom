@@ -15,17 +15,17 @@ RESOURCES_PATH = os.path.join(
 # Execute pdflatex on tex_file.
 # tex_file is a .tex file
 def tex2pdf(tex_file):
-    logger.debug('Executing pdflatex on \'%s\'.' % tex_file)
+    logger.debug('Executing pdflatex on {}.'.format(tex_file))
     if not tex_file.endswith('.tex'):
-        logger.error('The argument tex_file=\'%s\' passed to tex2pdf is not a .tex file.' % tex_file)
+        logger.error('The argument tex_file={} passed to tex2pdf is not a .tex file.'.format(tex_file))
         exit(1)
     
     tex_dir = os.path.dirname(tex_file)
     tex_name = os.path.basename(tex_file)[:-4] # Without extension
     command_as_list = ['pdflatex', '-interaction=nonstopmode', '--shell-escape',
-                       '-output-dir=' + tex_dir, '-jobname=%s' % tex_name,
+                       '-output-dir=' + tex_dir, '-jobname={}'.format(tex_name),
                        tex_file]
-    logger.debug('pdflatex command = ' + ' '.join(command_as_list))
+    logger.debug('pdflatex command = \'' + ' '.join(command_as_list) + '\'')
     pdflatex = subprocess.run(command_as_list, stdout=subprocess.PIPE,
                               shell=False)
     if pdflatex.returncode != 0:
@@ -56,10 +56,10 @@ def generate_statement_tex(problem, tex_dir):
         shutil.copyfile(sample['in'], sample_path + '.in')
         shutil.copyfile(sample['out'], sample_path + '.out')
 
-        samples_tex += '\\sample{%s}\n' % sample_path
+        samples_tex += '\\sample{{{}}}\n'.format(sample_path)
 
         if sample['explanation']:
-            samples_tex += '\\sampleexplanation{%s}\n' % sample['explanation']
+            samples_tex += '\\sampleexplanation{{{}}}\n'.format(sample['explanation'])
 
     if sample_cnt == 0:
         logger.error('No samples found.')
@@ -73,7 +73,7 @@ def generate_statement_tex(problem, tex_dir):
         section_content = problem['statement'][section_title]
         if section_content is None or str(section_content).strip() == '':
             statement_template = statement_template.replace(
-                '\\section*{%s}' % section_title.capitalize(), ''
+                '\\section*{{{}}}'.format(section_title.capitalize()), ''
             )
 
     replacements_statement = {
@@ -90,7 +90,7 @@ def generate_statement_tex(problem, tex_dir):
     }
     for placeholder in replacements_statement:
         statement_template = statement_template.replace(
-            '??%s??' % placeholder, str(replacements_statement[placeholder]))
+            '??{}??'.format(placeholder), str(replacements_statement[placeholder]))
 
     for image in problem['statement']['images']:
         # Giving a name depending on the problem name to the image to avoid
@@ -120,7 +120,7 @@ def generate_solution_tex(problem, tex_dir):
     }
     for placeholder in replacements_solution:
         solution_template = solution_template.replace(
-            '??%s??' % placeholder, str(replacements_solution[placeholder]))
+            '??{}??'.format(placeholder), str(replacements_solution[placeholder]))
 
     for image in problem['statement']['images']:
         # Giving a name depending on the problem name to the image to avoid
@@ -156,7 +156,7 @@ def compile_document_template(document_content, tex_file, params):
 
     for placeholder in replacements_document:
         document_template = document_template.replace(
-            '??%s??' % placeholder, str(replacements_document[placeholder]))
+            '??{}??'.format(placeholder), str(replacements_document[placeholder]))
 
     with open(tex_file, 'w') as f:
         f.write(document_template)
@@ -194,15 +194,16 @@ def generate_problemset_pdf(problems, frontpage, tex_dir, params):
 
     if frontpage:
         frontpage = os.path.abspath(frontpage)
-        problemset_tex += '\\includepdf{%s}\n' % frontpage
+        problemset_tex += '\\includepdf{{{}}}\n'.format(frontpage)
         problemset_tex += '\\insertblankpageifnecessary\n\n'
 
     for problem in problems:
         maybe_tex = os.path.join(tex_dir, problem + '-statement-content.tex')
         if not os.path.isfile(maybe_tex):
-            logger.warning('The tex source \'%s\' does not exist; but it is required to generate the pdf with all problems.' % maybe_tex)
+            logger.warning('The tex source {} does not exist, but it is required to generate the pdf with all the problems.'
+                           .format(maybe_tex))
             continue
-        problemset_tex += '\\input{%s-statement-content.tex}\n' % problem
+        problemset_tex += '\\input{{{}-statement-content.tex}}\n'.format(problem)
         problemset_tex += '\\insertblankpageifnecessary\n\n'
 
     # Executing pdflatex twice because otherwise the command
@@ -223,14 +224,15 @@ def generate_solutions_pdf(problems, frontpage, tex_dir, params):
     
     if frontpage:
         frontpage = os.path.abspath(frontpage)
-        solutions_tex += '\\includepdf{%s}\n\n' % frontpage
+        solutions_tex += '\\includepdf{{{}}}\n\n'.format(frontpage)
 
     for problem in problems:
         maybe_tex = os.path.join(tex_dir, problem + '-solution-content.tex')
         if not os.path.isfile(maybe_tex):
-            logger.warning('The tex source \'%s\' does not exist; but it is required to generate the pdf with all solutions.' % maybe_tex)
+            logger.warning('The tex source {} does not exist, but it is required to generate the pdf with all the solutions.'
+                           .format(maybe_tex))
             continue
-        solutions_tex += '\\input{%s-solution-content.tex}\n' % problem
+        solutions_tex += '\\input{{{}-solution-content.tex}}\n'.format(problem)
         solutions_tex += '\\clearpage\n'
     
     compile_document_template(

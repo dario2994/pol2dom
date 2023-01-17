@@ -39,7 +39,7 @@ RESULT_POLYGON2DOMJUDGE = {
     'time-limit-exceeded-or-accepted': None,
     'time-limit-exceeded-or-memory-limit-exceeded': None,
     'memory-limit-exceeded': 'run_time_error',
-    'rejected': None,  # = label 'Incorrect' in polygon.
+    'rejected': None,  # = label 'Incorrect' in Polygon.
     'failed': None,
     'do-not-run': None
 }
@@ -55,7 +55,7 @@ RESULT_POLYGON2DOMJUDGE = {
 #             - problemname-solution.{tex,pdf}
 #   params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
 def generate_domjudge_package(problem, domjudge, tex_dir, params):
-    logger.debug('Creating the DOMjudge package directory \'%s\'.' % domjudge)
+    logger.debug('Creating the DOMjudge package directory {}.'.format(domjudge))
 
     problem_yaml_data = {}
 
@@ -63,10 +63,10 @@ def generate_domjudge_package(problem, domjudge, tex_dir, params):
     logger.debug('Writing \'domjudge-problem.ini\'.')
     ini_file = os.path.join(domjudge, 'domjudge-problem.ini')
     ini_content = [
-        'short-name = %s' % problem['name'],
-        'name = %s' % problem['title'].replace("'", "`"),
-        'timelimit = %s' % problem['timelimit'],
-        'color = #%s' % problem['color']
+        'short-name = {}'.format(problem['name']),
+        'name = {}'.format(problem['title'].replace('\'', '`')),
+        'timelimit = {}'.format(problem['timelimit']),
+        'color = #{}'.format(problem['color'])
     ]
     with open(ini_file, 'w', encoding='utf-8') as f:
         f.writelines(map(lambda s: s + '\n', ini_content))
@@ -90,9 +90,9 @@ def generate_domjudge_package(problem, domjudge, tex_dir, params):
     for test in problem['tests']:
         destination = sample_dir if test['is_sample'] else secret_dir
         shutil.copyfile(
-            test['in'], os.path.join(destination, '%s.in' % test['num']))
+            test['in'], os.path.join(destination, '{}.in'.format(test['num'])))
         shutil.copyfile(
-            test['out'], os.path.join(destination, '%s.ans' % test['num']))
+            test['out'], os.path.join(destination, '{}.ans'.format(test['num'])))
 
     # Checker or interactor.
     if problem['interactor'] is not None:
@@ -105,7 +105,7 @@ def generate_domjudge_package(problem, domjudge, tex_dir, params):
                 os.path.join(domjudge, 'output_validators', 'interactor.cpp'))
     elif problem['checker']['name'] is not None:
         checker_name = problem['checker']['name']
-        logger.debug('Standard checker \'%s\'.' % checker_name)
+        logger.debug('Standard checker {}.'.format(checker_name))
 
         checker_name_match = re.match(r'std\:\:([a-z0-9]+)\.cpp', checker_name)
         assert(checker_name_match)
@@ -142,7 +142,6 @@ def generate_domjudge_package(problem, domjudge, tex_dir, params):
     # Write problem.yaml
     yaml_path = os.path.join(domjudge, 'problem.yaml')
     logger.debug(
-            'Writing into \'%s\' the dictionary %s'
-            % (yaml_path, problem_yaml_data))
+            'Writing into {} the dictionary {}'.format(yaml_path, problem_yaml_data))
     with open(yaml_path, 'w', encoding='utf-8') as f:
         yaml.safe_dump(problem_yaml_data, f, default_flow_style=False)
