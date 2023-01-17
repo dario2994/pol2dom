@@ -3,16 +3,16 @@ import os
 import pathlib
 import sys
 from argparse import ArgumentParser
+import logging
 
 from p2d._version import __version__
-from p2d.logging_utils import logger
 from p2d import (domjudge_api,
                  generate_domjudge_package,
                  generate_testlib_for_domjudge,
                  parse_polygon_package,
                  polygon_api,
                  p2d_utils,
-                 logging_utils,
+                 p2d_utils,
                  tex_utilities)
 RESOURCES_PATH = os.path.join(
     os.path.split(os.path.realpath(__file__))[0], 'resources')
@@ -38,13 +38,13 @@ def prepare_argument_parser():
 
 
 def p2d(args):
-    logging_utils.configure_logging(args.verbosity)
+    p2d_utils.configure_logging(args.verbosity)
 
     # Downloading and patching testlib.h if necessary.
     testlib_h = os.path.join(RESOURCES_PATH, 'testlib.h')
     if not os.path.isfile(testlib_h) or args.update_testlib:
         generate_testlib_for_domjudge.generate_testlib_for_domjudge(testlib_h)
-        logger.info('The file testlib.h was successfully downloaded and patched. The local version can be found at {}.'.format(testlib_h))
+        logging.info('The file testlib.h was successfully downloaded and patched. The local version can be found at {}.'.format(testlib_h))
     
     contest_dir = args.contest_directory
 
@@ -56,7 +56,7 @@ def p2d(args):
        and args.from_contest is None \
        and not args.pdf_contest \
        and not args.clear_dir and not args.clear_domjudge_ids:
-        logger.error('At least one of the flags --polygon, --convert, --domjudge, --from-contest, --contestpdf, --clear-dir, --clear-domjudge-ids is necessary.')
+        logging.error('At least one of the flags --polygon, --convert, --domjudge, --from-contest, --contestpdf, --clear-dir, --clear-domjudge-ids is necessary.')
         exit(1)
 
     if args.clear_dir:
@@ -66,7 +66,7 @@ def p2d(args):
             p2d_utils.remove_problem_data(problem, contest_dir)
 
         p2d_utils.save_config_yaml(config, contest_dir)
-        logger.info('Deleted the problems\' data from {}.'.format(contest_dir))
+        logging.info('Deleted the problems\' data from {}.'.format(contest_dir))
 
     if args.clear_domjudge_ids:
         for problem in config['problems']:
@@ -77,13 +77,13 @@ def p2d(args):
             problem.pop('domjudge_externalid', None)
 
         p2d_utils.save_config_yaml(config, contest_dir)
-        logger.info('Deleted the DOMjudge IDs from config.yaml.')
+        logging.info('Deleted the DOMjudge IDs from config.yaml.')
         
     if (args.polygon or args.from_contest) \
         and ('polygon' not in config
           or 'key' not in config['polygon']
           or 'secret' not in config['polygon']):
-        logger.error('The entries polygon:key and polygon:secret must be '
+        logging.error('The entries polygon:key and polygon:secret must be '
                       'present in config.yaml to access Polygon problems.')
         exit(1)
 
@@ -92,7 +92,7 @@ def p2d(args):
                          or 'server' not in config['domjudge']
                          or 'username' not in config['domjudge']
                          or 'password' not in config['domjudge']):
-        logger.error('The entries domjudge:contest_id, domjudge:server, '
+        logging.error('The entries domjudge:contest_id, domjudge:server, '
                       'domjudge:username, domjudge:password must be present '
                       'in config.yaml to upload problems on DOMjudge.')
         exit(1)
@@ -120,10 +120,10 @@ def p2d(args):
 
         problem_selected_exists = True
         print('Processing problem \033[96m' + problem['name'] + '\033[39m')     # Cyan
-        logging_utils.Pol2DomLoggingFormatter.INDENT += 1
+        p2d_utils.Pol2DomLoggingFormatter.INDENT += 1
 
         if 'label' not in problem:
-            logger.warning('The problem does not have a label.')
+            logging.warning('The problem does not have a label.')
 
         if args.polygon:
             if args.no_cache:
@@ -151,11 +151,10 @@ def p2d(args):
                     contest_dir, 'domjudge', problem['name']), problem)
             p2d_utils.save_config_yaml(config, contest_dir)
 
-        logging_utils.Pol2DomLoggingFormatter.INDENT -= 1
+        p2d_utils.Pol2DomLoggingFormatter.INDENT -= 1
 
     if args.problems and not problem_selected_exists:
-        logger.warning('The problem specified with --problem does not appear '
-                        'in config.yaml.')
+        logging.warning('None of the problem names specified with --problems appears in config.yaml.')
         return
 
     if args.problems:
@@ -166,16 +165,16 @@ def p2d(args):
 
 # Guidelines for error tracing and logging:
 #
-# Use logging_utils.logger everywhere for info/warning/error printing.
+# Use logging everywhere for info/warning/error printing.
 # Do not use print.
 # Use exceptions when appropriate.
 #
-# For errors, use logger.error followed by exit(1) or raise an exception.
-# For warnings, use logger.warning.
+# For errors, use logging.error followed by exit(1) or raise an exception.
+# For warnings, use logging.warning.
 #
 # For information:
-# - Use logger.info in this p2d.py (for useful information).
-# - Use logger.debug in all other files (and for not-so-useful information
+# - Use logging.info in this p2d.py (for useful information).
+# - Use logging.debug in all other files (and for not-so-useful information
 #   in this file).
 def main():
     args = prepare_argument_parser().parse_args()

@@ -7,9 +7,9 @@ import string
 import sys
 import time
 import json
+import logging
 
 from p2d._version import __version__
-from p2d.logging_utils import logger
 from p2d import p2d_utils
 
 POLYGON_ADDRESS = 'https://polygon.codeforces.com/api/'
@@ -36,7 +36,7 @@ def call_polygon_api(key, secret, method_name, params, desc=None, decode=False):
     to_hash = pref + middle + suff
     params['apiSig'] = rand + hashlib.sha512(to_hash.encode()).hexdigest()
 
-    logger.debug(('Sending API request:\n'
+    logging.debug(('Sending API request:\n'
                   '\t method = {}\n'
                   '\t params = {}').format(method_name, params))
     
@@ -50,7 +50,7 @@ def call_polygon_api(key, secret, method_name, params, desc=None, decode=False):
         if chunk:
             content += chunk
     if not response.ok:
-        logger.error('API call to Polygon returned status {}. The content of the response is {}.'.format(response.status_code, response.text))
+        logging.error('API call to Polygon returned status {}. The content of the response is {}.'.format(response.status_code, response.text))
         exit(1)
     assert(response.ok)
     return content.decode() if decode else content
@@ -64,7 +64,7 @@ def get_latest_package_id(key, secret, problem_id):
     )
 
     if packages_list['status'] != 'OK':
-        logger.error('API problem.packages request to Polygon failed with error: {}'.format(packages_list['comment']))
+        logging.error('API problem.packages request to Polygon failed with error: {}'.format(packages_list['comment']))
         exit(1)
 
     revision = -1
@@ -86,7 +86,8 @@ def download_package(key, secret, problem_id, package_id, polygon_zip):
     with open(polygon_zip, "wb") as f:
         f.write(io.BytesIO(package).getbuffer())
 
-# Fetches the list of problems of the specified contest.
+# Fetches the list of problems of the specified contest
+# as a dictionary {problem_label: problem_info}.
 def get_contest_problems(key , secret, contest_id):
     return json.loads(call_polygon_api(
         key, secret, 'contest.problems', {'contestId': contest_id}, desc='Fetching contest problems', decode=True

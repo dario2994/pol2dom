@@ -49,3 +49,4 @@ def configure_logging(verbosity):
     logger.setLevel(eval('logging.' + verbosity.upper()))
     logger.addHandler(console_handler)
     logger.propagate = False
+
