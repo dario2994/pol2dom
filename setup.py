@@ -33,6 +33,7 @@ setup(
     install_requires=[
         'pyyaml >= 5.3',
         'requests >= 2.26',
-        'webcolors >= 1.0'
+        'webcolors >= 1.0',
+        'tqdm >= 4.64.1'
     ]
 )
