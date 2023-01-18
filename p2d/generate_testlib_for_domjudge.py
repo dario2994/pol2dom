@@ -1,7 +1,7 @@
-import logging
 import requests
 import os
 import re
+import logging
 
 from p2d._version import __version__
 

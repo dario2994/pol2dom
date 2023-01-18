@@ -1,9 +1,9 @@
 import json
-import logging
 import os
 import pathlib
 import re
 import sys
+import logging
 from filecmp import cmp
 import xml.etree.ElementTree
 

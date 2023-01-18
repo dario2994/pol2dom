@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import pathlib
 import re
@@ -10,6 +9,7 @@ import tempfile
 import xml.etree.ElementTree
 import yaml
 import zipfile
+import logging
 
 from p2d._version import __version__
 from p2d import tex_utilities

@@ -52,6 +52,7 @@ For each problem, the directory `contest_directory/DOMjudge/problem_name` is gen
 For each problem, also `contest_directory/tex/problem_name-statement.pdf` and `contest_directory/tex/problem_name-solution.pdf` are generated.
 - `--domjudge`: For each problem, upload its package to the DOMjudge server. A caching mechanism is employed to avoid uploading a package which is already up to date in the DOMjudge server.
 For this to work, `config.yaml` must contain the credentials to access DOMjudge APIs.
+- `--from-contest <contest-id>`: Fetch the problems of an existing Polygon contest. The configuration file `config.yaml` will be updated with the problems from the contest that were not present before (some fields, such as `color` and `author`, are to be set manually). The problem packages will not be downloaded unless the `--polygon` flag is specified.
 - `--pdf-contest`: Generate in `contest_directory/tex/` the full problem set `problemset.pdf` and the editorial of the contest `solutions.pdf`. The problems that will appear in these files are those that were ever converted to a valid DOMjudge package by the command (even in a previous execution).
 
 Here is a schematic description of the structure of `contest_directory` after the execution of the command (the user needs only to create a properly set up `config.yaml`):
@@ -77,7 +78,7 @@ tex/
 ```
 
 Let us describe some additional flags:
-- `--problem problem_name`: Process a single problem.
+- `--problems <problem_name> [<problem_name> [...]]`: Process only the specified problems.
 - `--no-cache`: Ignore the cache for a single run.
 - `--clear-dir`: Clear the directory `contest_directory` (without removing `config.yaml`) and permanently delete the cache.
 - `--clear-domjudge-ids`: Clear the DOMjudge IDs assigned to the problems when importing them in DOMjudge. This is necessary if the DOMjudge instance changes, or if the DOMjudge instance is reset, or if the DOMjudge contest is changed in `config.yaml`.
@@ -146,7 +147,7 @@ We provide a description of the process which generates the tex source of the st
 The statement is generated starting from `resources/statement_template.tex` by performing the following operations:
 
 1. Replace the strings `??LABEL??`, `??TITLE??`, `??TIMELIMIT??`, `??MEMORYLIMIT??` with the corresponding metadata.
-2. Replace the string `??LEGEND??`, `??INPUT??`, `??OUTPUT??` with the content of the corresponding sections in the polygon statement;
+2. Replace the string `??LEGEND??`, `??INPUT??`, `??OUTPUT??`, `??INTERACTION??` with the content of the corresponding sections in the polygon statement (if present);
 3. Generate an initially empty string `samples`.
 For each problem sample, create two files `sample_id.in` and `sample_id.out` and append to the string `samples` the code `\sample{sample_id}`.
 If the sample has an explanation (see [Samples explanation detection](#samples-explanation-detection)), append also `\sampleexplanation{Content of the sample explanation.}`.

@@ -1,5 +1,4 @@
 import io
-import logging
 import os
 import random
 import requests
@@ -7,6 +6,7 @@ import string
 import sys
 import tempfile
 import yaml
+import logging
 
 from p2d._version import __version__
 

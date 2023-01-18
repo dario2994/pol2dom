@@ -1,4 +1,3 @@
-import logging
 import os
 import pathlib
 import re
@@ -6,6 +5,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import logging
 
 from p2d._version import __version__
 RESOURCES_PATH = os.path.join(

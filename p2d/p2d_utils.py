@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import pathlib
 import re
@@ -10,6 +9,7 @@ import tempfile
 import webcolors
 import yaml
 import zipfile
+import logging
 
 from p2d._version import __version__
 from p2d import (domjudge_api,
@@ -21,6 +21,48 @@ from p2d import (domjudge_api,
 RESOURCES_PATH = os.path.join(
     os.path.split(os.path.realpath(__file__))[0], 'resources')
 
+# Custom formatter for the console logger handler.
+# Adapted from https://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output
+class Pol2DomLoggingFormatter(logging.Formatter):
+    INDENT = 0
+
+    bold_gray = '\033[1;90m'
+    bold_green = '\033[1;92m'
+    bold_yellow = '\033[1;33m'
+    bold_red = '\033[1;91m'
+    yellow = '\033[33m'
+    red = '\033[91m'
+    reset = '\033[0m'
+
+    COLORS = {
+        logging.DEBUG: (bold_gray, reset),
+        logging.INFO: (bold_green, reset),
+        logging.WARNING: (bold_yellow, yellow),
+        logging.ERROR: (bold_red, red)
+    }
+
+    def format(self, record):
+        level_color, message_color = self.COLORS.get(record.levelno)
+        padding = ' ' * (10 - len(record.levelname))
+        log_fmt = '  ' * self.INDENT + level_color + '{levelname}' + self.reset + padding + message_color + '{message}' + self.reset
+        formatter = logging.Formatter(log_fmt, style='{')
+        return formatter.format(record)
+
+def configure_logging(verbosity):
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(eval('logging.' + verbosity.upper()))
+    console_handler.setFormatter(Pol2DomLoggingFormatter())
+
+    logging.basicConfig(
+        format='{levelname}\t{message}',
+        style='{',
+        level=eval('logging.' + verbosity.upper()),
+        handlers=[console_handler]
+    )
+    
+    requests_log = logging.getLogger('requests.packages.urllib3')
+    requests_log.setLevel(logging.DEBUG)
+    requests_log.propagate = True
 
 def manage_download(config, polygon_dir, problem):
     if 'polygon_id' not in problem:
@@ -204,6 +246,40 @@ def manage_domjudge(config, domjudge_dir, problem):
 
     logging.info('Updated the DOMjudge package on the server \'%s\', with id = \'%s\'.' % (config['domjudge']['server'], problem['domjudge_id']))
 
+# Updates config with the data of the problems in the specified contest.
+def fill_config_from_contest(config, contest_id):
+    contest_problems = polygon_api.get_contest_problems(
+        config['polygon']['key'], config['polygon']['secret'],
+        contest_id
+    )
+    logging.info('Fetched problems from contest {}.'.format(contest_id))
+
+    new_problems = []
+
+    for label in contest_problems:
+        problem = contest_problems[label]
+        if problem['deleted']:
+            continue
+        if problem['id'] not in [p['polygon_id'] for p in config['problems']]:
+            config['problems'].append({
+                'name': problem['name'],
+                'polygon_id': problem['id']
+            })
+            new_problems.append(problem['name'])
+        config_problem = [p for p in config['problems'] if p['polygon_id'] == problem['id']][0]
+        if 'label' not in config_problem:
+            config_problem['label'] = label
+        if 'color' not in config_problem:
+            config_problem['color'] = 'Black'
+        for field in ['author', 'preparation']:
+            if field not in config_problem:
+                config_problem[field] = ''
+    
+    if len(new_problems) > 0:
+        logging.info('Found new problems: {}.'.format(', '.join(new_problems)))
+    else:
+        logging.info('No new problems were found in the contest.')
+
 # Generates contest_dir/tex/problemset.pdf and contest_dir/tex/solutions.pdf.
 def generate_problemset_solutions(config, contest_dir):
     pdf_generation_params = {
@@ -232,17 +308,6 @@ def generate_problemset_solutions(config, contest_dir):
     logging.info('Successfully generated \'%s\' and \'%s\'.' %
         (os.path.join(contest_dir, 'tex', 'problemset.pdf'),
         os.path.join(contest_dir, 'tex', 'solutions.pdf')))
-    
-def configure_logging(verbosity):
-    logging.basicConfig(
-        stream=sys.stdout,
-        format='%(levelname)s: %(message)s',
-        level=eval('logging.' + verbosity.upper())
-    )
-    
-    requests_log = logging.getLogger("requests.packages.urllib3")
-    requests_log.setLevel(logging.DEBUG)
-    requests_log.propagate = True
 
 def load_config_yaml(contest_dir):
     config_yaml = os.path.join(contest_dir, 'config.yaml')
