@@ -41,10 +41,13 @@ def call_polygon_api(key, secret, method_name, params, desc=None, decode=False):
                   '\t params = {}').format(method_name, params))
     
     response = requests.post(POLYGON_ADDRESS + method_name, data=params, stream=True)
+    total = int(response.headers.get('content-length', 0))
+    chunk_size = max(1024, total // 100)
     content = bytes()   # Request stream yields chunks in bytes
     for chunk in p2d_utils.wrap_iterable_in_tqdm(
-        response.iter_content(chunk_size=1024),
-        int(response.headers.get('content-length', 0)) // 1024,
+        response.iter_content(chunk_size=chunk_size),
+        total // chunk_size,
+        unit_scale=chunk_size/1024,
         desc=desc
     ):
         if chunk:

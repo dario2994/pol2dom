@@ -27,7 +27,7 @@ def call_domjudge_api(api_address, data, files, credentials):
 # Updates the problem on the server with the package_zip.
 # Returns true if the update was successful.
 def update_problem_api(package_zip, problem_domjudge_id, credentials):
-    api_address = '/api/v4/contests/{}}/problems'.format(credentials['contest_id'])
+    api_address = '/api/v4/contests/{}/problems'.format(credentials['contest_id'])
     
     with open(package_zip, 'rb') as f:
         res = call_domjudge_api(api_address,

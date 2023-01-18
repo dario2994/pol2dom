@@ -102,7 +102,7 @@ def manage_download(config, polygon_dir, problem):
     # Unzip the package
     if not zipfile.is_zipfile(package_zip):
         logging.error(
-            'There was an error downloading the package zip to {}}.'
+            'There was an error downloading the package zip to {}.'
             .format(package_zip))
         exit(1)
 
@@ -199,7 +199,7 @@ def manage_convert(config, polygon_dir, domjudge_dir, tex_dir, problem):
             'hide_tlml': config.get('hide_tlml', 0)
         })
 
-    logging.info('Converted the Polygon package to the DOMjudge package \'{}\'.'
+    logging.info('Converted the Polygon package to the DOMjudge package {}.'
                 .format(domjudge_dir))
 
     # Zip the package
@@ -437,7 +437,7 @@ def convert_to_hex(color):
     return color.upper()
 
 # Returns a tqdm object that wraps the iterable.
-def wrap_iterable_in_tqdm(iterable, total, desc=None):
+def wrap_iterable_in_tqdm(iterable, total, unit_scale=False, desc=None):
     return tqdm(
         iterable,
         total=total,
@@ -447,6 +447,7 @@ def wrap_iterable_in_tqdm(iterable, total, desc=None):
         file=sys.stdout,
         colour='cyan',
         unit='kB',
+        unit_scale=unit_scale,
         bar_format='{l_bar}{bar}| \033[33m[ETA: {remaining}, {rate:6.2f} {unit}/s]\033[0m',
-        delay=1
+        delay=0.5
     )
