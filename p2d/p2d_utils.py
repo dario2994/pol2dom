@@ -450,5 +450,5 @@ def wrap_iterable_in_tqdm(iterable, total, unit_scale=False, desc=None):
         unit='kB',
         unit_scale=unit_scale,
         bar_format='{l_bar}{bar}| \033[33m[ETA: {remaining}, {rate:6.2f} {unit}/s]\033[0m',
-        delay=0.5
+        delay=3
     )
