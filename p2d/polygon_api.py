@@ -36,9 +36,9 @@ def call_polygon_api(key, secret, method_name, params, desc=None, decode=False):
     to_hash = pref + middle + suff
     params['apiSig'] = rand + hashlib.sha512(to_hash.encode()).hexdigest()
 
-    logging.debug(('Sending API request:\n'
-                  '\t method = {}\n'
-                  '\t params = {}').format(method_name, params))
+    logging.debug('Sending API request:\n'
+                  + ('\tmethod = %s\n' % method_name)
+                  + ('\tparams = %s' % params))
     
     response = requests.post(POLYGON_ADDRESS + method_name, data=params, stream=True)
     total = int(response.headers.get('content-length', 0))
@@ -53,7 +53,8 @@ def call_polygon_api(key, secret, method_name, params, desc=None, decode=False):
         if chunk:
             content += chunk
     if not response.ok:
-        logging.error('API call to Polygon returned status {}. The content of the response is {}.'.format(response.status_code, response.text))
+        logging.error('API call to Polygon returned status %s. The content of the response is %s.'
+                      % (response.status_code, response.text))
         exit(1)
     assert(response.ok)
     return content.decode() if decode else content
@@ -67,7 +68,7 @@ def get_latest_package_id(key, secret, problem_id):
     )
 
     if packages_list['status'] != 'OK':
-        logging.error('API problem.packages request to Polygon failed with error: {}'.format(packages_list['comment']))
+        logging.error('API problem.packages request to Polygon failed with error: %s' % packages_list['comment'])
         exit(1)
 
     revision = -1

@@ -44,7 +44,7 @@ def p2d(args):
     testlib_h = os.path.join(RESOURCES_PATH, 'testlib.h')
     if not os.path.isfile(testlib_h) or args.update_testlib:
         generate_testlib_for_domjudge.generate_testlib_for_domjudge(testlib_h)
-        logging.info('The file testlib.h was successfully downloaded and patched. The local version can be found at {}.'.format(testlib_h))
+        logging.info('The file testlib.h was successfully downloaded and patched. The local version can be found at %s.' % testlib_h)
     
     contest_dir = args.contest_directory
 
@@ -66,7 +66,7 @@ def p2d(args):
             p2d_utils.remove_problem_data(problem, contest_dir)
 
         p2d_utils.save_config_yaml(config, contest_dir)
-        logging.info('Deleted the problems\' data from {}.'.format(contest_dir))
+        logging.info('Deleted the problems\' data from %s.' % contest_dir)
 
     if args.clear_domjudge_ids:
         for problem in config['problems']:

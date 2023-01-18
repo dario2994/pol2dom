@@ -17,15 +17,15 @@ def parse_samples_explanations(notes):
     for line in lines:
         if re.fullmatch(r'%BEGIN (\d+)', line.strip()):
             if test_id != -1:
-                logging.error('In the samples explanations, there are two %BEGIN lines without an %END line in between:\n{}.'
-                             .format(notes))
+                logging.error('In the samples explanations, there are two %BEGIN lines without an %END line in between:\n%s.'
+                              % notes)
                 exit(1)
             assert(test_id == -1)
             test_id = int(re.fullmatch(r'%BEGIN (\d+)', line.strip()).group(1))
         elif re.fullmatch(r'%END', line.strip()):
             if test_id == -1:
-                logging.error('In the samples explanations, there is an %END line which does not close any %BEGIN line:\n{}.'
-                             .format(notes))
+                logging.error('In the samples explanations, there is an %END line which does not close any %BEGIN line:\n%s.'
+                              % notes)
                 exit(1)
             assert(test_id != -1)
             assert(test_id not in explanations)
@@ -36,8 +36,8 @@ def parse_samples_explanations(notes):
         elif test_id != -1:
             curr += line + '\n'
     if test_id != -1:
-        logging.error('In the samples explanations, the last %BEGIN line is not matched by an %END line:\n{}.'
-                     .format(notes))
+        logging.error('In the samples explanations, the last %BEGIN line is not matched by an %END line:\n%s.'
+                      % notes)
         exit(1)
     assert(test_id == -1)
     return explanations
@@ -88,7 +88,7 @@ def parse_problem_from_polygon(polygon):
     def pol_path(*path):
         return os.path.join(polygon, *path)
 
-    logging.debug('Parsing the Polygon package directory {}.'.format(polygon))
+    logging.debug('Parsing the Polygon package directory %s.' % polygon)
     if not os.path.isfile(pol_path('problem.xml')):
         logging.error('The directory {} is not a Polygon package (as it does not contain the file problem.xml.'
                      .format(polygon))
@@ -97,7 +97,7 @@ def parse_problem_from_polygon(polygon):
     problem = {}
 
     # Metadata
-    logging.debug('Parsing {}'.format(pol_path('problem.xml')))
+    logging.debug('Parsing %s' % pol_path('problem.xml'))
     problem_xml = xml.etree.ElementTree.parse(pol_path('problem.xml'))
     problem['name'] = problem_xml.getroot().attrib['short-name']
     problem['title'] = problem_xml.find('names').find('name').attrib['value']
@@ -151,8 +151,8 @@ def parse_problem_from_polygon(polygon):
     test_id = 1
     for testset in problem_xml.find('judging').iter('testset'):
         if testset.attrib['name'] not in ['pretests', 'tests']:
-            logging.warning('testset \'{}\' ignored: only the testset \'tests\' is exported to DOMjudge (apart from the samples).'
-                           .format(testset.attrib['name']))
+            logging.warning('testset \'%s\' ignored: only the testset \'tests\' is exported to DOMjudge (apart from the samples).'
+                            % testset.attrib['name'])
         local_id = 1
         # Pretests are processed only to collect samples.
 
