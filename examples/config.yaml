@@ -3,7 +3,7 @@ contest_name: Testing pol2dom
 front_page_problemset: absolute_path/problemset_frontpage.pdf # A single-page pdf
 front_page_solutions: absolute_path/solutions_frontpage.pdf # A single-page pdf
 
-polygon: # Credentials for polygon APIs. Can be generated in polygon -> settings.
+polygon: # Credentials for Polygon APIs. Can be generated in Polygon -> Settings.
   key: ??? 
   secret: ???
 
@@ -20,8 +20,8 @@ problems:
   label: A
   color: CornflowerBlue # HTML color: https://htmlcolorcodes.com/color-names/
   override_memory_limit: 2048 # MiB
-  # To find the problem id in polygon:
-  # 1. Open the problem in polygon
+  # To find the problem id in Polygon:
+  # 1. Open the problem in Polygon
   # 2. The first row of the right-side menu contains id = ???.
   polygon_id: ???
   author: Federico Glaudo

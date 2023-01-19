@@ -41,18 +41,18 @@ def parse_samples_explanations(notes):
 
 
 # Parsing a Polygon package to a Dictionary object.
-#   polygon = path of the root of the polygon package directory
+#   polygon = path of the root of the Polygon package directory
 #
 # The returned dictionary has the following structure ('[]' denotes a list):
 '''
-color: string (not set in this function as it is not present in polygon)
-label: string (not set in this function as it is not present in polygon)
+color: string (not set in this function as it is not present in Polygon)
+label: string (not set in this function as it is not present in Polygon)
 name: string
 title: string
 timelimit: float (seconds)
 memorylimit: int (MiB)
-author: string (not set in this function as it is not present in polygon)
-preparation: string (not set in this function as it is not present in polygon)
+author: string (not set in this function as it is not present in Polygon)
+preparation: string (not set in this function as it is not present in Polygon)
 
 statement:
     legend: string
@@ -85,9 +85,9 @@ def parse_problem_from_polygon(polygon):
     def pol_path(*path):
         return os.path.join(polygon, *path)
 
-    logging.debug('Parsing the polygon package directory \'%s\'.' % polygon)
+    logging.debug('Parsing the Polygon package directory \'%s\'.' % polygon)
     if not os.path.isfile(pol_path('problem.xml')):
-        logging.error('The directory \'%s\' is not a polygon package (as it does not contain the file \'problem.xml\'.' % polygon)
+        logging.error('The directory \'%s\' is not a Polygon package (as it does not contain the file \'problem.xml\'.' % polygon)
         exit(1)
 
     problem = {}
@@ -102,8 +102,8 @@ def parse_problem_from_polygon(polygon):
             tl_str = testset.find('time-limit').text
             ml_str = testset.find('memory-limit').text
             problem['timelimit'] = float(tl_str) / 1000.0
-            # In the polygon package the memory limit is given in byte.
-            # The memory limit written in polygon is interpreted as MiB, thus
+            # In the Polygon package the memory limit is given in byte.
+            # The memory limit written in Polygon is interpreted as MiB, thus
             # here we recover such number dividing by 2**20.
             # DOMjudge interpret this value in MiB, so the conversion is exact
             # see icpc.io/problem-package-format/spec/problem_package_format#limits).
