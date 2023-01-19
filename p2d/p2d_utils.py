@@ -78,15 +78,15 @@ def manage_download(config, polygon_dir, problem):
                   % (problem['name'], latest_package[1]))
 
     if latest_package[0] == -1:
-        logging.warning('No packages were found on polygon.')
+        logging.warning('No packages were found on Polygon.')
         return
 
     if latest_package[0] < local_version:
-        logging.warning('The local version is newer than the polygon version.')
+        logging.warning('The local version is newer than the Polygon version.')
         return
 
     if latest_package[0] == local_version:
-        logging.info('The polygon package is up to date.')
+        logging.info('The Polygon package is up to date.')
         return
 
     pathlib.Path(polygon_dir).mkdir(exist_ok=True)
@@ -105,15 +105,15 @@ def manage_download(config, polygon_dir, problem):
         return
 
     with zipfile.ZipFile(package_zip, 'r') as f:
-        logging.debug('Unzipping the polygon package \'%s\'.' % package_zip)
+        logging.debug('Unzipping the Polygon package \'%s\'.' % package_zip)
         f.extractall(polygon_dir)
 
-    logging.info('Downloaded and unzipped the polygon package into '
+    logging.info('Downloaded and unzipped the Polygon package into '
                  '\'%s\'.' % os.path.join(polygon_dir))
     problem['polygon_version'] = latest_package[0]
 
-# Transforms the polygon package contained in polygon_dir (already extracted)
-# into an equivalent domjudge package in domjudge_dir. In domjudge_dir the
+# Transforms the Polygon package contained in polygon_dir (already extracted)
+# into an equivalent DOMjudge package in domjudge_dir. In domjudge_dir the
 # package is contained extracted, but also a zip of the package itself is
 # present.
 # Moreover, this function creates the two tex files:
@@ -125,26 +125,26 @@ def manage_convert(config, polygon_dir, domjudge_dir, tex_dir, problem):
     domjudge_version = problem.get('domjudge_local_version', -1)
 
     if polygon_version == -1:
-        logging.warning('The polygon package is not present locally.')
+        logging.warning('The Polygon package is not present locally.')
         return
 
     if polygon_version < domjudge_version:
-        logging.warning('The version of the local domjudge package is more '
-                        'up to date the the local polygon package.')
+        logging.warning('The version of the local DOMjudge package is more '
+                        'up to date the the local Polygon package.')
         return
 
     if polygon_version == domjudge_version:
-        logging.info('The local domjudge package is already up to date.')
+        logging.info('The local DOMjudge package is already up to date.')
         return
 
-    # Parse the polygon package
+    # Parse the Polygon package
     problem_package = parse_polygon_package.parse_problem_from_polygon(polygon_dir)
 
     if problem_package['name'] != problem['name']:
-        logging.error('The name of the problem does not coincide with the name of the problem in polygon, which is \'%s\'.' % problem_package['name'])
+        logging.error('The name of the problem does not coincide with the name of the problem in Polygon, which is \'%s\'.' % problem_package['name'])
         exit(1)
 
-    # Set some additional properties of the problem (not present in polygon)
+    # Set some additional properties of the problem (not present in Polygon)
     missing_keys = list(filter(lambda key: key not in problem or not problem[key],
                                ['label', 'color', 'author', 'preparation']))
     if missing_keys:
@@ -192,7 +192,7 @@ def manage_convert(config, polygon_dir, domjudge_dir, tex_dir, problem):
             'hide_tlml': config.get('hide_tlml', 0)
         })
 
-    logging.info('Converted the polygon package to the DOMjudge package \'%s\'.',
+    logging.info('Converted the Polygon package to the DOMjudge package \'%s\'.',
                  domjudge_dir)
 
     # Zip the package

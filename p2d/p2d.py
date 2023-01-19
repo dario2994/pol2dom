@@ -19,11 +19,11 @@ RESOURCES_PATH = os.path.join(
 
     
 def prepare_argument_parser():
-    parser = ArgumentParser(description='Utility script to import a whole contest from polygon into DOMjudge.')
-    parser.add_argument('contest_directory', help='The directory containing the config.yaml file describing the contest. This directory will store also the polygon and DOMjudge packages.')
+    parser = ArgumentParser(description='Utility script to import a whole contest from Polygon into DOMjudge.')
+    parser.add_argument('contest_directory', help='The directory containing the config.yaml file describing the contest. This directory will store also the Polygon and DOMjudge packages.')
     parser.add_argument('--problems', nargs='+', metavar='PROBLEM_NAME', help='Use this flag to pass the name of one or more problems if you want to execute the script only on those problems.')
     parser.add_argument('-p', '--polygon', '--import', '--get', '--download', action='store_true', help='Whether the problem packages should be downloaded from Polygon. Otherwise only the packages already present in the system will be considered.')
-    parser.add_argument('-c', '--convert', action='store_true', help='Whether the polygon packages should be converted to DOMjudge packages. Otherwise only the DOMjudge packages already present in the system will be considered.')
+    parser.add_argument('-c', '--convert', action='store_true', help='Whether the Polygon packages should be converted to DOMjudge packages. Otherwise only the DOMjudge packages already present in the system will be considered.')
     parser.add_argument('-d', '--domjudge', '--export', '--send', '--upload', action='store_true', help='Whether the DOMjudge packages shall be uploaded to the DOMjudge instance specified in config.yaml.')
     parser.add_argument('--from-contest', type=int, metavar='CONTEST_ID', help='Update config.yaml with the problems of the specified Polygon contest.')
     parser.add_argument('--pdf-contest', action='store_true', help='Whether the pdf of the whole problemset and the pdf with all the solutions should be generated. If set, the files are created in \'contest_dir/tex/problemset.pdf\' and \'contest_dir/tex/solutions.pdf\'.')
@@ -31,7 +31,7 @@ def prepare_argument_parser():
                         default='info', help='Verbosity of the logs.')
     parser.add_argument('--no-cache', action='store_true', help='If set, the various steps (polygon, convert, domjudge) are run even if they would not be necessary (according to the caching mechanism).')
     parser.add_argument('--clear-dir', action='store_true', help='If set, problems\' data in the contest directory is deleted (as a consequence, the cache is deleted). The file \'config.yaml\' is not deleted.')
-    parser.add_argument('--clear-domjudge-ids', action='store_true', help='If set, the domjudge IDs saved in config.yaml (for the problems that were uploaded to the DOMjudge server) are deleted. As a consequence, next time the flag `--domjudge` is passed, the problems will be uploaded as new problems to DOMjudge. This should be used either if the DOMjudge server changed, if the DOMjudge contest changed, or if the problems were deleted in the DOMjudge server.')
+    parser.add_argument('--clear-domjudge-ids', action='store_true', help='If set, the DOMjudge IDs saved in config.yaml (for the problems that were uploaded to the DOMjudge server) are deleted. As a consequence, next time the flag `--domjudge` is passed, the problems will be uploaded as new problems to DOMjudge. This should be used either if the DOMjudge server changed, if the DOMjudge contest changed, or if the problems were deleted in the DOMjudge server.')
     parser.add_argument('--update-testlib', action='store_true', help='Whether to update the local version of testlib (syncing it with the latest version from the official github repository and patching it for DOMjudge).')
     
     return parser
@@ -108,8 +108,8 @@ def p2d(args):
     # Process the problems, one at a time.
     # For each problem some of the following operations are performed (depending
     # on the command line flags used to run the command):
-    #  1. Download the polygon package (from polygon).
-    #  2. Convert the polygon package to a DOMjudge package.
+    #  1. Download the Polygon package (from Polygon).
+    #  2. Convert the Polygon package to a DOMjudge package.
     #  3. Upload the DOMjudge package (to a running DOMjudge server).
     problem_selected_exists = False
     for problem in config['problems']:

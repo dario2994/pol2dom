@@ -12,7 +12,7 @@ from p2d._version import __version__
 
 POLYGON_ADDRESS = 'https://polygon.codeforces.com/api/'
 
-# Call to a polygon API.
+# Call to a Polygon API.
 # It returns the response, checking that the return status is ok.
 def call_polygon_api(key, secret, method_name, params):
     params['apiKey'] = key
@@ -40,7 +40,7 @@ def call_polygon_api(key, secret, method_name, params):
 
     res = requests.post(POLYGON_ADDRESS + method_name, data = params)
     if not res.ok:
-        logging.error('API call to polygon returned status %s. The content of the response is %s.' % (res.status_code, res.text))
+        logging.error('API call to Polygon returned status %s. The content of the response is %s.' % (res.status_code, res.text))
         exit(1)
     assert(res.ok)
     return res
@@ -53,7 +53,7 @@ def get_latest_package_id(key, secret, problem_id):
                                      {'problemId': problem_id}).json()
 
     if packages_list['status'] != 'OK':
-        logging.error('API problem.packages request to polygon failed with error: %s'              % packages_list['comment'])
+        logging.error('API problem.packages request to Polygon failed with error: %s'              % packages_list['comment'])
         exit(1)
 
     revision = -1
@@ -65,7 +65,7 @@ def get_latest_package_id(key, secret, problem_id):
             package_id = p['id']
     return (revision, package_id)
 
-# Downloads the polygon package into polygon_zip (as a .zip archive).
+# Downloads the Polygon package into polygon_zip (as a .zip archive).
 def download_package(key, secret, problem_id, package_id, polygon_zip):
     package = call_polygon_api(key, secret, 'problem.package',
                                {'problemId': problem_id,

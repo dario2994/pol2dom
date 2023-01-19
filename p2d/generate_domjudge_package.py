@@ -39,7 +39,7 @@ RESULT_POLYGON2DOMJUDGE = {
     'time-limit-exceeded-or-accepted': None,
     'time-limit-exceeded-or-memory-limit-exceeded': None,
     'memory-limit-exceeded': 'run_time_error',
-    'rejected': None,  # = label 'Incorrect' in polygon.
+    'rejected': None,  # = label 'Incorrect' in Polygon.
     'failed': None,
     'do-not-run': None
 }
