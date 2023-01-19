@@ -10,6 +10,7 @@ import webcolors
 import yaml
 import zipfile
 import logging
+from tqdm import tqdm
 
 from p2d._version import __version__
 from p2d import (domjudge_api,
@@ -421,3 +422,21 @@ def convert_to_hex(color):
             exit(1)
     
     return color.upper()
+
+# Returns a tqdm object that wraps the iterable.
+# The object is itself an iterable that yields the same values,
+# and additionally displays a progress bar which is updated after each iteration.
+def wrap_iterable_in_tqdm(iterable, total, unit_scale=False, desc=None):
+    return tqdm(
+        iterable,
+        total=total,
+        ncols=100,
+        desc=desc,
+        leave=False,
+        file=sys.stdout,
+        colour='cyan',
+        unit='kB',
+        unit_scale=unit_scale,
+        bar_format='{l_bar}{bar}| \033[33m[ETA: {remaining}, {rate:6.2f} {unit}/s]\033[0m',
+        delay=3
+    )

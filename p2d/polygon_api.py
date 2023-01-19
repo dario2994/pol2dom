@@ -6,15 +6,17 @@ import requests
 import string
 import sys
 import time
+import json
 import logging
 
 from p2d._version import __version__
+from p2d import p2d_utils
 
 POLYGON_ADDRESS = 'https://polygon.codeforces.com/api/'
 
 # Call to a polygon API.
 # It returns the response, checking that the return status is ok.
-def call_polygon_api(key, secret, method_name, params):
+def call_polygon_api(key, secret, method_name, params, desc=None, decode=False):
     params['apiKey'] = key
     params['time'] = int(time.time())
     
@@ -38,19 +40,32 @@ def call_polygon_api(key, secret, method_name, params):
                   + ('\t method = %s\n' % method_name)
                   + '\t params = %s' % params)
 
-    res = requests.post(POLYGON_ADDRESS + method_name, data = params)
-    if not res.ok:
-        logging.error('API call to polygon returned status %s. The content of the response is %s.' % (res.status_code, res.text))
-        exit(1)
-    assert(res.ok)
-    return res
+    response = requests.post(POLYGON_ADDRESS + method_name, data=params, stream=True)
+    total = int(response.headers.get('content-length', 0))
+    chunk_size = max(1024, total // 100)    # Keep chunks big enough as streaming many chunks slows down download.
+    content = bytes()                       # Request stream yields chunks in bytes.
+    for chunk in p2d_utils.wrap_iterable_in_tqdm(
+        response.iter_content(chunk_size=chunk_size),
+        total // chunk_size,
+        unit_scale=chunk_size/1024,
+        desc=desc
+    ):
+        if chunk:
+            content += chunk
+    if not response.ok:
+        logging.error('API call to Polygon returned status %s. The content of the response is %s.'
+                      % (response.status_code, response.text))
+
+    assert(response.ok)
+    return content.decode() if decode else content
 
 # Returns the pair (revision, package_id) corresponding to the latest
 # revision of the problem which has a package of type linux ready.
 # It returns (-1, -1) if no valid package is found.
 def get_latest_package_id(key, secret, problem_id):
-    packages_list = call_polygon_api(key, secret, 'problem.packages',
-                                     {'problemId': problem_id}).json()
+    packages_list = json.loads(call_polygon_api(key, secret, 'problem.packages',
+                                                {'problemId': problem_id},
+                                                desc='Fetching latest package ID', decode=True))
 
     if packages_list['status'] != 'OK':
         logging.error('API problem.packages request to polygon failed with error: %s'              % packages_list['comment'])
@@ -67,14 +82,17 @@ def get_latest_package_id(key, secret, problem_id):
 
 # Downloads the polygon package into polygon_zip (as a .zip archive).
 def download_package(key, secret, problem_id, package_id, polygon_zip):
-    package = call_polygon_api(key, secret, 'problem.package',
-                               {'problemId': problem_id,
-                                'packageId': package_id,
-                                'type': 'linux'})
+    package_content = call_polygon_api(key, secret, 'problem.package',
+                                       {'problemId': problem_id,
+                                        'packageId': package_id,
+                                        'type': 'linux'},
+                                        desc='Downloading Polygon package')
     with open(polygon_zip, "wb") as f:
-        f.write(io.BytesIO(package.content).getbuffer())
+        f.write(io.BytesIO(package_content).getbuffer())
 
 # Fetches the list of problems of the specified contest
 # as a dictionary {problem_label: problem_info}.
 def get_contest_problems(key , secret, contest_id):
-    return call_polygon_api(key, secret, 'contest.problems', {'contestId': contest_id}).json()['result']
+    return json.loads(call_polygon_api(
+        key, secret, 'contest.problems', {'contestId': contest_id}, desc='Fetching contest problems', decode=True
+    ))['result']
