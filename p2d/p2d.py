@@ -21,11 +21,11 @@ RESOURCES_PATH = os.path.join(
 def prepare_argument_parser():
     parser = ArgumentParser(description='Utility script to import a whole contest from Polygon into DOMjudge.')
     parser.add_argument('contest_directory', help='The directory containing the config.yaml file describing the contest. This directory will store also the Polygon and DOMjudge packages.')
-    parser.add_argument('--problems', nargs='+', help='Use this flag to pass the name of one or more problems if you want to execute the script on only on those problems.')
-    parser.add_argument('--polygon', '--import', '--get', '--download', action='store_true', help='Whether the problem packages should be downloaded from Polygon. Otherwise only the packages already present in the system will be considered.')
-    parser.add_argument('--convert', action='store_true', help='Whether the Polygon packages should be converted to DOMjudge packages. Otherwise only the DOMjudge packages already present in the system will be considered.')
-    parser.add_argument('--domjudge', '--export', '--send', '--upload', action='store_true', help='Whether the DOMjudge packages shall be uploaded to the DOMjudge instance specified in config.yaml.')
-    parser.add_argument('--from-contest', type=int, help='Update config.yaml with the problems of the specified Polygon contest.')
+    parser.add_argument('--problems', nargs='+', metavar='PROBLEM_NAME', help='Use this flag to pass the name of one or more problems if you want to execute the script only on those problems.')
+    parser.add_argument('-p', '--polygon', '--import', '--get', '--download', action='store_true', help='Whether the problem packages should be downloaded from Polygon. Otherwise only the packages already present in the system will be considered.')
+    parser.add_argument('-c', '--convert', action='store_true', help='Whether the Polygon packages should be converted to DOMjudge packages. Otherwise only the DOMjudge packages already present in the system will be considered.')
+    parser.add_argument('-d', '--domjudge', '--export', '--send', '--upload', action='store_true', help='Whether the DOMjudge packages shall be uploaded to the DOMjudge instance specified in config.yaml.')
+    parser.add_argument('--from-contest', type=int, metavar='CONTEST_ID', help='Update config.yaml with the problems of the specified Polygon contest.')
     parser.add_argument('--pdf-contest', action='store_true', help='Whether the pdf of the whole problemset and the pdf with all the solutions should be generated. If set, the files are created in \'contest_dir/tex/problemset.pdf\' and \'contest_dir/tex/solutions.pdf\'.')
     parser.add_argument('--verbosity', choices=['debug', 'info', 'warning'],
                         default='info', help='Verbosity of the logs.')
