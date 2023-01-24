@@ -16,7 +16,7 @@ POLYGON_ADDRESS = 'https://polygon.codeforces.com/api/'
 
 # Call to a polygon API.
 # It returns the response, checking that the return status is ok.
-def call_polygon_api(key, secret, method_name, params, desc=None, decode=False):
+def call_polygon_api(key, secret, method_name, params, desc=None):
     params['apiKey'] = key
     params['time'] = int(time.time())
     
@@ -57,7 +57,7 @@ def call_polygon_api(key, secret, method_name, params, desc=None, decode=False):
                       % (response.status_code, response.text))
 
     assert(response.ok)
-    return content.decode() if decode else content
+    return content
 
 # Returns the pair (revision, package_id) corresponding to the latest
 # revision of the problem which has a package of type linux ready.
@@ -65,7 +65,7 @@ def call_polygon_api(key, secret, method_name, params, desc=None, decode=False):
 def get_latest_package_id(key, secret, problem_id):
     packages_list = json.loads(call_polygon_api(key, secret, 'problem.packages',
                                                 {'problemId': problem_id},
-                                                desc='Fetching latest package ID', decode=True))
+                                                desc='Fetching latest package ID').decode())
 
     if packages_list['status'] != 'OK':
         logging.error('API problem.packages request to polygon failed with error: %s'              % packages_list['comment'])
@@ -94,5 +94,5 @@ def download_package(key, secret, problem_id, package_id, polygon_zip):
 # as a dictionary {problem_label: problem_info}.
 def get_contest_problems(key , secret, contest_id):
     return json.loads(call_polygon_api(
-        key, secret, 'contest.problems', {'contestId': contest_id}, desc='Fetching contest problems', decode=True
-    ))['result']
+        key, secret, 'contest.problems', {'contestId': contest_id}, desc='Fetching contest problems'
+    ).decode())['result']
