@@ -42,7 +42,7 @@ Running
 downloads the packages of the problems of the contest from Polygon, converts them to DOMjudge packages, and uploads them to the DOMjudge server, and generates the pdf of the whole problem set and of the solutions.
 The list of the problems, as well as the credentials to access Polygon and the DOMjudge server are contained in the configuration file `contest_directory/config.yaml`. The content and the format of `config.yaml` are described in [Structure of config.yaml](#structure-of-configyaml).
 
-Let us describe the four, almost independent, fundamental operations that can be performed by `p2d`:
+Let us describe the five, almost independent, fundamental operations that can be performed by `p2d`:
 
 - `--polygon`: For each problem, download its latest valid package from Polygon. The package must be a *full* package (and the linux version will be downloaded). A caching mechanism is employed to avoid downloading a package which is already up to date locally.
 For this to work, `config.yaml` must contain the credentials to access Polygon APIs.
