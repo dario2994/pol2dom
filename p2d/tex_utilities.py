@@ -184,12 +184,12 @@ def generate_solution_pdf(problem, tex_dir, params):
         params)
 
 # Produces the complete problem set of a contest and saves it as
-# tex_dir/problemset.pdf.
+# tex_dir/statements.pdf.
 #   problems is a list of problem names, in the order they shall appear.
 #   tex_dir must contain problem-statement-content.tex for each problem in
 #   problems.
 #   params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
-def generate_problemset_pdf(problems, frontpage, tex_dir, params):
+def generate_statements_pdf(problems, frontpage, tex_dir, params):
     problemset_tex = ''
 
     if frontpage:
@@ -210,7 +210,7 @@ def generate_problemset_pdf(problems, frontpage, tex_dir, params):
     for _ in range(2):
         compile_document_template(
                 problemset_tex,
-                os.path.join(tex_dir, 'problemset.tex'),
+                os.path.join(tex_dir, 'statements.tex'),
                 params)
 
 # Produces the complete editorial of a contest and saves it as tex_dir/solutions.pdf.

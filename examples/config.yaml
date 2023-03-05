@@ -1,6 +1,6 @@
 contest_name: Testing pol2dom
 
-front_page_problemset: absolute_path/problemset_frontpage.pdf # A single-page pdf
+front_page_statements: absolute_path/statements_frontpage.pdf # A single-page pdf
 front_page_solutions: absolute_path/solutions_frontpage.pdf # A single-page pdf
 
 polygon: # Credentials for Polygon APIs. Can be generated in Polygon -> Settings.

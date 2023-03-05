@@ -281,8 +281,8 @@ def fill_config_from_contest(config, contest_id):
     else:
         logging.info('No new problems were found in the contest.')
 
-# Generates contest_dir/tex/problemset.pdf and contest_dir/tex/solutions.pdf.
-def generate_problemset_solutions(config, contest_dir):
+# Generates contest_dir/tex/statements.pdf and contest_dir/tex/solutions.pdf.
+def generate_statements_solutions(config, contest_dir):
     pdf_generation_params = {
         'contest_name': config['contest_name'],
         'hide_balloon': config.get('hide_balloon', False),
@@ -294,9 +294,9 @@ def generate_problemset_solutions(config, contest_dir):
     label_and_name.sort()
     sorted_names = [p[1] for p in label_and_name]
     
-    tex_utilities.generate_problemset_pdf(
+    tex_utilities.generate_statements_pdf(
             sorted_names,
-            config.get('front_page_problemset'),
+            config.get('front_page_statements'),
             os.path.join(contest_dir, 'tex'),
             pdf_generation_params)
 
@@ -307,7 +307,7 @@ def generate_problemset_solutions(config, contest_dir):
             pdf_generation_params)
 
     logging.info('Successfully generated \'%s\' and \'%s\'.' %
-        (os.path.join(contest_dir, 'tex', 'problemset.pdf'),
+        (os.path.join(contest_dir, 'tex', 'statements.pdf'),
         os.path.join(contest_dir, 'tex', 'solutions.pdf')))
 
 def load_config_yaml(contest_dir):
@@ -332,7 +332,7 @@ def validate_config_yaml(config):
         logging.error('The keys \'contest_name\' and \'problems\' must be present in \'config.yaml\'.')
         exit(1)
     
-    top_level_keys = ['contest_name', 'polygon', 'domjudge', 'front_page_problemset', 'front_page_solutions', 'problems']
+    top_level_keys = ['contest_name', 'polygon', 'domjudge', 'front_page_statements', 'front_page_solutions', 'problems']
 
     wrong_keys = list(set(config.keys()) - set(top_level_keys))
     if wrong_keys:

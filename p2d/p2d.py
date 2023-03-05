@@ -26,7 +26,7 @@ def prepare_argument_parser():
     parser.add_argument('-c', '--convert', action='store_true', help='Whether the Polygon packages should be converted to DOMjudge packages. Otherwise only the DOMjudge packages already present in the system will be considered.')
     parser.add_argument('-d', '--domjudge', '--export', '--send', '--upload', action='store_true', help='Whether the DOMjudge packages shall be uploaded to the DOMjudge instance specified in config.yaml.')
     parser.add_argument('--from-contest', type=int, metavar='CONTEST_ID', help='Update config.yaml with the problems of the specified Polygon contest.')
-    parser.add_argument('--pdf-contest', action='store_true', help='Whether the pdf of the whole problemset and the pdf with all the solutions should be generated. If set, the files are created in \'contest_dir/tex/problemset.pdf\' and \'contest_dir/tex/solutions.pdf\'.')
+    parser.add_argument('--pdf', action='store_true', help='Whether the pdf of the whole problemset and the pdf with all the solutions should be generated. If set, the files are created in \'contest_dir/tex/statements.pdf\' and \'contest_dir/tex/solutions.pdf\'.')
     parser.add_argument('--verbosity', choices=['debug', 'info', 'warning'],
                         default='info', help='Verbosity of the logs.')
     parser.add_argument('--no-cache', action='store_true', help='If set, the various steps (polygon, convert, domjudge) are run even if they would not be necessary (according to the caching mechanism).')
@@ -54,9 +54,9 @@ def p2d(args):
 
     if not args.polygon and not args.convert and not args.domjudge \
        and args.from_contest is None \
-       and not args.pdf_contest \
+       and not args.pdf \
        and not args.clear_dir and not args.clear_domjudge_ids:
-        logging.error('At least one of the flags --polygon, --convert, --domjudge, --from-contest, --contestpdf, --clear-dir, --clear-domjudge-ids is necessary.')
+        logging.error('At least one of the flags --polygon, --convert, --domjudge, --from-contest, --pdf, --clear-dir, --clear-domjudge-ids is necessary.')
         exit(1)
 
     if args.clear_dir:
@@ -160,8 +160,8 @@ def p2d(args):
     if args.problems:
         return
 
-    if args.pdf_contest:
-        p2d_utils.generate_problemset_solutions(config, contest_dir)
+    if args.pdf:
+        p2d_utils.generate_statements_solutions(config, contest_dir)
 
 # Guidelines for error tracing and logging:
 #
