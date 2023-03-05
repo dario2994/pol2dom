@@ -189,8 +189,8 @@ def manage_convert(config, polygon_dir, domjudge_dir, tex_dir, problem):
         problem_package, domjudge_dir, tex_dir,
         {
             'contest_name': config['contest_name'],
-            'hide_balloon': config.get('hide_balloon', 0),
-            'hide_tlml': config.get('hide_tlml', 0)
+            'hide_balloon': config.get('hide_balloon', False),
+            'hide_tlml': config.get('hide_tlml', False)
         })
 
     logging.info('Converted the Polygon package to the DOMjudge package \'%s\'.',
@@ -332,7 +332,7 @@ def validate_config_yaml(config):
         logging.error('The keys \'contest_name\' and \'problems\' must be present in \'config.yaml\'.')
         exit(1)
     
-    top_level_keys = ['contest_name', 'polygon', 'domjudge', 'front_page_statements', 'front_page_solutions', 'problems']
+    top_level_keys = ['contest_name', 'polygon', 'domjudge', 'front_page_statements', 'front_page_solutions', 'problems', 'hide_balloon', 'hide_tlml']
 
     wrong_keys = list(set(config.keys()) - set(top_level_keys))
     if wrong_keys:
