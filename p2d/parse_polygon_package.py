@@ -159,7 +159,8 @@ def parse_problem_from_polygon(polygon):
 
         for test in testset.iter('test'):
             if 'sample' in test.attrib and not cmp(pol_path(input_format % local_id), pol_path(sample_input_format % local_id)):
-                raise RuntimeError('Custom inputs are not supported.')  # Because DOMjudge evaluates the same sample inputs that are provided to contestants.
+                logging.error('Custom inputs are not supported.') # Because DOMjudge evaluates the same sample inputs that are provided to contestants.
+                exit(1)
             t = {
                 'num': test_id,
                 'in': pol_path(input_format % local_id),
@@ -172,7 +173,8 @@ def parse_problem_from_polygon(polygon):
                 problem['tests'].append(t)
                 test_id += 1
     if not problem['tests']:
-        raise RuntimeError('One of the testset shall be called \'tests\'.')
+        logging.error('One of the testset shall be called \'tests\'.')
+        exit(1)
 
     # Checker
     checker_xml = problem_xml.find('assets').find('checker')
@@ -183,7 +185,8 @@ def parse_problem_from_polygon(polygon):
 
     checker_name = problem['checker']['source']
     if not checker_name.endswith('.cpp') and not checker_name.endswith('.cc'):
-        raise RuntimeError('Only C++ checkers (using testlib) are supported.')
+        logging.error('Only C++ checkers (using testlib) are supported.')
+        exit(1)
 
     # Interactor
     problem['interactor'] = None
