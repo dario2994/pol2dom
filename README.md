@@ -11,7 +11,7 @@ Its main features are:
 - Upload, with a caching mechanism, the converted DOMjudge package of a problem into a DOMjudge server.
 - Handling many problems as a contest.
 - Convert a Polygon package into a DOMjudge package without human intervention (with the possibility to tweak time and memory limit in the process).
-- Generation of the statement (here is an [example of statement](tree/master/examples/statement.pdf)) in pdf with the option to add some custom features to it (e.g., the contest name, a balloon with the color of the problem, time limit and memory limit, etc..). The samples' explanations are [detected from the notes section in Polygon through the use of special markers](#samples-explanation-detection).
+- Generation of the statement (here is an [example of statement](examples/statement.pdf)) in pdf with the option to add some custom features to it (e.g., the contest name, a balloon with the color of the problem, time limit and memory limit, etc..). The samples' explanations are [detected from the notes section in Polygon through the use of special markers](#samples-explanation-detection).
 - Generation of a pdf with the complete problem set of a contest featuring a custom front page. Same for the pdf of the solutions of the problems.
 - Checkers using testlib.h are supported transparently (by using a modified `testlib.h` which is DOMjudge compatible).
 - Through the `Judging verifier` feature of DOMjudge, it enforces that the submissions present in Polygon get the correct result also in DOMjudge.
