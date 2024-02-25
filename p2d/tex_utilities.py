@@ -97,7 +97,9 @@ def generate_statement_tex(problem, tex_dir):
         # collisions with images of other statements/solutions.
         image_unique_name = os.path.join(
             'images', problem['name'] + '-' + image[0])
-        statement_template = statement_template.replace(image[0], image_unique_name)
+        statement_template = statement_template.replace(
+            '{' + image[0] + '}', 
+            '{' + image_unique_name + '}')
         shutil.copyfile(image[1], os.path.join(tex_dir, image_unique_name))
 
     return statement_template
