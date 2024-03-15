@@ -36,7 +36,10 @@ def update_problem_api(package_zip, problem_domjudge_id, credentials):
                                 {'zip': (package_zip, f)},
                                 credentials)
 
-    if res.status_code != 200 or not res.json()['problem_id']:
+    if res.status_code == 413:
+        logging.error('Received error \'413 Request Entity Too Large\' while sending the package to the DOMjudge server. The server configuration must be changed to accept larger files.')
+        return False
+    elif res.status_code != 200 or not res.json()['problem_id']:
         logging.error('Error sending the package to the DOMjudge server: %s.'
                       % res.json())
         return False
