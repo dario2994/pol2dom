@@ -25,6 +25,9 @@ def parse_samples_explanations(notes):
             if test_id == -1:
                 logging.error('In the samples explanations, there is an \%END line which does not close any \%BEGIN line: %s.' % notes)
                 exit(1)
+            if test_id in explanations:
+                logging.error('There are two explanations for sample %d.' % test_id)
+                exit(1)
             assert(test_id != -1)
             assert(test_id not in explanations)
             curr = curr[0].upper() + curr[1:]  # Capitalize first letter.
