@@ -17,13 +17,13 @@ def parse_samples_explanations(notes):
     for line in lines:
         if re.fullmatch(r'%BEGIN (\d+)', line.strip()):
             if test_id != -1:
-                logging.error('In the samples explanations, there are two %BEGIN lines without an %END line in between: %s.' % notes)
+                logging.error('In the samples explanations, there are two \%BEGIN lines without an \%END line in between: %s.' % notes)
                 exit(1)
             assert(test_id == -1)
             test_id = int(re.fullmatch(r'%BEGIN (\d+)', line.strip()).group(1))
         elif re.fullmatch(r'%END', line.strip()):
             if test_id == -1:
-                logging.error('In the samples explanations, there is an %END line which does not close any %BEGIN line: %s.' % notes)
+                logging.error('In the samples explanations, there is an \%END line which does not close any \%BEGIN line: %s.' % notes)
                 exit(1)
             assert(test_id != -1)
             assert(test_id not in explanations)
@@ -34,7 +34,7 @@ def parse_samples_explanations(notes):
         elif test_id != -1:
             curr += line + '\n'
     if test_id != -1:
-        logging.error('In the samples explanations, the last %BEGIN line is not matched by an %END line: %s.' % notes)
+        logging.error('In the samples explanations, the last \%BEGIN line is not matched by an \%END line: %s.' % notes)
         exit(1)
     assert(test_id == -1)
     return explanations
