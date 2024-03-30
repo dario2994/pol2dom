@@ -31,7 +31,7 @@ This provides you with the command `p2d` available in any shell terminal.
 
 ### Method 2: Run directly from the repository
 
-Clone the repository with `git clone https://github.com/dario2994/pol2dom` and run the command with `./p2d.sh` directly from the repository directory.
+Clone the repository with `git clone https://github.com/dario2994/pol2dom` and run the command with `./p2d.sh` directly from the repository directory. You might have to install some python packages system-wide for this command to work.
 
 ## Usage
 

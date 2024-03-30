@@ -46,7 +46,7 @@ def p2d(args):
         generate_testlib_for_domjudge.generate_testlib_for_domjudge(testlib_h)
         logging.info('The file testlib.h was successfully downloaded and patched. The local version can be found at \'%s\'.' % testlib_h)
     
-    contest_dir = args.contest_directory
+    contest_dir = os.path.abspath(args.contest_directory)
 
     config = p2d_utils.load_config_yaml(contest_dir)
 

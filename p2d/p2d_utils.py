@@ -286,7 +286,9 @@ def generate_statements_solutions(config, contest_dir):
     pdf_generation_params = {
         'contest_name': config['contest_name'],
         'hide_balloon': config.get('hide_balloon', False),
-        'hide_tlml': config.get('hide_tlml', False)
+        'hide_tlml': config.get('hide_tlml', False),
+        'front_page_statements': config.get('front_page_statements', ''),
+        'front_page_solutions': config.get('front_page_solutions', '')
     }
 
     # Sorting problems by label.
@@ -296,13 +298,11 @@ def generate_statements_solutions(config, contest_dir):
     
     tex_utilities.generate_statements_pdf(
             sorted_names,
-            config.get('front_page_statements'),
             os.path.join(contest_dir, 'tex'),
             pdf_generation_params)
 
     tex_utilities.generate_solutions_pdf(
             sorted_names,
-            config.get('front_page_solutions'),
             os.path.join(contest_dir, 'tex'),
             pdf_generation_params)
 
@@ -348,6 +348,14 @@ def validate_config_yaml(config):
     if 'domjudge' in config and\
             set(config['domjudge'].keys()) != set(domjudge_keys):
         logging.warning('The subdictionary \'domjudge\' of \'config.yaml\' must contain they keys: %s.' % ', '.join(domjudge_keys))
+    
+    if 'front_page_statements' in config and not os.path.isfile(config['front_page_statements']):
+        logging.error('The \'front_page_statements\' specified in \'config.yaml\' is not a file.')
+        exit(1)
+        
+    if 'front_page_solutions' in config and not os.path.isfile(config['front_page_solutions']):
+        logging.error('The \'front_page_solutions\' specified in \'config.yaml\' is not a file.')
+        exit(1)
 
     problem_keys = ['name', 'label', 'color', 'author', 'preparation', 'override_time_limit', 'override_memory_limit', 'polygon_id', 'polygon_version', 'domjudge_local_version', 'domjudge_server_version', 'domjudge_id', 'domjudge_externalid']
 

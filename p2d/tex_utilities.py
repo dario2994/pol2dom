@@ -190,13 +190,15 @@ def generate_solution_pdf(problem, tex_dir, params):
 #   problems is a list of problem names, in the order they shall appear.
 #   tex_dir must contain problem-statement-content.tex for each problem in
 #   problems.
-#   params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
-def generate_statements_pdf(problems, frontpage, tex_dir, params):
+#   params is a dictionary with keys contest_name, hide_balloon, 
+#   hide_tlml, front_page_statements, front_page_solutions.
+def generate_statements_pdf(problems, tex_dir, params):
     problemset_tex = ''
-
-    if frontpage:
-        frontpage = os.path.abspath(frontpage)
-        problemset_tex += '\\includepdf{%s}\n' % frontpage
+    
+    front_page = params['front_page_statements']
+    if front_page:
+        front_page = os.path.abspath(front_page)
+        problemset_tex += '\\includepdf{%s}\n' % front_page
         problemset_tex += '\\insertblankpageifnecessary\n\n'
 
     for problem in problems:
@@ -219,13 +221,15 @@ def generate_statements_pdf(problems, frontpage, tex_dir, params):
 #   problems is a list of problem names, in the order they shall appear.
 #   tex_dir must contain problemname-solution-content.tex for each problem
 #   in problems.
-#   params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
-def generate_solutions_pdf(problems, frontpage, tex_dir, params):
+#   params is a dictionary with keys contest_name, hide_balloon, 
+#   hide_tlml, front_page_statements, front_page_solutions.
+def generate_solutions_pdf(problems, tex_dir, params):
     solutions_tex = ''
     
-    if frontpage:
-        frontpage = os.path.abspath(frontpage)
-        solutions_tex += '\\includepdf{%s}\n\n' % frontpage
+    front_page = params['front_page_solutions']
+    if front_page:
+        front_page = os.path.abspath(front_page)
+        solutions_tex += '\\includepdf{%s}\n\n' % front_page
 
     for problem in problems:
         maybe_tex = os.path.join(tex_dir, problem + '-solution-content.tex')
