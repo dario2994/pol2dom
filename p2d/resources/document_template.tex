@@ -1,9 +1,9 @@
 \documentclass[11pt,final,twoside]{article}
 
 %%%%%%%%%%%%%%%%%%% PACKAGES %%%%%%%%%%%%%%%%%%%%
-\usepackage[a4paper, top=2.5cm, bottom=3.5cm, inner=2cm, outer=2.5cm]{geometry}
+\usepackage[a4paper, includeheadfoot, top=0.5cm, bottom=2cm, inner=2cm, outer=2.5cm]{geometry}
 
-\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage[dvipsnames]{xcolor}
 \usepackage[T1]{fontenc}    
 \usepackage[utf8]{inputenc}
 \usepackage{verbatim}
@@ -48,22 +48,56 @@
 
 %%%%%%%%%%%%%%%%%%% HEADER AND FOOTER %%%%%%%%%%%%%%%%%%%%
 
+\newcommand\headerimage{??HEADERIMAGE??}
+
+\ifthenelse{\equal{\headerimage}{}}
+{
+    \setlength\headheight{40pt}
+}
+{
+    \settoheight{\headheight}{%
+        \includegraphics[width=\textwidth,keepaspectratio]{\headerimage}
+    }
+    % The following line fixes "Head height too small...".
+    \addtolength{\headheight}{22pt}
+}
+\geometry{headheight=\headheight}
+
+
 \fancypagestyle{problem}{
-\fancyhf{}
-    \renewcommand{\headrulewidth}{0.1pt}
-\setlength\headheight{14pt}
-\lhead{\textsc{Problem \problemlabel: \problemtitle}}
-\rhead{\textsc{\contestname}} % e.g., SWERC 2021/22 - Milan
-\rfoot{\thepage\hspace{2em}}
+    \fancyhf{}
+    
+    \ifthenelse{\equal{\headerimage}{}}
+    {
+        \renewcommand{\headrulewidth}{0.1pt}
+        \lhead{\textsc{Problem \problemlabel: \problemtitle}}
+        \rhead{\textsc{\contestname}}
+    }
+    {
+       \renewcommand{\headrulewidth}{0.0pt}    
+        \chead{%
+            \includegraphics[width=\textwidth,keepaspectratio]{\headerimage}%
+        }
+    }
+    
+    \rfoot{\thepage\hspace{2em}}
 }
 
 \fancypagestyle{solution}{
-\fancyhf{}
-    \renewcommand{\headrulewidth}{0.1pt}
-\setlength\headheight{14pt}
-\lhead{\textsc{\problemlabel: \problemtitle}}
-\rhead{\textsc{Solutions of \contestname}} % e.g., SWERC 2021/22 - Milan
-\rfoot{\thepage\hspace{2em}}
+    \fancyhf{}
+    \ifthenelse{\equal{\headerimage}{}}
+    {
+        \renewcommand{\headrulewidth}{0.1pt}
+        \lhead{\textsc{\problemlabel: \problemtitle}}
+        \rhead{\textsc{Solutions of \contestname}}
+    }
+    {
+        \renewcommand{\headrulewidth}{0.0pt}  
+        \chead{%
+            \includegraphics[width=\textwidth,keepaspectratio]{\headerimage}%
+        }
+    }
+    \rfoot{\thepage\hspace{2em}}
 }
 
 
@@ -71,7 +105,7 @@
 
 \fancypagestyle{blank}{
     \fancyhf{}
-    \renewcommand{\headrulewidth}{0pt}    
+    \renewcommand{\headrulewidth}{0pt} 
     \rfoot{\thepage\hspace{2em}}
 }
 
@@ -265,7 +299,7 @@
 \newcommand\problemauthor{undefined}
 \newcommand\problempreparation{undefined}
 
- 
+
 \begin{document}
 
 ??DOCUMENTCONTENT??

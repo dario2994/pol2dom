@@ -12,7 +12,7 @@ Its main features are:
 - Handling many problems as a contest.
 - Convert a Polygon package into a DOMjudge package without human intervention (with the possibility to tweak time and memory limit in the process).
 - Generation of the statement (here is an [example of statement](examples/statement.pdf)) in pdf with the option to add some custom features to it (e.g., the contest name, a balloon with the color of the problem, time limit and memory limit, etc..). The samples' explanations are [detected from the notes section in Polygon through the use of special markers](#samples-explanation-detection).
-- Generation of a pdf with the complete problem set of a contest featuring a custom front page. Same for the pdf of the solutions of the problems.
+- Generation of a pdf with the complete problem set of a contest featuring a custom front page and header image. Same for the pdf of the solutions of the problems.
 - Checkers using testlib.h are supported transparently (by using a modified `testlib.h` which is DOMjudge compatible).
 - Through the `Judging verifier` feature of DOMjudge, it enforces that the submissions present in Polygon get the correct result also in DOMjudge.
 
@@ -92,6 +92,7 @@ It must be a valid `yaml` file containing the following top-level keys:
 - `contest_name` (mandatory): The name of the contest. It appears in the statements of the problems (and in the solutions).
 - `front_page_statements`: Absolute path of the single-page pdf to use as front page of the document containing the statements of all the problems. This key is not mandatory, if it is not provided then the pdf will not have a front page.
 - `front_page_solutions`: Absolute path of the single-page pdf to use for the front page of the editorial containing the solutions to all the problems. This key is not mandatory, if it is not provided then the pdf with the solutions will not have a front page.
+- `header_image`: Absolute path of the header image to put on top of each page of the statements (and of the solutions). This key is not mandatory, if it is not provided then the header will not be an image (instead it will contain the title of the problem and the name of the contest).
 - `hide_balloon`: A boolean which decides whether a balloon with the color of the problem shall appear in the statement. By default it appears, set this to `1` to not show it.
 - `hide_tlml`: A boolean which decides whether the time limit and the memory limit of the problem shall appear in the statement. By default it appears, set this to `1` to not show it. This can be useful when one has to print the statements before having the opportunity to test the computers that will evaluate the submissions during the contest.
 - `polygon`: A dictionary containing the credentials to use Polygon's APIs. This is necessary only if you want to use `p2d` to download the problem packages from Polygon. It must have the keys `key` and `secret`. The credentials can be generated in the menu `settings` in Polygon.

@@ -145,10 +145,12 @@ def generate_solution_tex(problem, tex_dir):
 # 4. Compile tex_file. If tex_file = 'path/name.tex', the pdf file produced is
 #    'path/name.pdf'.
 #
-# params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
+# params is a dictionary with keys contest_name, hide_balloon, hide_tlml,
+# header_image.
 def compile_document_template(document_content, tex_file, params):
     replacements_document = {
         'CONTESTNAME': params['contest_name'],
+        'HEADERIMAGE': params['header_image'],
         'SHOWBALLOON': 0 if params['hide_balloon'] else 1,
         'SHOWTLML': 0 if params['hide_tlml'] else 1,
         'DOCUMENTCONTENT': document_content
@@ -167,7 +169,8 @@ def compile_document_template(document_content, tex_file, params):
 
 # Produces problemname-statement.{tex,pdf}, which are respectively the tex source
 # and the pdf of the statement, in the directory tex_dir.
-#   params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
+#   params is a dictionary with keys contest_name, hide_balloon, 
+#   hide_tlml, header_image.
 def generate_statement_pdf(problem, tex_dir, params):
     statement_tex = generate_statement_tex(problem, tex_dir)
     compile_document_template(
@@ -177,7 +180,8 @@ def generate_statement_pdf(problem, tex_dir, params):
 
 # Produces problemname-solution.{tex,pdf}, which are respectively the tex source
 # and the pdf of the solution, in the directory tex_dir.
-#   params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
+#   params is a dictionary with keys contest_name, hide_balloon, 
+#   hide_tlml, header_image.
 def generate_solution_pdf(problem, tex_dir, params):
     solution_tex = generate_solution_tex(problem, tex_dir)
     compile_document_template(
@@ -191,7 +195,7 @@ def generate_solution_pdf(problem, tex_dir, params):
 #   tex_dir must contain problem-statement-content.tex for each problem in
 #   problems.
 #   params is a dictionary with keys contest_name, hide_balloon, 
-#   hide_tlml, front_page_statements, front_page_solutions.
+#   hide_tlml, front_page_statements, front_page_solutions, header_image.
 def generate_statements_pdf(problems, tex_dir, params):
     problemset_tex = ''
     
@@ -222,7 +226,7 @@ def generate_statements_pdf(problems, tex_dir, params):
 #   tex_dir must contain problemname-solution-content.tex for each problem
 #   in problems.
 #   params is a dictionary with keys contest_name, hide_balloon, 
-#   hide_tlml, front_page_statements, front_page_solutions.
+#   hide_tlml, front_page_statements, front_page_solutions, header_image.
 def generate_solutions_pdf(problems, tex_dir, params):
     solutions_tex = ''
     

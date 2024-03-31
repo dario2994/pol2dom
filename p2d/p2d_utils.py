@@ -288,7 +288,8 @@ def generate_statements_solutions(config, contest_dir):
         'hide_balloon': config.get('hide_balloon', False),
         'hide_tlml': config.get('hide_tlml', False),
         'front_page_statements': config.get('front_page_statements', ''),
-        'front_page_solutions': config.get('front_page_solutions', '')
+        'front_page_solutions': config.get('front_page_solutions', ''),
+        'header_image': config.get('header_image', '')
     }
 
     # Sorting problems by label.
@@ -332,7 +333,7 @@ def validate_config_yaml(config):
         logging.error('The keys \'contest_name\' and \'problems\' must be present in \'config.yaml\'.')
         exit(1)
     
-    top_level_keys = ['contest_name', 'polygon', 'domjudge', 'front_page_statements', 'front_page_solutions', 'problems', 'hide_balloon', 'hide_tlml']
+    top_level_keys = ['contest_name', 'polygon', 'domjudge', 'front_page_statements', 'front_page_solutions', 'header_image', 'problems', 'hide_balloon', 'hide_tlml']
 
     wrong_keys = list(set(config.keys()) - set(top_level_keys))
     if wrong_keys:
@@ -355,6 +356,10 @@ def validate_config_yaml(config):
         
     if 'front_page_solutions' in config and not os.path.isfile(config['front_page_solutions']):
         logging.error('The \'front_page_solutions\' specified in \'config.yaml\' is not a file.')
+        exit(1)
+        
+    if 'header_image' in config and not os.path.isfile(config['header_image']):
+        logging.error('The \'header_image\' specified in \'config.yaml\' is not a file.')
         exit(1)
 
     problem_keys = ['name', 'label', 'color', 'author', 'preparation', 'override_time_limit', 'override_memory_limit', 'polygon_id', 'polygon_version', 'domjudge_local_version', 'domjudge_server_version', 'domjudge_id', 'domjudge_externalid']

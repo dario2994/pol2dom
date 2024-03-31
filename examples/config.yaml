@@ -2,6 +2,7 @@ contest_name: Testing pol2dom
 
 front_page_statements: absolute_path/statements_frontpage.pdf # A single-page pdf
 front_page_solutions: absolute_path/solutions_frontpage.pdf # A single-page pdf
+header_image: absolute_path/header.pdf # A rectangular-shaped image (it can be in any format supported by \includegraphics in latex).
 
 # hide_balloon: 1 # A balloon with the color of the problem is not present in the problem statement.
 # hide_tlml: 1 # The time limit and memory limit of each problem is not shown in the pdf statement (useful for printing statements before the time limit is finalized).
