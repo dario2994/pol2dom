@@ -190,7 +190,8 @@ def manage_convert(config, polygon_dir, domjudge_dir, tex_dir, problem):
         {
             'contest_name': config['contest_name'],
             'hide_balloon': config.get('hide_balloon', False),
-            'hide_tlml': config.get('hide_tlml', False)
+            'hide_tlml': config.get('hide_tlml', False),
+            'header_image': config.get('header_image', '')
         })
 
     logging.info('Converted the Polygon package to the DOMjudge package \'%s\'.',

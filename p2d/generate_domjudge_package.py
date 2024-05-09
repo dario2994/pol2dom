@@ -53,7 +53,8 @@ RESULT_POLYGON2DOMJUDGE = {
 #             After the execution, it will contain:
 #             - problemname-statement.{tex,pdf}
 #             - problemname-solution.{tex,pdf}
-#   params is a dictionary with keys contest_name, hide_balloon, hide_tlml.
+#   params is a dictionary with keys contest_name, hide_balloon, 
+#   hide_tlml, header_image.
 def generate_domjudge_package(problem, domjudge, tex_dir, params):
     logging.debug('Creating the DOMjudge package directory \'%s\'.' % domjudge)
 
