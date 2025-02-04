@@ -142,6 +142,11 @@ there are $5$ people and...
 
 Notice that only the explanation itself shall be among the two magic lines, and not the title. The first letter of the explanation of each sample will be capitalized.
 
+## Special characters in the statement
+
+The text parsing in Polygon is not fully compatible with LaTeX. Specifically, some special characters that require escaping in LaTeX (e.g., `#`) can be used freely in Polygon.
+
+To ensure compatibility, enclose such characters in `$\texttt{..}$` (e.g., `$\texttt{#}$`). This resolves most issues, while `pol2dom` applies additional replacement rules to handle any remaining cases, ensuring that characters displayed correctly in Polygon also appear correctly in LaTeX.
 
 ## Internal working of the generation of the LaTeX statement
 
