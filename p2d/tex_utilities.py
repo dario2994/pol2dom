@@ -12,6 +12,40 @@ RESOURCES_PATH = os.path.join(
     os.path.split(os.path.realpath(__file__))[0], 'resources')
 
 
+# Polygon treats certain special characters (such as # or /) differently 
+# from how latex supports them. 
+# As a general rule of thumb, it is convenient to put them inside
+# \texttt{..} as this often takes care of the escaping appropriately.
+# (in the sense that, inside \texttt, the right thing to do in polygon
+# coincides with the right thing to do in latex).
+# In a few instances, this is not the case. 
+# This function takes care of these special cases by converting a few
+# common special characters into their latex-supported equivalent.
+# In particular, it replaces only characters inside \texttt{..}.
+# It was tested only when \texttt is itself in math mode.
+#
+# ACHTUNG: Polygon escaping mechanism is broken. Remarkably,
+#          it seems to be impossible to write the character '%' in
+#          the \texttt environment.
+def escape_special_chars(content):
+    # This list of rules was compiled comparing the behavior of 
+    # $\texttt{...}$ on polygon and in latex.
+    escaping_rules = {
+        '#': '\\#',
+        '\\\\': '\\textbackslash',
+        '_': '\\_',
+        '&': '\\&',
+        '^': '\\textasciicircum',
+        '~': '\\textasciitilde'
+    }
+    
+    for c in escaping_rules:
+        content = content.replace(
+            '\\texttt{%s}' % c, '\\texttt{%s}' % escaping_rules[c])
+    
+    return content
+    
+
 # Execute pdflatex on tex_file.
 # tex_file is a .tex file
 def tex2pdf(tex_file):
@@ -59,7 +93,8 @@ def generate_statement_tex(problem, tex_dir):
         samples_tex += '\\sample{%s}\n' % sample_path
 
         if sample['explanation']:
-            samples_tex += '\\sampleexplanation{%s}\n' % sample['explanation']
+            explanation = escape_special_chars(sample['explanation'])
+            samples_tex += '\\sampleexplanation{%s}\n' % explanation
 
     if sample_cnt == 0:
         logging.error('No samples found.')
@@ -82,10 +117,10 @@ def generate_statement_tex(problem, tex_dir):
         'TITLE': problem['title'],
         'TIMELIMIT': problem['timelimit'],
         'MEMORYLIMIT': problem['memorylimit'],
-        'LEGEND': problem['statement']['legend'],
-        'INPUT': problem['statement']['input'],
-        'OUTPUT': problem['statement']['output'],
-        'INTERACTION': problem['statement']['interaction'],
+        'LEGEND': escape_special_chars(problem['statement']['legend']),
+        'INPUT': escape_special_chars(problem['statement']['input']),
+        'OUTPUT': escape_special_chars(problem['statement']['output']),
+        'INTERACTION': escape_special_chars(problem['statement']['interaction']),
         'SAMPLES': samples_tex
     }
     for placeholder in replacements_statement:
@@ -118,7 +153,7 @@ def generate_solution_tex(problem, tex_dir):
         'TITLE': problem['title'],
         'AUTHOR': problem['author'],
         'PREPARATION': problem['preparation'],
-        'SOLUTION': problem['statement']['tutorial']
+        'SOLUTION': escape_special_chars(problem['statement']['tutorial'])
     }
     for placeholder in replacements_solution:
         solution_template = solution_template.replace(
