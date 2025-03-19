@@ -105,11 +105,11 @@ def parse_problem_from_polygon(polygon):
             tl_str = testset.find('time-limit').text
             ml_str = testset.find('memory-limit').text
             problem['timelimit'] = float(tl_str) / 1000.0
-            # In the Polygon package the memory limit is given in byte.
+            # In the Polygon package the memory limit is given in bytes.
             # The memory limit written in Polygon is interpreted as MiB, thus
             # here we recover such number dividing by 2**20.
-            # DOMjudge interpret this value in MiB, so the conversion is exact
-            # see icpc.io/problem-package-format/spec/problem_package_format#limits).
+            # DOMjudge interprets this value in MiB, so the conversion is exact
+            # (see icpc.io/problem-package-format/spec/problem_package_format#limits).
             problem['memorylimit'] = int(ml_str) // 2**20 # MiB
     assert('timelimit' in problem and 'memorylimit' in problem)
     
